@@ -1,0 +1,22 @@
+{
+  "name": "jiemurat",
+  "owner": {
+    "name": "Jiemurat",
+    "url": "https://github.com/jiemurat"
+  },
+  "description": "Panoramic Harness: agent skills that build and maintain a plain-text harness for any AI coding agent.",
+  "plugins": [
+    {
+      "name": "pan-harness",
+      "source": "./",
+      "description": "ph-init, ph-doctor, ph-update and ph-grilling: create, audit, update and plan a Panoramic Harness (AGENTS.md, PAN-HARNESS.md, pan-harness/).",
+      "category": "productivity",
+      "keywords": [
+        "agents-md",
+        "harness",
+        "skills",
+        "planning"
+      ]
+    }
+  ]
+}

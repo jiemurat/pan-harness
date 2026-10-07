@@ -1,0 +1,53 @@
+{
+  "name": "@jiemurat/pan-harness",
+  "version": "1.0.0",
+  "description": "Panoramic Harness (pan-harness): plain-text rules and knowledge that let any AI coding agent run a project like its owner. Installs the ph-init, ph-doctor, ph-update and ph-grilling agent skills into a project.",
+  "keywords": [
+    "agent-skills",
+    "agents-md",
+    "ai-agents",
+    "claude-code",
+    "codex",
+    "gemini-cli",
+    "antigravity",
+    "cursor",
+    "copilot",
+    "harness",
+    "panoramic-harness"
+  ],
+  "license": "MIT",
+  "author": "Jiemurat",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jiemurat/pan-harness.git"
+  },
+  "homepage": "https://github.com/jiemurat/pan-harness#readme",
+  "bugs": {
+    "url": "https://github.com/jiemurat/pan-harness/issues"
+  },
+  "type": "module",
+  "bin": {
+    "pan-harness": "cli/pan-harness.js"
+  },
+  "files": [
+    "cli/",
+    "lib/",
+    "skills/",
+    "docs/",
+    "CHANGELOG.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "node scripts/build.js",
+    "check-build": "node scripts/build.js --check",
+    "validate": "node scripts/validate.js",
+    "test": "node --test",
+    "prepublishOnly": "npm run check-build && npm run validate && npm test"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

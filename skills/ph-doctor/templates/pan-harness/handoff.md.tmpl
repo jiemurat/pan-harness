@@ -1,0 +1,52 @@
+<!--
+pan-harness template. Loyihada `pan-harness/handoff.md` nomi bilan saqlanadi.
+- Faol large task bo'lmasa, fayl shu izohsiz, sarlavha, birinchi paragraf va `**Status:** none` qatoridan iborat.
+- Large task tasdiqlangach `**Status:** active` yoziladi va bo'limlar to'ldiriladi. Ish tugagach, qarorlar `decisions.md` ga, qolgani tarix yozuviga o'tadi, fayl yana `**Status:** none` holiga qaytadi.
+- Bo'limlar va holat so'zlari (`todo`, `active`, `blocked`, `done`) inglizcha qoladi (standart): skript ularni o'qiydi. Gaplar egasining tilida.
+- Hali yo'q, yaratiladigan fayl backtick'siz va "(new)" belgisi bilan yoziladi, aks holda skript uni yo'q yo'l deb ko'rsatadi.
+- Shu izohni olib tashla.
+-->
+# Handoff
+
+Faol large task'ning holati (state). Agent uni har holat xabarida, egasidan savol so'rab to'xtashdan oldin va kontekst tugashiga yaqin yangilaydi; kontekst tugayotganda ham tekshiruvlar (checks) qisqartirilmaydi. Yangi sessiya ishni shu fayldan davom ettiradi.
+
+**Status:** {{none yoki active}}
+
+## Task
+
+- **Ish:** {{nomi, boshlangan sana, `plan.md` dagi bandi}}
+- **Maqsad:** {{2–3 gap}}
+- **Qilinmaydi:** {{kelishilgan istisnolar}}
+- **Byudjet:** {{vaqt, token yoki sub-agentlar soni, pullik API xarajati; ikki barobar oshsa, to'xtab egasidan so'raladi}}
+
+## Criteria
+
+- {{K1: nima kuzatiladi, chegara, qanday va qachon tekshiriladi. Holat: `todo`, `active`, `blocked` (sababi), `done` (dalili) yoki ⏳ (qachon)}}
+
+## Steps
+
+- {{`active` — bosqich yoki qadam: natijasi va uning tekshiruvi (check). Bir vaqtda faqat bitta qadam `active`. `done` dalil bilan, `blocked` sababi bilan}}
+
+## Changed files
+
+- {{shu ish o'zgartirgan fayllar, loyiha ildiziga nisbatan yo'l bilan. `git status` dagi bu ro'yxatda yo'q o'zgarish egasiniki: u agentning commit'iga kirmaydi, alohida commit qilinadi (R4)}}
+
+## Checks
+
+- {{qaysi tekshiruv (check) qachon ishga tushdi va natijasi, raqam bilan}}
+
+## Decisions
+
+- {{ish davomida qabul qilingan qaror: nima, nega, rad etilgan variant. Ish oxirida `decisions.md` ga o'tadi}}
+
+## Open questions
+
+- {{egasining javobini kutayotgan savollar va to'siqlar. Bo'lmasa: "Yo'q."}}
+
+## Next step
+
+{{keyingi aniq qadam: nima qilinadi va qaysi fayldan boshlanadi}}
+
+## Work files
+
+- {{rejadagi fayllar ro'yxati (ish oxirida o'zgarganlar bilan solishtiriladi) va ish uchun vaqtinchalik fayllar: loyiha ichidagi, git'ga kirmaydigan papkada (masalan, `temp/<sana>-<ish>/`), agent vositasining vaqtinchalik papkasida emas}}

@@ -1,0 +1,18 @@
+{
+  "name": "pan-harness",
+  "displayName": "Panoramic Harness",
+  "version": "1.0.0",
+  "description": "Agent skills that create, audit, update and plan a Panoramic Harness (pan-harness): plain-text rules and knowledge (AGENTS.md, PAN-HARNESS.md, pan-harness/) that let any AI coding agent run a project like its owner.",
+  "author": {
+    "name": "Jiemurat",
+    "url": "https://github.com/jiemurat"
+  },
+  "repository": "https://github.com/jiemurat/pan-harness",
+  "license": "MIT",
+  "keywords": [
+    "agents-md",
+    "harness",
+    "skills",
+    "planning"
+  ]
+}

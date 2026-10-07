@@ -1,0 +1,21 @@
+name: ci
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [18, 22, 24]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm run check-build
+      - run: npm run validate
+      - run: node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=./.github/annotate.mjs --test-reporter-destination=stdout
+      - run: npm pack --dry-run

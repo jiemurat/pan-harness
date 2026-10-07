@@ -1,0 +1,21 @@
+# History: {{YYYY-MM}}
+
+Har ish uchun bitta yozuv, yangisi oxiriga qo'shiladi. Har oy o'z faylida: oy boshida yangi fayl ochiladi va bu sarlavha unga ko'chiriladi (copy). Qoidalar: `PAN-HARNESS.md` → `Journals`.
+
+Yangi yozuv shakli (`Downtime:` faqat `live-system=yes` bo'lsa):
+
+```
+### YYYY-MM-DD — <ish nomi> [tag]
+- **What and why:** …
+- **Checks:** large task'da avval kriteriyalar (K1 ✅ …, K2 ⏳ …), keyin tekshiruvlar
+- **Downtime:** yo'q / N daqiqa (sababi)
+- **Files:** … (commit: <hash> yoki pending)
+```
+
+---
+
+### {{YYYY-MM-DD}} — Pan-harness yaratildi [docs]
+- **What and why:** {{egasining maqsadi}}. Yaratildi: `AGENTS.md`, `PAN-HARNESS.md`, `pan-harness/` ({{fayllar soni}} ta fayl). {{Ko'chirilgan (migrated) mavjud fayllar va migration table: eski bo'lim → yangi joyi}}.
+- **Checks:** kriteriyalar: {{K1 ✅ dalil bilan / ❌ / ⏳ qachon}}; `pan-harness-check.mjs` {{natija}}, `secret-check.mjs` {{natija yoki "o'rnatilmagan"}}, fresh-agent test: {{natija yoki "o'tkazilmadi (egasining qarori)"}}.
+- **Downtime:** {{yo'q. Faqat live-system=yes bo'lsa, aks holda qatorni olib tashla}}
+- **Files:** {{ro'yxat}} (commit: pending)

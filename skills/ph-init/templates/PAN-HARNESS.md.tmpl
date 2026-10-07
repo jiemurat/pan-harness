@@ -1,0 +1,60 @@
+<!--
+pan-harness template. Loyihada `PAN-HARNESS.md` nomi bilan saqlanadi.
+`{{…}}` joylarini to'ldir. `[profile: …]` belgilarini `structure.md` → "Profile" dagi qoida bo'yicha qo'lla. Xaritaga loyihaning `project/` dagi har faylini kalit so'zlar bilan qo'sh. Sarlavhalar, `Profile:` va `Standard:` qatorlari inglizcha qoladi (standart). `End of task` dagi commit bandi S11 ning (a) javobi uchun; (b) bo'lsa, uning o'rniga: "- [ ] Commit'ni egasi qiladi (R4): o'zgargan fayllar ro'yxatini hisobotga yoz." Shu izohni olib tashla.
+-->
+# PAN-HARNESS
+
+Pan-harness (Panoramic Harness) — shu loyihaning harness'i: `AGENTS.md` (loyiha, ish tartibi, qoidalar), shu fayl (harness'ning structure'i va yuritilishi) va `pan-harness/` papkasi (R16).{{loyihada "harness" so'zi boshqa ma'noda ishlatilsa, farqini shu yerda yoz}}
+
+## Profile
+
+Profile: live-system={{yes yoki no}}, code={{yes yoki no}}, sensitive-data={{secrets, pii, confidential (+ bilan) yoki none}}
+
+Profile standartning qaysi qismi kerakligini belgilaydi, sababi D1 da.
+
+## Map
+
+Har fakt bitta joyda, boshqa fayllar unga havola beradi. Hammasi `pan-harness/` ichida:
+- `state.md` — joriy holat (state); `plan.md` — barcha ochiq ishlar va sanalar; `handoff.md` — faol large task'ning holati va keyingi qadami (sessiya boshida, `**Status:** active` bo'lsa).
+- `system-map.md` — {{komponentlar, tashqi xizmatlar, sir nomlari, repo map}} ("qayerda?", "qanday tuzilgan?" savolida).
+- `runbook.md` — buyruqlar, skriptlar, hujjat yozish uslubi, topic tag'lar, accepted warnings (buyruq kerak bo'lganda va hujjat yozishdan oldin).
+- `playbooks/pan-harness.md` — `ph-doctor` bilan parvarish: standartga moslash, loyiha qadamlari, sinov savollari.
+- Jurnallar: `decisions.md` (D…, "nega shunday?"), `feedback.md` (F…, qoidaning sababi), `lessons.md` (L…, o'xshash ishdan oldin), `history/` (o'tgan ishlar, oyma-oy).
+- `archive/` — superseded qarorlar va jurnallarning eski qismlari; `scripts/` — skill'dan nusxa: {{`pan-harness-check.mjs`, profile'da `secrets` bo'lsa `secret-check.mjs` ham}}.
+- `project/` — loyihaga xos fayllar:
+  - {{`project/<file>.md` — nima bor (kalit so'zlar), qachon o'qiladi}};
+  - {{`project/playbooks/` — ish turlari: `<name>` (kalit so'zlar), …}};
+  - {{`project/scripts/` — loyiha skriptlari}}.
+
+## Journals
+
+- R — qoidalar (`AGENTS.md`, playbook boshlari); F, L, D — jurnallarda, arxivi bilan bitta ketma-ketlik; Q — rejalashtirish savollari (suhbatda qoladi, natijasi D yoki F ga yoziladi). `← F/L/D…` — qoidaning manbasi. Doimiy ko'rsatma avval `feedback.md` ga yoziladi, keyin keyingi raqamli qoida bo'ladi: hamma ishga tegishli bo'lsa `AGENTS.md` ga, bitta sohaga tegishli bo'lsa o'sha soha playbook'i boshiga (P9). Buzilsa zarar keltirishi mumkin bo'lgan qoidaning qisqa qatori, qayerda turishidan qat'i nazar, `## Boundaries` da ham bo'ladi (P7). Iloji bo'lsa, qoida tekshiruv (check) bilan ham majburlanadi (P23). Raqamlar o'zgarmaydi.
+- Jurnallar faqat qo'shib boriladi (append-only), eski yozuvda faqat yo'l va havola tuzatiladi. O'zgargan qaror o'rniga yangi D yoziladi, eskisi `Archived (YYYY-MM-DD): superseded by D<n>.` belgisi bilan arxivga ko'chiriladi (move). Yozuv shakli jurnal boshida. Ziddiyatda amaldagi D va `state.md` ustun, jurnal yozuvi o'z vaqtidagi holatni aytadi.
+- Tarix oyma-oy: `history/YYYY-MM.md`, yozuvlar ko'chirilmaydi (move). Oxirgi ishlar: `cat pan-harness/history/*.md | grep '^### 20' | tail -5`.
+- Jurnal va arxiv butun o'qilmaydi, yozuv ID, tag yoki so'z bilan topiladi (`grep -rnE 'D1|\[docs\]' pan-harness/`). Jurnalda topilmasa, arxiv ham qidiriladi.
+
+## End of task
+
+Fayl yoki tizim o'zgargan bo'lsa (R5):
+- [ ] Joriy oy tarix fayliga yozuv qo'sh, large task'da `Checks:` kriteriyalar natijasidan boshlanadi. Large task tugasa, `handoff.md` dagi qarorlarni `decisions.md` ga, qolganini shu yozuvga o'tkaz va `**Status:** none` qoldir. [profile: live-system=yes] Live system'ni o'zgartirgan bo'lsang, `state.md` ni yangi status check natijasidan yangila.
+- [ ] `plan.md` dan bajarilganini o'chir, yangisini qo'sh. ⏳ kriteriyani `Later and watch` ga qachon (sana yoki hodisa) va qanday tekshirilishi bilan yoz, sanalisini `Scheduled` ga ham. Shu ish tekshira oladigan eski ⏳ larni dalil bilan yop. Yangi qarorni `decisions.md` ga yoz.
+- [ ] Egasi ish uslubi haqida yangi gap aytsa, uni `feedback.md` ga yoz va qoidalarni yangila. Saboqni `lessons.md` ga yoz (nima bo'ldi, `Rule:`, `Check:`). Takrorlangan xatoni qoidaga aylantir.
+- [ ] O'zing o'zgartirgan fayllarni (`handoff.md` dagi `Changed files` ro'yxati) rejadagi ro'yxat bilan solishtir: rejada yo'g'ini hisobotda izohla, keragi bo'lmasa egasidan so'rab qaytar; tushib qolganini ayt. `git status` dagi, ro'yxatda yo'q o'zgarish egasiniki: uni qaytarma (R15), u alohida commit qilinadi (R4). Ish uchun yaratilgan vaqtinchalik fayl va fon jarayonlarini tozala yoki qayerda qolganini yoz (o'chirish R18 bo'yicha).
+- [ ] `git status --porcelain=v1 -uall` dagi yangi fayllarni ko'r: git kuzatmasligi kerak bo'lganini (sir, kesh, log, build natijasi, 50 MB dan katta fayl) `.gitignore` ga qo'sh. Kuzatilayotgan bo'lsa, `git rm --cached <fayl>` qil (fayl diskda qoladi). Keng naqsh yozma: `git status --short --ignored` da loyiha mazmuni ignore qilinmagan bo'lsin. Sir git tarixiga tushgan bo'lsa, egasiga darhol ayt: sir almashtiriladi, tarix egasining ruxsatisiz qayta yozilmaydi.
+- [ ] Ishda harness'dan topa olmagan, uzoq qidirgan yoki taxmin qilgan faktingni tegishli faylga yoz yoki xaritaga kalit so'z qo'sh (P22).
+- [ ] Tuzilma (structure) o'zgarsa, `system-map.md` va `project/` dagi tegishli faylni yangila. Yangi usulni `runbook.md` ga, ikkinchi marta takrorlangan ish turini `project/playbooks/` ga yoz.
+- [ ] Hujjatni `runbook.md` → `Writing docs` uslubida yoz.
+- [ ] `node pan-harness/scripts/pan-harness-check.mjs` ni ishga tushir: 0 xato, `never_track` ogohlantirishi yo'q bo'lsin, qolgan ogohlantirishlarni hisobotda ayt. Node bo'lmasa, hisobotda "skript ishlamadi" deb yoz.
+- [ ] [profile: sensitive-data=secrets] `node pan-harness/scripts/secret-check.mjs` ni ishga tushir, `pan-harness/` dan tashqarida o'zgargan fayllarni yo'li bilan qo'sh. `RESULT: clean` chiqmasa, commit qilinmaydi.
+- [ ] Commit (R4): avval egasining o'zgarishlari alohida commit'da (xabar: `Owner's changes: <fayllar>`), keyin o'zing o'zgartirgan fayllar (`git add <fayl>`). Xabar `runbook.md` → `Writing docs` bo'yicha. Hook xato bersa, sababini tuzat, `--no-verify` ishlatma. Push qilma. Tarix yozuvidagi `(commit: pending)` keyingi ishda raqam bilan almashtiriladi.
+- [ ] Qisqa hisobot ber: har kriteriya (large task'da: ✅ dalil bilan, ❌ yoki ⏳ qachon), nima qilindi, nima topildi, [profile: live-system=yes] uzilish, o'zgargan fayllar va commit raqami, keyingi qadam. Large task'da o'zgargan har komponent uchun bir qator: nima o'zgardi, kimga ta'sir qiladi, kutilgan xarajat va sifat, qanday o'chiriladi yoki qaytariladi. Keyin to'xta.
+
+## Growth limits
+
+Hajm chegaralari `project/check.json` da (`start_limit_bytes` — start set, ya'ni to'rt fayl jami; `doc_limit_bytes` — boshqa hujjat), u bo'lmasa standartdagi; tarix va arxiv fayllari bundan mustasno. Raqamni bu yerga yozma: skript ularni har safar chiqaradi. 10 KB dan katta, kerak bo'lganda o'qiladigan hujjat `## Contents` ro'yxati bilan boshlanadi. `decisions.md` da faqat amaldagi qarorlar turadi. `feedback.md` yoki `lessons.md` chegaradan oshsa, qoidaga aylangan eski yozuvlar arxivga o'tadi, saboqlar qisqartirilmaydi. Ogohlantirish chiqsa, o'sha ishda tartibla yoki egasiga ayt. Parvarish: `playbooks/pan-harness.md`.
+
+## Project checks
+
+{{loyihaning to'liq tekshiruv buyrug'i (kod: testlar; hujjat: lint, havolalar, yig'ish yoki eksport), status check'lari va qachon ishlatilishi, masalan: "To'liq tekshiruv: `make check`. Live holat: `pan-harness/project/scripts/status-check.sh` (~1 daqiqa)". Bo'lmasa: "Yo'q."}}
+
+Standard: pan-harness {{version}}

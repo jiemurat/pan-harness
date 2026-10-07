@@ -1,0 +1,29 @@
+# Playbook: pan-harness
+
+Pan-harness (`AGENTS.md`, `PAN-HARNESS.md` va `pan-harness/`) vaqt o'tishi bilan eskiradi va kattalashadi. `ph-doctor` uni standartga mos, to'g'ri va ixcham saqlaydi. {{kim va qachon eslatadi, masalan: "Har oyning birinchi dushanbasida kalendar eslatadi, egasi agentga `/ph-doctor` deb yozadi."}}
+
+## How
+
+1. Agentda `ph-doctor` ni ishga tushir: Claude Code, Antigravity, Cursor, GitHub Copilot, Gemini CLI va OpenCode'da `/ph-doctor`, Codex'da `$ph-doctor`. Skill'lar o'rnatilmagan bo'lsa (ular git'da turmaydi): `npx @jiemurat/pan-harness@latest init`. Paketning yangi versiyasi chiqqan bo'lsa: `/ph-update`.
+2. Pastdagi loyiha qadamlarini ham bajar.
+3. Structural o'zgarishni large task kabi qil: avval ro'yxat va reja, keyin egasining tasdig'i (`AGENTS.md` → `Workflow`). Qoidada belgilangan mechanical fix darhol qilinadi.
+
+## Project steps
+
+{{masalan: status check va uni `state.md` bilan solishtirish. Bo'lmasa: "Yo'q."}}
+
+## Test questions
+
+Doimiy savollar to'plami (`references/testing.md` → "Fixed question set"): tuzilma (structure) o'zgarishidan oldin va keyin bir xil beriladi, natijalar solishtiriladi.
+1. Bu loyiha nima va kim uchun?
+2. U qanday tuzilgan: asosiy qismlari qayerda?
+3. Natija qanday yaratiladi yoki ishga tushiriladi (build, eksport, deploy)?
+4. U qanday tekshiriladi (test, lint, korrektura, faktlar)?
+5. Hozirgi holat qanday, qaysi ish ochiq?
+{{6–10. loyihaga xos savollar: ishni qayerdan boshlaydi, o'tgan ishni qanday topadi, ish oxirida nima qiladi, eng xavfli amalda nima qiladi}}
+
+Oxirgi natijalar: {{sana, model, to'g'ri / qisman / noto'g'ri soni, o'qilgan KB; bo'lmasa: "hali o'tkazilmagan"}}.
+
+## Fresh-agent test
+
+{{egasining doimiy javobi, masalan: "faqat kichik model bilan, structural o'zgarishdan keyin". Bo'lmasa: "Doimiy javob yo'q, har safar so'raladi."}}
