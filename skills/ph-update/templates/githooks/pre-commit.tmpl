@@ -1,7 +1,7 @@
 #!/bin/sh
 # pre-commit (pan-harness): the harness checks run before every commit, the
-# agent's and the owner's (AGENTS.md R5, principles P23). In the project this
-# file is .githooks/pre-commit (executable), switched on with:
+# agent's and the owner's: a check holds where a text rule can be skipped. In the project this
+# file is the executable .githooks/pre-commit, switched on with:
 #   git config core.hooksPath .githooks
 # Errors stop the commit: fix the cause. Skipping the checks
 # (git commit --no-verify) is the owner's decision, never the agent's.

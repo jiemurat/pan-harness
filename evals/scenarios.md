@@ -1,6 +1,6 @@
 # Skill evals: scenarios
 
-Skill o'zgargandan keyin skill muallifi uni shu ssenariylar bilan sinaydi. Har ssenariy faqat skill va maqsadli loyihani ko'rgan yangi agentda (masalan, sub-agentda) ishga tushiriladi. Sinov loyiha nusxasida yoki toza git holatidagi (state) loyihada qilinadi: natija `git diff` bilan ko'riladi va qaytariladi.
+Skill o'zgargandan keyin skill muallifi uni shu ssenariylar bilan sinaydi. Har ssenariy faqat skill va maqsadli loyihani ko'rgan yangi agentda (masalan, sub-agentda) ishga tushiriladi. Sinov loyiha nusxasida yoki git'da hamma narsa commit qilingan loyihada qilinadi: natija `git diff` bilan ko'riladi va qaytariladi.
 
 Bitta ssenariy strong model bilan taxminan 150–300 ming token oladi. Sinovdan oldin qaysi ssenariy va qaysi model bilan o'tkazishni egasidan so'ra, tavsiyani skill'dagi o'zgarishga qarab ber: o'zgargan qismni tekshiradigan ssenariy birinchi. Sinovlarni bir vaqtda bittadan yoki ikkitadan ishga tushir: ko'p parallel agent sessiya limitiga urilishi mumkin.
 
@@ -140,8 +140,28 @@ Sinov agentiga yoz: live system buyruqlarini ishlatma, external side effect qilm
 
 **Expected:**
 - [ ] Uch versiya solishtirilgan (o'rnatilgan, npm, `Standard:`), `npx @jiemurat/pan-harness@latest update` ishga tushirilgan; 3 kodi bo'lsa, ro'yxat egasiga ko'rsatilgan.
-- [ ] Ko'chirish yangi o'rnatilgan `references/changelog.md` bo'yicha: `mechanical` qadamlar bajarilgan, `structural` qadamlar egasiga taklif qilingan; skriptlar va hook yangi skill papkasidagilar bilan almashtirilgan; `Standard:` yangi versiyaga.
+- [ ] Migration yangi o'rnatilgan `references/changelog.md` bo'yicha: `mechanical` qadamlar bajarilgan, `structural` qadamlar egasiga taklif qilingan; skriptlar va hook yangi skill papkasidagilar bilan almashtirilgan; `Standard:` yangi versiyaga.
 - [ ] `pan-harness-check.mjs` 0 xato, keyin to'liq `ph-doctor` moslik jadvali, commit R4 bo'yicha, push yo'q.
+
+## E12. Harness'ga yangi matn (P26)
+
+**Setup:** joriy versiyadagi `ph-init` bilan yaratilgan harness'li kichik loyiha. Yangi agentga beshta vazifa beriladi: egasi aytgan xatodan `lessons.md` ga saboq; egasining qaroridan `decisions.md` ga D; 3 bosqichli ish uchun `handoff.md`; `plan.md` ga ⏳ band; `runbook.md` ga yangi usul.
+
+**Expected:**
+- [ ] Yozishdan oldin `runbook.md` → `Writing the harness` yoki fayl boshidagi yozuv shakli o'qilgan.
+- [ ] Qoida, `Rule:` va qadamlar positive form'da; taqiq faqat qat'iy chegarada, yonida nima qilish kerakligi bilan.
+- [ ] Har qadam va ⏳ band tekshirsa bo'ladigan to'liq shart bilan tugaydi.
+- [ ] Har tushuncha bitta atama bilan, qavsdagi izohsiz: `pan-harness-check` → `terms` jim.
+- [ ] Har ma'no bitta joyda: qiymat `Where:` dagi joyda, repo'dagi narsaga havola; model shusiz ham qiladigan gap yo'q.
+
+## E13. ph-doctor: P26 bandlari yangi matnda
+
+**Setup:** joriy versiyadagi harness. `Standard:` qatori o'zgargan commit'dan keyin har P26 bandi (A20 dagi trigger, A43, A59–A63) uchun bittadan buzilgan yangi matn qo'shilgan; undan oldingi eski matnda atama izohlari va taqiqlar bor.
+
+**Expected:**
+- [ ] Boshlang'ich commit `audit.md` → "Writing" bo'yicha topilgan, yangi matn `git diff` bilan ajratilgan.
+- [ ] Har buzilgan yangi matn moslik jadvalida `fail`, fayl:qator bilan.
+- [ ] Eski matnda P26 bandlari bo'yicha `fail` yo'q, toza yangi matnda noto'g'ri `fail` yo'q.
 
 ## Grading
 

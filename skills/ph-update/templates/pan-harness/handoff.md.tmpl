@@ -1,14 +1,15 @@
 <!--
 pan-harness template. Loyihada `pan-harness/handoff.md` nomi bilan saqlanadi.
-- Faol large task bo'lmasa, fayl shu izohsiz, sarlavha, birinchi paragraf va `**Status:** none` qatoridan iborat.
-- Large task tasdiqlangach `**Status:** active` yoziladi va bo'limlar to'ldiriladi. Ish tugagach, qarorlar `decisions.md` ga, qolgani tarix yozuviga o'tadi, fayl yana `**Status:** none` holiga qaytadi.
-- Bo'limlar va holat so'zlari (`todo`, `active`, `blocked`, `done`) inglizcha qoladi (standart): skript ularni o'qiydi. Gaplar egasining tilida.
+- Faol large task bo'lmasa, fayl shu izohsiz, sarlavha, ikki paragraf va `**Status:** none` qatoridan iborat: ikkinchi paragraf faol ish shaklini saqlaydi.
+- Bo'limlar va status so'zlari (`todo`, `active`, `blocked`, `done`) inglizcha qoladi (standart): skript ularni o'qiydi. Gaplar egasining tilida.
 - Hali yo'q, yaratiladigan fayl backtick'siz va "(new)" belgisi bilan yoziladi, aks holda skript uni yo'q yo'l deb ko'rsatadi.
 - Shu izohni olib tashla.
 -->
 # Handoff
 
-Faol large task'ning holati (state). Agent uni har holat xabarida, egasidan savol so'rab to'xtashdan oldin va kontekst tugashiga yaqin yangilaydi; kontekst tugayotganda ham tekshiruvlar (checks) qisqartirilmaydi. Yangi sessiya ishni shu fayldan davom ettiradi.
+Faol large task'ning state'i. Agent uni har status xabarida, egasidan savol so'rab to'xtashdan oldin va kontekst tugashiga yaqin yangilaydi; kontekst tugayotganda ham check'lar to'liq o'tkaziladi. Yangi sessiya ishni shu fayldan davom ettiradi.
+
+Large task tasdiqlangach `**Status:** active` deb yoz va bo'limlarni to'ldir: `## Task` (ish, maqsad, qilinmaydi, byudjet), `## Criteria` (K1…: nima kuzatiladi, threshold, qanday va qachon tekshiriladi, status), `## Steps` (har qadam natijasi va completion criterion bilan; status — `todo`, `active`, `blocked` yoki `done`, bir vaqtda bitta `active`), `## Changed files` (shu ish allaqachon o'zgartirgan fayllar), `## Checks`, `## Decisions`, `## Open questions`, `## Next step`, `## Work files` (rejadagi va vaqtinchalik fayllar). Ish tugagach, qarorlarni `decisions.md` ga, qolganini tarix yozuviga move qil va bu yerda `**Status:** none` qoldir.
 
 **Status:** {{none yoki active}}
 
@@ -21,11 +22,11 @@ Faol large task'ning holati (state). Agent uni har holat xabarida, egasidan savo
 
 ## Criteria
 
-- {{K1: nima kuzatiladi, chegara, qanday va qachon tekshiriladi. Holat: `todo`, `active`, `blocked` (sababi), `done` (dalili) yoki ⏳ (qachon)}}
+- {{K1: nima kuzatiladi, threshold, qanday va qachon tekshiriladi. Status: `todo`, `active`, `blocked` (sababi), `done` (dalili) yoki ⏳ (qachon)}}
 
 ## Steps
 
-- {{`active` — bosqich yoki qadam: natijasi va uning tekshiruvi (check). Bir vaqtda faqat bitta qadam `active`. `done` dalil bilan, `blocked` sababi bilan}}
+- {{`active` — bosqich yoki qadam: natijasi va completion criterion'i (tekshirsa bo'ladigan shart). Bir vaqtda faqat bitta qadam `active`. `done` dalil bilan, `blocked` sababi bilan}}
 
 ## Changed files
 
@@ -33,7 +34,7 @@ Faol large task'ning holati (state). Agent uni har holat xabarida, egasidan savo
 
 ## Checks
 
-- {{qaysi tekshiruv (check) qachon ishga tushdi va natijasi, raqam bilan}}
+- {{qaysi check qachon ishga tushdi va natijasi, raqam bilan}}
 
 ## Decisions
 

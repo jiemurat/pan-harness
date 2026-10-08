@@ -3,7 +3,7 @@ name: ph-grilling
 description: Grill the user relentlessly about a plan, decision, or idea. Use when the user wants to stress-test their thinking, or uses any 'grill' trigger phrases.
 license: MIT (Copyright (c) 2026 Matt Pocock), see LICENSE
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   package: "@jiemurat/pan-harness"
   source: "https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md"
   changes: "renamed to ph-grilling; facts are looked up by the agent itself, a sub-agent only with the user's consent"

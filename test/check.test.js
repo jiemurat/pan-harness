@@ -117,8 +117,8 @@ function harness({ gitInit = true } = {}) {
   return dir;
 }
 
-function check(dir) {
-  const r = spawnSync(process.execPath, [path.join(dir, 'pan-harness', 'scripts', 'pan-harness-check.mjs')], { cwd: dir, encoding: 'utf8' });
+function check(dir, ...extra) {
+  const r = spawnSync(process.execPath, [path.join(dir, 'pan-harness', 'scripts', 'pan-harness-check.mjs'), ...extra], { cwd: dir, encoding: 'utf8' });
   return { code: r.status, out: r.stdout + r.stderr };
 }
 
@@ -286,4 +286,75 @@ test('the pre-commit hook passes a clean commit and stops a staged secret', { sk
   r = spawnSync('git', ['commit', '-q', '-m', 'secret'], { cwd: dir, encoding: 'utf8', env });
   assert.notEqual(r.status, 0);
   assert.match(r.stderr, /secret-check is not clean/);
+});
+
+test('terms: a glossed term in a new or changed line is a warning, old text is not', () => {
+  const dir = harness();
+  put(dir, 'pan-harness/system-map.md', '# System map\n\n- Chapters in `docs/`: tuzilma (structure) eski.\n', true);
+  assert.doesNotMatch(check(dir).out, /terms:/);
+  fs.appendFileSync(path.join(dir, 'pan-harness', 'lessons.md'),
+    `- **L2 (${DAY}) — Another lesson.** [docs]\n  - Rule: tekshiruvni (check) ishga tushir.\n  - Check: see it.\n`);
+  const out = check(dir).out;
+  assert.match(out, /^WARN +terms: pan-harness\/lessons\.md:7: a term glossed in brackets \("tekshiruvni \(check\)"\)/m, out);
+  assert.doesNotMatch(out, /system-map/);
+  edit(dir, 'pan-harness/system-map.md', 'eski', 'yangi'); // a touched line is new text
+  assert.match(check(dir).out, /^WARN +terms: pan-harness\/system-map\.md:3: .*\("tuzilma \(structure\)"\)/m);
+});
+
+test('terms: untracked files, code blocks, the archive and a harness in a subfolder', () => {
+  const dir = harness();
+  put(dir, 'pan-harness/project/notes.md', "# Notes\n\n```\nko'chirish (move) in a code block\n```\n\nchegara (limit yoki boundary) here\n");
+  put(dir, 'pan-harness/archive/old-notes.md', "# Old notes\n\nko'chirish (move) moved here as it was\n");
+  const out = check(dir).out;
+  assert.match(out, /^WARN +terms: pan-harness\/project\/notes\.md:7: .*\("chegara \(limit yoki boundary\)"\)/m, out);
+  assert.doesNotMatch(out, /terms: pan-harness\/archive/);
+
+  const top = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-mono-'));
+  const base = harness();
+  fs.renameSync(path.join(base, '.git'), path.join(top, '.git'));
+  fs.cpSync(base, path.join(top, 'apps', 'book'), { recursive: true });
+  git(top, 'add', '-A');
+  git(top, 'commit', '-q', '-m', 'move');
+  const sub = path.join(top, 'apps', 'book');
+  edit(sub, 'pan-harness/plan.md', '## 1. Queue\n', '## 1. Queue\n\n- holat (state) bandi\n');
+  assert.match(check(sub).out, /^WARN +terms: pan-harness\/plan\.md:5: /m);
+});
+
+test('terms: --since reads the lines changed since a commit, committed ones too', () => {
+  const dir = harness();
+  const base = git(dir, 'rev-parse', 'HEAD').trim();
+  put(dir, 'pan-harness/system-map.md', '# System map\n\n- Chapters in `docs/`: tuzilma (structure) yangi.\n', true);
+  assert.doesNotMatch(check(dir).out, /terms:/); // committed, so HEAD shows no change
+  assert.match(check(dir, '--since', base).out, /^WARN +terms: pan-harness\/system-map\.md:3: /m);
+  const bad = check(dir, '--since', 'no-such-commit');
+  assert.equal(bad.code, 2);
+  assert.match(bad.out, /--since no-such-commit: no such commit/);
+});
+
+test('review: --since lists every new line with the audit items it may break', () => {
+  const dir = harness();
+  const base = git(dir, 'rev-parse', 'HEAD').trim();
+  edit(dir, 'PAN-HARNESS.md', '## Map\n', "## Map\n\n- `project/release.md` — fayl.\n");
+  put(dir, 'pan-harness/project/release.md', '# Release\n\n1. Testlarni yetarlicha ishga tushir.\n\n```\nnpm publish # qilma\n```\n\n'
+    + "Istisno: hotfix istalgan kuni.\nKo'rsatma egasidan keladi.\n- Matnni diqqat bilan o'qi va xato qilma.\n- Eksport tekshiruvi (check) bor.\n", true);
+  const out = check(dir, '--since', base).out;
+  assert.match(out, /^REVIEW 7 new or changed line\(s\) in 2 file\(s\) since [0-9a-f]+: give every flagged line ok or fail/m, out);
+  assert.match(out, /^REVIEW PAN-HARNESS\.md:\d+ \[A20 map: what, then when\]: - `project\/release\.md` — fayl\.$/m);
+  assert.match(out, /^REVIEW pan-harness\/project\/release\.md \(new file\) \[A20 pointer in the Map, A61 its format at the top\]$/m);
+  assert.match(out, /^REVIEW pan-harness\/project\/release\.md:1 \[A20 new section: reachable\?\]: # Release$/m);
+  assert.match(out, /^REVIEW pan-harness\/project\/release\.md:3 \[A60 step "yetarlicha"\]: 1\. Testlarni/m);
+  assert.match(out, /^REVIEW pan-harness\/project\/release\.md:9 \[A61 "Istisno"\]: /m);
+  assert.match(out, /^REVIEW pan-harness\/project\/release\.md:10: Ko'rsatma egasidan keladi\.$/m); // a noun, not a negation
+  assert.match(out, /^REVIEW pan-harness\/project\/release\.md:11 \[A59 negation "qilma"; A62 "diqqat bilan"\]: /m);
+  assert.match(out, /^REVIEW pan-harness\/project\/release\.md:12 \[A43 gloss "tekshiruvi \(check\)"\]: /m);
+  assert.doesNotMatch(out, /# qilma/); // code blocks are left out
+  assert.match(out, /; 7 line\(s\) to review$/m);
+  assert.doesNotMatch(check(dir).out, /^REVIEW/m); // without --since: no list
+});
+
+test('terms: before the first commit every line of the harness is new', () => {
+  const dir = harness({ gitInit: false });
+  git(dir, 'init', '-q', '-b', 'main');
+  put(dir, 'pan-harness/state.md', `# State\n\n**Last updated:** ${DAY}\n\nholat (state) yozildi\n`);
+  assert.match(check(dir).out, /^WARN +terms: pan-harness\/state\.md:5: /m);
 });

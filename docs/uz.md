@@ -54,7 +54,7 @@ loyihangiz/
     └── project/                              faqat shu loyihaga xos bilim
 ```
 
-Harness loyiha bilan birga git'ga commit qilinadi: har sessiya va har agent bir xil bilimdan boshlaydi.
+Harness loyiha bilan birga git'ga commit qilinadi: har sessiya va har agent bir xil bilimdan boshlaydi. Agentlar uni agent o'quvchi uchun yozish qoidalari bilan yozadi (Matt Pocock'ning [writing-for-agents](https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-for-agents) skill'i asosida): har havola nima borligini va qachon o'qilishini aytadi, har qadam tekshirsa bo'ladigan shart bilan tugaydi, qoida nima qilishni aytadi, har tushuncha bitta atama bilan yoziladi. `ph-doctor` yangi matnni shu qoidalar bilan tekshiradi.
 
 ## Keyin
 
@@ -81,7 +81,7 @@ CLI faqat o'zi boshqaradigan skill va buyruq papkalariga (va `.gitignore` dagi o
 
 ## Bilib qo'ying
 
-- To'liq `/ph-init` yoki `/ph-doctor` skill ma'lumotnomalarini va loyihani o'qiydi: kuchli model bilan taxminan 150–300 ming token. Kichik modellar qadamlarni bajaradi, lekin suhbatda kamroq aniq.
+- To'liq `/ph-init` yoki `/ph-doctor` skill ma'lumotnomalarini va loyihani o'qiydi: kuchli model bilan taxminan 150–300 ming token. Kichik modellar qadamlarni bajaradi, lekin suhbatda kamroq aniq, harness'ga yozgan yozuvlarida esa to'qilgan fakt bo'lishi mumkin: Claude Haiku 4.5 bilan sinovda beshta yozish vazifasidan uchtasida shunday bo'ldi. Qaror va qoida kabi muhim yozuvlarni kuchli model bilan yozing yoki ko'rib chiqing.
 - Cursor va VS Code `.agents/skills/` ni ham, `.claude/skills/` ni ham o'qiydi va har skill'ni ikki marta ko'rsatishi mumkin: Claude Code ishlatmasangiz, `--agents agents` bilan o'rnating.
 - Telemetriya yo'q. CLI internetga faqat `status` da (npm registry) chiqadi; `PH_OFFLINE=1` buni o'chiradi.
 - Tekshiruvlar sir qiymatini hech qachon chiqarmaydi: `secret-check` faqat fayl, qator va naqsh nomini aytadi.

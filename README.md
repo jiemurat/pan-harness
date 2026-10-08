@@ -48,7 +48,7 @@ your-project/
     └── project/                              knowledge specific to this project
 ```
 
-The harness is committed with the project, so every session and every agent starts from the same knowledge.
+The harness is committed with the project, so every session and every agent starts from the same knowledge. Agents write it by rules made for agent readers (after Matt Pocock's [writing-for-agents](https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-for-agents)): every pointer says what is there and when to read it, every step ends on a checkable condition, rules say what to do, and each concept has one term. `ph-doctor` checks new text against them.
 
 ## Day to day
 
@@ -84,7 +84,7 @@ The CLI writes only inside the skill and command folders it manages (and its blo
 
 ## Good to know
 
-- A full `/ph-init` or `/ph-doctor` run reads the skill's references and your project: plan for roughly 150–300k tokens with a strong model. Small models follow the steps but are less precise in interviews.
+- A full `/ph-init` or `/ph-doctor` run reads the skill's references and your project: plan for roughly 150–300k tokens with a strong model. Small models follow the steps but are less precise in interviews, and the entries they write into the harness can carry an invented fact: in our tests with Claude Haiku 4.5, three of five writing tasks did. Write important entries, such as decisions and rules, with a strong model, or review them.
 - Cursor and VS Code read both `.agents/skills/` and `.claude/skills/` and may list each skill twice; use `--agents agents` if you do not use Claude Code.
 - No telemetry. The CLI goes online only for `status` (the npm registry); `PH_OFFLINE=1` skips it.
 - The checks never print secret values: `secret-check` reports the file, line and pattern name only.

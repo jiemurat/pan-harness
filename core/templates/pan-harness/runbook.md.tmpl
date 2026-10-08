@@ -3,7 +3,7 @@ pan-harness template. `{{…}}` joylarini to'ldir, `[profile: …]` belgilarini 
 -->
 # Runbook
 
-Ko'p ishlatiladigan buyruqlar va hujjat yozish qoidalari. Loyihaning README yoki Makefile'ida bor buyruqni bu yerga ko'chirma (copy), unga havola ber.
+Ko'p ishlatiladigan buyruqlar va harness matnini yozish qoidalari. Loyihaning README yoki Makefile'ida bor buyruqqa havola ber.
 
 ## 1. Environment and access
 
@@ -17,25 +17,33 @@ Ko'p ishlatiladigan buyruqlar va hujjat yozish qoidalari. Loyihaning README yoki
 
 | Script | Runs on | Purpose |
 |---|---|---|
-| `pan-harness/scripts/pan-harness-check.mjs` | lokal | Pan-harness tuzilmasi (structure), ID, maydon, yo'l va hajm tekshiruvi (check) |
+| `pan-harness/scripts/pan-harness-check.mjs` | lokal | Pan-harness structure, ID, maydon, yo'l, hajm va atama check'i |
 | [profile: sensitive-data=secrets] `pan-harness/scripts/secret-check.mjs` | lokal | Sirga o'xshash qatorlarni qidirish, qiymat chiqarilmaydi |
 | {{`pan-harness/project/scripts/<name>`}} | {{qayerda}} | {{nima qiladi}} |
 
-## 4. Writing docs
+## 4. Writing the harness
+
+Harness matni (`AGENTS.md`, `PAN-HARNESS.md`, `pan-harness/`) agent uchun yoziladi: kuchli va kichik model uni bir xil tushunib, har safar bir xil jarayon bilan bajarishi kerak. Qoidalar yangi va o'zgartirilgan matnga qo'llanadi, eski matn tegilganda moslanadi. Inson uchun matn (README, loyiha hujjatlari, hisobot, commit xabari, `feedback.md` dagi `Quote:`) o'z o'quvchisi uchun yoziladi.
 
 - **Til:** {{harness tili}}. Kod izohlari inglizcha.
-- **Atamalar:** {{S27 javobi, masalan: "atamalar inglizcha, noaniq so'z birinchi uchraganda yonida inglizchasi qavsda"}}.
-- Maydon nomlari, sarlavhalar va jadval ustunlari inglizcha (pan-harness standarti).
-- Buyruq, yo'l, ID va sozlama kalitlari backtick ichida yoziladi.
-- **Shakl:** qisqa gaplar va ro'yxatlar, bitta bandda bitta fikr. Ko'rsatma buyruq shaklida, bajaruvchi aniq bo'ladi.
+- **Atamalar:** {{S27 javobi, masalan: "atamalar inglizcha; bir necha ma'noli so'z o'rniga inglizcha atama, izohsiz: structure, copy, move, migration, state, status, check, test, limit, boundary"}}.
+- Maydon nomlari, sarlavhalar va jadval ustunlari inglizcha (pan-harness standarti). Buyruq, yo'l, ID va sozlama kalitlari backtick ichida yoziladi.
+- **Buyruq shakli:** bajaruvchi va shart aniq, bitta bandda bitta fikr: "`state.md` ni yangila".
+- **Context pointer:** xarita qatori va havola avval nima borligini (kalit so'zlar boshida), keyin qachon o'qilishini aytadi; har vaziyatga bitta trigger.
+- **Progressive disclosure va co-location:** hamma ishga keragi `AGENTS.md` da, bitta sohaga keragi o'sha soha playbook'ida. Bir tushunchaning qoidasi, sababi va istisnosi bir joyda, fayl uchun yozuv shakli shu faylning boshida.
+- **Completion criterion:** har qadam va ⏳ band tekshirsa bo'ladigan to'liq shart bilan tugaydi: "har D ning `Where:` maydoni tekshirildi".
+- **Positive form:** qoida va `Rule:` nima qilishni aytadi. Taqiq faqat qat'iy qoida uchun (`AGENTS.md` → `Boundaries` → `Never`), yonida nima qilish kerakligi bilan.
+- **Leading word:** har tushuncha har joyda bitta atama bilan yoziladi.
+- **Single source:** har fakt bitta joyda yuritiladi (`PAN-HARNESS.md` → `Map`): joriy state `state.md` da, kelajakdagi ishlar va sanalar `plan.md` da, structure `system-map.md` da. Repo'dagi narsaga havola beriladi.
+- **Manba:** har fakt manbasi bilan yoziladi: egasining xabari, repo yoki ishga tushirilgan buyruq natijasi. Manbasi yo'q sabab, kriteriya, rol yoki sanani yozishdan oldin egasidan so'ra; `Checks:` dagi har natija yonida uni bergan buyruq yoki dalil turadi.
+- **No-op:** har gap agentning xatti-harakatini o'zgartiradi: model shusiz ham qiladigan ishni aytgan gapni o'chir.
 - **Sana va vaqt:** sanalar `YYYY-MM-DD`, vaqt {{vaqt zonasi}} bo'yicha.
 - **Commit xabari** (R4): birinchi qatorda 72 belgigacha nima o'zgargani, bo'sh qatordan keyin qisqa ro'yxat va tegishli D, L ID'lari. Til — kod izohlari tili. Agent vositasining imzosi (masalan, `Co-Authored-By`) vositaning o'z qoidasida.
 - Hujjatlarda egasi "{{egasi uchun so'z, masalan "egasi"}}" deb ataladi. `feedback.md` yozuvlaridagi "men" — o'sha yozuvni yozgan agent.
-- **Har fakt bitta joyda yuritiladi** (`PAN-HARNESS.md` → `Map`): joriy holat (state) `state.md` da, kelajakdagi ishlar va sanalar `plan.md` da, tuzilma `system-map.md` da.
-- **Pan-harness xususiy ishga bog'lanmaydi.** Yozuv nima haqida ekanini oddiy so'z bilan aytadi, vositalarning ichki raqamlari yozilmaydi.
-- [profile: sensitive-data=pii yoki confidential] **Maxfiy mazmun yozilmaydi:** shaxsiy ma'lumot va maxfiy hujjat mazmuni o'rniga yo'l, ID va neytral tavsif yoziladi.
+- **Oddiy so'z:** yozuv nima haqida ekanini oddiy so'z bilan aytadi, vositaning ichki raqami (band, bosqich) o'rniga.
+- [profile: sensitive-data=pii yoki confidential] **Maxfiy mazmun o'rniga** (shaxsiy ma'lumot, maxfiy hujjat) yo'l, ID va neytral tavsif yoziladi.
 - **Topic tags:** `[docs]` `[workflow]` `[config]` `[security]` `[upgrade]` {{loyiha tag'lari}}. Jurnallardagi har yozuv sarlavhasida kamida bitta tag turadi. Yangi tag kerak bo'lsa, uni shu qatorga qo'sh.
 
 ## 5. Accepted warnings
 
-{{tekshiruvlarda (checks) chiqadigan, sababi bilan qabul qilingan ogohlantirishlar yoki "Yo'q."}}
+{{check'larda chiqadigan, sababi bilan qabul qilingan ogohlantirishlar yoki "Yo'q."}}

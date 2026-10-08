@@ -1,9 +1,9 @@
 # Decisions
 
-Bu faylda tizim va harness haqidagi amaldagi qarorlar turadi: nima tanlangani, nega, qaysi variantlar rad etilgani va qarorning qayerda amalga oshgani. Egasining ishlash uslubi haqidagi ko'rsatmalari bu yerda emas, `feedback.md` da turadi.
-- **Shakl.** Har qaror bitta paragraf: `- **D<n>** (YYYY-MM-DD) [tag] Qaror. Why: … Rejected: … Where: …`. `Where:` qaror qaysi fayl yoki sozlamada amalga oshganini ko'rsatadi. Qarorga tayanishdan oldin o'sha joyni tekshir.
+Bu faylda tizim va harness haqidagi amaldagi qarorlar turadi: nima tanlangani, nega, qaysi variantlar rad etilgani va qarorning qayerda amalga oshgani. Egasining ish uslubi haqidagi ko'rsatmalari `feedback.md` da turadi.
+- **Shakl.** Har qaror bitta paragraf: `- **D<n>** (YYYY-MM-DD) [tag] Qaror. Why: … Rejected: … Where: …`. `Qaror` nima tanlanganini aytadi, qiymat va tafsilot `Where:` dagi fayl yoki sozlamada turadi (single source). Qarorga tayanishdan oldin o'sha joyni tekshir.
 - **Raqamlar** yagona va o'sib boradi. Boshqa fayllar qarorga shu raqam bilan havola beradi.
-- **Amaldagi qaror tahrirlanmaydi.** Qaror o'zgarsa, yangi D yoziladi, eskisi `archive/decisions.md` ga `Archived (YYYY-MM-DD): superseded by D<n>.` belgisi bilan ko'chiriladi (move). Bajarilgan bir martalik qaror `Archived (YYYY-MM-DD): done (one-off).` belgisi bilan arxivlanadi.
+- **Qaror o'zgarsa, yangi D yoziladi.** Eskisi `archive/decisions.md` ga `Archived (YYYY-MM-DD): superseded by D<n>.` belgisi bilan move qilinadi; amaldagi D matni o'z holicha qoladi. Bajarilgan bir martalik qaror `Archived (YYYY-MM-DD): done (one-off).` belgisi bilan arxivlanadi.
 - **Provisional qaror** (egasi javob bermagan savolda tavsiya bo'yicha olingan tanlov) oxirida `(provisional: owner to confirm)` belgisi bilan yoziladi.
 - **Qidirish:** `grep -n '\[docs\]' pan-harness/decisions.md` butun qarorni bitta qatorda qaytaradi.
 

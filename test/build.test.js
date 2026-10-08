@@ -74,3 +74,17 @@ test('the repository is a valid Claude Code plugin: version, default skills/ lay
   const market = JSON.parse(fs.readFileSync(path.join(ROOT, '.claude-plugin', 'marketplace.json'), 'utf8'));
   assert.equal(market.plugins[0].name, plugin.name);
 });
+
+test('the P26 writing rules carry the same names in principles.md, structure.md and the runbook template', () => {
+  const names = ['Context pointer', 'Progressive disclosure va co-location', 'Completion criterion', 'Positive form',
+    'Leading word', 'Single source', 'Manba', 'No-op'];
+  const read = (rel) => fs.readFileSync(path.join(ROOT, 'core', rel), 'utf8');
+  const writing = read('references/structure.md').split('## Writing\n')[1].split('\n## ')[0];
+  const runbook = read('templates/pan-harness/runbook.md.tmpl').split('## 4. Writing the harness\n')[1].split('\n## ')[0];
+  const p26 = read('references/principles.md').split('**P26.')[1].split('\n## ')[0];
+  for (const n of names) {
+    assert.ok(p26.includes(`**${n}.**`), `principles.md P26: ${n}`);
+    assert.ok(writing.includes(`**${n}.**`), `structure.md Writing: ${n}`);
+    assert.ok(runbook.includes(`**${n}:**`), `runbook.md.tmpl Writing the harness: ${n}`);
+  }
+});
