@@ -32,7 +32,7 @@ ph-init:
 
 Papkada nima borligini ko'r (`ls -A`, `git status`):
 - **Harness bor** (`PAN-HARNESS.md` yoki `pan-harness/`): `ph-init` shu yerda tugaydi. `PAN-HARNESS.md` → `Standard:` dagi versiya skill'nikiga teng bo'lsa, egasiga `ph-doctor` ni (harness'ni tekshirish va tuzatish) taklif qil. Versiya farq qilsa yoki harness unknown standard'da bo'lsa, `ph-update` ni taklif qil: u harness'ni migration qiladi va oxirida `ph-doctor` ni ham o'tkazadi.
-- **Bo'sh papka** (faqat `.git`, `.gitignore` va agent papkalari: `.agents/`, `.claude/`, `.gemini/`, `.opencode/` bor): birinchi savollar raundida, Q1 bilan birga, loyiha nima bo'lishini so'ra: kod (til, nima qiladi) yoki hujjat (qanday hujjatlar, kim uchun), nomi va egasi. Git'ni o'rnatish va `git init` (1-qadam) javobni kutmaydi. Javobdan keyin minimal structure yarat: `README.md` (maqsad 2–3 gapda), loyiha turiga mos `.gitignore` va dastlabki commit (1-qadam), keyin `ph-init` ning qolgan qadamlari. Faktlar egasining javobidan olinadi; repo'da bor narsa yo'q, shuning uchun `Facts` qisqa bo'ladi.
+- **Bo'sh papka** (faqat `.git`, `.gitignore` va agent papkalari: `.agents/`, `.claude/`, `.gemini/`, `.opencode/` bor): birinchi savollar raundida, Q1 bilan birga, loyiha nima bo'lishini so'ra: kod (til, nima qiladi) yoki hujjat (qanday hujjatlar, kim uchun), nomi va egasi. Git'ni o'rnatish va `git init` (1-qadam) javobni kutmaydi. Javobdan keyin minimal structure yarat: `README.md` (maqsad 2–3 gapda, suhbat tilida), loyiha turiga mos `.gitignore` va dastlabki commit (1-qadam), keyin `ph-init` ning qolgan qadamlari. Faktlar egasining javobidan olinadi; repo'da bor narsa yo'q, shuning uchun `Facts` qisqa bo'ladi.
 - **Mavjud loyiha** (kod yoki hujjat): 1-qadamdan boshla.
 
 Tugadi: uch vaziyatdan biri aniqlangan; harness bor bo'lsa, taklif egasida.
@@ -89,6 +89,7 @@ Qisqa reja ber:
 - yaratiladigan fayllar (standart qism va `project/`) va profile;
 - migration table: mavjud har fayl yoki bo'lim qayerga tushadi (qoida → `AGENTS.md`, fakt → `system-map.md` yoki `state.md`, playbook → `project/playbooks/`, qaror → `decisions.md`). Har bo'lim jadvalda yangi joyi bilan turadi, asl fayllar asl holida `archive/` ga ham saqlanadi;
 - `CLAUDE.md` bilan nima bo'lishi;
+- bo'sh papkada: `README.md` suhbat tilida yozilgani; egasi boshqa tilni aytsa, uni o'sha tilga o'girishing;
 - istisnolar, byudjet va egasining qo'li qayerda kerakligi, verification va orqaga qaytish yo'li.
 
 Egasining tasdig'igacha faqat o'qi. Tugadi: egasi rejani tasdiqlagan.

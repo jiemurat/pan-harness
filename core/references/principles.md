@@ -82,7 +82,7 @@ Pan-harness shu tamoyillarga tayanadi. Har biri: qoida, nega (manba), pan-harnes
   - **Manba.** Har fakt manbasi bilan yoziladi: egasining xabari, repo yoki buyruq natijasi. Harness'ga tushgan to'qilgan gapni keyingi sessiya tekshirmay fakt deb oladi, kichik model esa yozganda yetishmagan faktni to'ldirib yuborishga moyil.
   - **No-op.** Model shusiz ham qiladigan ishni aytgan gap butunlay o'chiriladi. Gap no-op ekanini bahs emas, sinov ko'rsatadi (`testing.md` → "Simplification experiment").
 
-  Pan-harness'da qoidalar `structure.md` → "Writing" da, loyihada `runbook.md` → `Writing the harness` da va har faylning boshidagi yozuv shaklida turadi; `ph-doctor` ularni yangi matnda tekshiradi (`audit.md` → "Writing"). Shablon va skill matnlari ham shu qoidalar bilan yoziladi, chunki agent yangi matnni atrofdagi matndan namuna olib yozadi: prompt shakli javob shakliga ta'sir qiladi [30]. Tamoyil agent o'qiydigan harness matni uchun; README, hisobot va commit xabari inson uchun yoziladi.
+  Pan-harness'da qoidalar `structure.md` → "Writing" da, loyihada `runbook.md` → `Writing the harness` da va har faylning boshidagi yozuv shaklida turadi; `ph-doctor` ularni yangi matnda tekshiradi (`audit.md` → "Writing"). Shablon va skill matnlari ham shu qoidalar bilan yoziladi, chunki agent yangi matnni atrofdagi matndan namuna olib yozadi: prompt shakli javob shakliga ta'sir qiladi [30]. Tamoyil agent o'qiydigan har matn uchun (ro'yxati `structure.md` → "Writing" da); README, hisobot va commit xabari inson uchun, egasining ko'rsatmasi bilan yoziladi.
 
 ## Sources
 

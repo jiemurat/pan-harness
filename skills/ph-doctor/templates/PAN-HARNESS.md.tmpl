@@ -17,7 +17,7 @@ Profile standartning qaysi qismi kerakligini belgilaydi, sababi D1 da.
 Har fakt bitta joyda, boshqa fayllar unga havola beradi. Hammasi `pan-harness/` ichida:
 - `state.md` — joriy state, `plan.md` — barcha ochiq ishlar va sanalar (ikkalasi sessiya boshida); `handoff.md` — faol large task'ning state'i va keyingi qadami (sessiya boshida, `**Status:** active` bo'lsa).
 - `system-map.md` — {{komponentlar, tashqi xizmatlar, sir nomlari, repo map}} ("qayerda?", "qanday tuzilgan?" savolida).
-- `runbook.md` — buyruqlar, skriptlar, harness matnini yozish qoidalari, topic tag'lar, accepted warnings (buyruq kerak bo'lganda va harness'ga matn yozishdan oldin).
+- `runbook.md` — buyruqlar, skriptlar, agent o'qiydigan matnni yozish qoidalari, topic tag'lar, accepted warnings (buyruq kerak bo'lganda va agent o'qiydigan matn yozishdan oldin).
 - `playbooks/pan-harness.md` — `ph-doctor` bilan parvarish: standartga moslash, loyiha qadamlari, sinov savollari (parvarishdan va sinovdan oldin).
 - Jurnallar: `decisions.md` (D…, "nega shunday?"), `feedback.md` (F…, qoidaning sababi kerak bo'lganda), `lessons.md` (L…, o'xshash ishdan oldin), `history/` (o'tgan ishlar, oyma-oy: o'tgan ish kerak bo'lganda).
 - `archive/` — superseded qarorlar va jurnallarning eski qismlari (jurnalda topilmaganda); `scripts/` — skill'dan nusxa, har ish oxirida ishga tushiriladi: {{`pan-harness-check.mjs`, profile'da `secrets` bo'lsa `secret-check.mjs` ham}}.
@@ -43,7 +43,7 @@ Fayl yoki tizim o'zgargan bo'lsa (R5):
 - [ ] `git status --porcelain=v1 -uall` dagi yangi fayllarni ko'r: git kuzatmasligi kerak bo'lganini (sir, kesh, log, build natijasi, 50 MB dan katta fayl) `.gitignore` ga qo'sh. Kuzatilayotgan bo'lsa, `git rm --cached <fayl>` qil (fayl diskda qoladi). Naqsh faqat keraklisini qamrasin: `git status --short --ignored` bilan loyiha mazmuni kuzatilayotganini tekshir. Sir git tarixiga tushgan bo'lsa, egasiga darhol ayt: sir almashtiriladi, tarix faqat egasining ruxsati bilan qayta yoziladi.
 - [ ] Ishda harness'dan topa olmagan, 3 tadan ortiq qidiruv bilan topgan yoki assumption bilan to'ldirgan faktingni tegishli faylga yoz yoki xaritaga kalit so'z qo'sh.
 - [ ] Structure o'zgarsa, `system-map.md` va `project/` dagi tegishli faylni yangila. Yangi usulni `runbook.md` ga, ikkinchi marta takrorlangan ish turini `project/playbooks/` ga yoz.
-- [ ] Shu ishda harness'ga yozgan har matnni `runbook.md` → `Writing the harness` qoidalari bilan solishtir va mos kelmaganini tuzat.
+- [ ] Shu ishda yozgan har matnni o'quvchisiga qarab tekshir (R23): agent o'qiydigan matn `runbook.md` → `Writing the harness` qoidalariga mos, inson o'qiydigan matnning tili va uslubi R23 dagi tartib bilan tanlangan va unda harness atamasi, ID va manba qatori yo'q; mos kelmaganini tuzat.
 - [ ] `node pan-harness/scripts/pan-harness-check.mjs` ni ishga tushir: 0 xato, `never_track` ogohlantirishi yo'q bo'lsin, qolgan ogohlantirishlarni hisobotda ayt. Node bo'lmasa, hisobotda "skript ishlamadi" deb yoz.
 - [ ] [profile: sensitive-data=secrets] `node pan-harness/scripts/secret-check.mjs` ni ishga tushir, `pan-harness/` dan tashqarida o'zgargan fayllarni yo'li bilan qo'sh. Commit faqat `RESULT: clean` bilan.
 - [ ] R4 bo'yicha commit qil, xabarni `runbook.md` → `Writing the harness` bo'yicha yoz; hook xato bersa, sababini tuzat. Tarix yozuvidagi `(commit: pending)` keyingi ishda raqam bilan almashtiriladi.

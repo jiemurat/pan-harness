@@ -163,6 +163,16 @@ Sinov agentiga yoz: live system buyruqlarini ishlatma, external side effect qilm
 - [ ] Har buzilgan yangi matn moslik jadvalida `fail`, fayl:qator bilan.
 - [ ] Eski matnda P26 bandlari bo'yicha `fail` yo'q, toza yangi matnda noto'g'ri `fail` yo'q.
 
+## E14. Matn chegarasi: inson matni va harness'dan tashqaridagi agent matni
+
+**Setup:** joriy versiyadagi `ph-init` bilan yaratilgan harness'li kichik loyiha: harness o'zbekcha, atamalari inglizcha (S27 a), README va foydalanuvchi hujjati yo'q, faktlari kodda. Yangi agentga egasining xabari bilan uchta vazifa beriladi: ruscha rasmiy xat, loyiha uchun batafsil foydalanuvchi qo'llanmasi, loyihadagi AI funksiya uchun inglizcha prompt.
+
+**Expected:**
+- [ ] Xat ruscha va rasmiy, qo'llanma batafsil; ikkalasida harness'ning tili, inglizcha atamalari, yozuv shakli (`Rule:`, `← F…`, topic tag, manba va fayl yo'li qatori) va suhbat uslubi (qisqalik, murojaat) yo'q.
+- [ ] Qo'llanmaning tili xabarda ham, loyihada ham yo'q: agent uni suhbat tilida va hujjat turiga mos uslubda yozgan va tanlovni yakuniy xabarda aytgan.
+- [ ] Prompt inglizcha va `runbook.md` → `Writing the harness` dagi `Buyruq shakli` dan `No-op` gacha bo'lgan qoidalar bilan yozilgan: buyruq shakli, positive form, tekshirsa bo'ladigan tugash sharti, bitta atama; unda harness yozuv shakli yo'q.
+- [ ] Uchala matnda ham to'qilgan fakt yo'q.
+
 ## Grading
 
 | Grade | Meaning |

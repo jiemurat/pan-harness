@@ -3,9 +3,9 @@ name: ph-grilling
 description: Grill the user relentlessly about a plan, decision, or idea. Use when the user wants to stress-test their thinking, or uses any 'grill' trigger phrases.
 license: MIT (Copyright (c) 2026 Matt Pocock), see LICENSE
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   package: "@jiemurat/pan-harness"
-  source: "https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md"
+  source: "https://github.com/mattpocock/skills/blob/95249b0b49782349740fd9b8c6ce32b4e59e497a/skills/productivity/grilling/SKILL.md"
   changes: "renamed to ph-grilling; facts are looked up by the agent itself, a sub-agent only with the user's consent"
 ---
 
@@ -26,6 +26,8 @@ Format a round like so:
 
 ➡️ <your recommended answer>
 ```
+
+Word each question so "yes" accepts your recommended answer.
 
 Each round the user answers reshapes the tree: settled decisions push the frontier outward and unblock questions that depended on them. Recompute the frontier and ask the next round. A question whose answer depends on another question still open in this round belongs to a _later_ round, not this one.
 

@@ -20,7 +20,7 @@ Har qator natijasi `ok`, `fail` (nima topilgani va fayl:qator), `not checked` (s
 - Size: A35
 - Extensions and settings: A36–A37
 - Version: A38
-- Writing: A39–A43, A59–A63
+- Writing: A39–A43, A59–A65
 - Principles: A44–A50
 - Continuity and checks: A51–A58
 
@@ -109,7 +109,7 @@ Har qator natijasi `ok`, `fail` (nima topilgani va fayl:qator), `not checked` (s
 
 ## Writing
 
-P26 bandlari (A20 dagi kalit so'z tartibi va trigger, A43, A59–A63) yangi matnda tekshiriladi: `ph-init` da butun harness, `ph-doctor` da oxirgi migration yoki `ph-doctor` dan beri o'zgargan qatorlar. Boshlang'ich commit — oxirgi `ph-doctor` yoki `ph-update` tarix yozuvidagi oxirgi `(commit: …)` raqami (`pending` bo'lsa, o'sha ishning commit'ini `git log` dan ol, A32), bunday yozuv bo'lmasa `Standard:` qatori oxirgi o'zgargan commit: `git log -1 --format=%h -G 'Standard: pan-harness' -- PAN-HARNESS.md`. Yangi matn — `git diff <commit> -- AGENTS.md PAN-HARNESS.md pan-harness/ ':!pan-harness/archive'` dagi `+` qatorlar va yangi fayllar. `pan-harness-check.mjs --since <commit>` ularni `REVIEW` qatorlari bilan chiqaradi va mos qatorga u buzishi mumkin bo'lgan band belgisini qo'yadi (masalan, `A59 negation "qilma"`). Belgi faqat nomzod: har belgilangan qator uchun moslik jadvalida sababi bilan `ok` yoki `fail` yoz, belgisiz qatorlarni A61–A63 uchun o'qi. Eski matn tegilganda moslanadi (`structure.md` → "Writing").
+P26 bandlari (A20 dagi kalit so'z tartibi va trigger, A43, A59–A63) va matn chegarasi (A65) yangi matnda tekshiriladi: `ph-init` da butun harness, `ph-doctor` da oxirgi migration yoki `ph-doctor` dan beri o'zgargan qatorlar. Boshlang'ich commit — oxirgi `ph-doctor` yoki `ph-update` tarix yozuvidagi oxirgi `(commit: …)` raqami (`pending` bo'lsa, o'sha ishning commit'ini `git log` dan ol, A32), bunday yozuv bo'lmasa `Standard:` qatori oxirgi o'zgargan commit: `git log -1 --format=%h -G 'Standard: pan-harness' -- PAN-HARNESS.md`. Yangi matn — `git diff <commit> -- AGENTS.md PAN-HARNESS.md pan-harness/ ':!pan-harness/archive'` dagi `+` qatorlar va yangi fayllar. `pan-harness-check.mjs --since <commit>` ularni `REVIEW` qatorlari bilan chiqaradi va mos qatorga u buzishi mumkin bo'lgan band belgisini qo'yadi (masalan, `A59 negation "qilma"`). Belgi faqat nomzod: har belgilangan qator uchun moslik jadvalida sababi bilan `ok` yoki `fail` yoz, belgisiz qatorlarni A61–A63 uchun o'qi. Eski matn tegilganda moslanadi (`structure.md` → "Writing").
 
 | ID | Requirement | Smell | How to check | Fix |
 |---|---|---|---|---|
@@ -123,6 +123,8 @@ P26 bandlari (A20 dagi kalit so'z tartibi va trigger, A43, A59–A63) yangi matn
 | A61 | Bir tushunchaning ta'rifi, qoidasi, sababi va istisnosi bir joyda; fayl uchun yozuv shakli shu faylning boshida; bitta sohaga tegishli matn o'sha soha faylida (co-location, P9, P26) | Scattered rule | script (`REVIEW` dagi `A61` belgisi va yangi fayl), manual: mavzuni grep bilan qidir va necha joyda chiqishini ko'r | structural |
 | A62 | Har gap agentning xatti-harakatini o'zgartiradi: model shusiz ham qiladigan ishni aytgan gap yo'q (no-op, P2, P26) | No-op | script (`REVIEW` dagi `A62` belgisi), manual: "olib tashlasam, agent boshqacha ishlaydimi?"; shubhada `testing.md` → "Simplification experiment" | structural |
 | A63 | Har fakt manbasi bilan: egasining xabari, repo yoki ishga tushirilgan buyruq natijasi; `Checks:` dagi har natija yonida uni bergan buyruq yoki dalil (P26) | Invented fact | manual: yangi matndagi har sabab, kriteriya, rol, sana va sonni egasining xabari, repo va buyruq natijasi bilan solishtir | structural: manbasi yo'q gapni egasiga ko'rsat |
+| A64 | `AGENTS.md` da matn chegarasi qoidasi bor (shablondagi R23, `**Writing**` guruhida), suhbat qoidasi (shablondagi R12) "Egasi bilan suhbatda" bilan boshlanadi va R23 ga havola beradi, `runbook.md` → `Writing the harness` kirish gapi agent matnlarini va ularga qo'llanadigan qoidalarni nomma-nom sanaydi | Rule leak | script (`**Writing**` guruhi yo'q bo'lsa WARN), manual (R12 va kirish gapi) | mechanical (`changelog.md` → 1.2.0) |
+| A65 | Boshlang'ich commit'dan beri yozilgan matn o'quvchisiga qarab yozilgan: agent o'qiydigan matn `Writing the harness` qoidalari bilan va R23 dagi tilda; inson o'qiydigan matnning tili va uslubi R23 dagi tartib bilan tanlangan, tanlov egasiga aytilgan, unda harness atamasi, ID va manba qatori yo'q | Rule leak | manual: `git diff --stat <commit> -- . ':!pan-harness'` dagi har matn fayli (README, `docs/`, prompt, skill) uchun o'quvchisini aniqla va shu talab bilan solishtir | structural: harness qoidasi sizgan inson matnini egasiga ko'rsat |
 
 ## Principles
 

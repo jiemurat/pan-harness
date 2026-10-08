@@ -2,6 +2,19 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 1.2.0
+
+Agent text and human text are kept apart:
+
+- the harness is written by all the writing rules of `runbook.md` → `Writing the harness`; every other text an agent reads (other agents' context files such as `CLAUDE.local.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursor/rules/` and nested `AGENTS.md`, skills, commands, subagents, prompts in the product) by its nine P26 rules, in the language the owner asks for, else in the file's own language, and a new file in the language of the conversation; the harness language and its English terms stay in the harness;
+- texts for people (README, project docs, letters, guides, report files) get their language and style from the owner's instruction, else from the document itself or similar documents, else the language of the conversation and a style that fits the kind of document, which the agent tells the owner; no source, file path or ID line unless the owner asks; the chat rule (language, brevity, form of address) covers only the conversation: new rule R23 in the `AGENTS.md` template, R12 limited to the chat;
+- `ph-init` asks the form of address as an open question instead of suggesting one, writes the README of an empty folder in the language of the conversation and says so in its plan; the time zone question is about the harness only;
+- `ph-doctor` checks the boundary (A64, A65); `pan-harness-check` warns when a 1.2.0 harness has no `**Writing**` rule group;
+- `ph-update` adds R23 to a 1.1.0 harness, limits its chat rule to the conversation and updates the `Writing the harness` intro, the runbook map line and the End of task writing item; a chat rule that also sets file text is left for the agent;
+- a fifth skill, `ph-writing-for-agents`: Matt Pocock's writing-for-agents skill (MIT, renamed only), the method behind these writing rules; the runbook's writing section points to it, and the project's rules come first; `ph-grilling` takes the newest upstream line, "Word each question so "yes" accepts your recommended answer";
+- fixes: the `pan-harness.md` playbook names the skill's `testing.md` without a project path (the check reported it as a missing file), and a ⏳ in the header text of `plan.md` no longer counts as an open item;
+- known limitation: in our tests (Claude Haiku 4.5 and Sonnet, a letter, a guide and a prompt each) no harness rule reached a text for people, but the small model's prompt did not follow the writing rules and its letter and guide carried invented facts; review such texts or write them with a strong model.
+
 ## 1.1.0
 
 Writing rules for the harness itself (principle P26, after Matt Pocock's [writing-for-agents](https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-for-agents)):

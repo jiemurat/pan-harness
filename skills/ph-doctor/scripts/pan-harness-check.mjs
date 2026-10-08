@@ -43,7 +43,8 @@ Errors (exit 1):
 Warnings:
   - no Profile line;
   - the standard sections of AGENTS.md or PAN-HARNESS.md are out of order, or
-    a Boundaries line (Never, Ask first, Always) is missing;
+    a Boundaries line (Never, Ask first, Always) is missing, or (standard 1.2.0
+    and newer) the **Writing** rule group;
   - a journal entry without its required fields (D: Why, Where; F: Quote,
     Context, Result; L: Rule, Check; history: What and why, Checks, Files, and
     Downtime when live-system=yes); entries older than check.json "fields_from"
@@ -92,7 +93,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const VERSION = '1.1.0';
+const VERSION = '1.2.0';
 
 // Sizes in bytes. 24 KB fits the start set of a complex project written
 // compactly; 40 KB keeps any doc readable in one go. An agent reads a doc over
@@ -372,6 +373,11 @@ if (args.since !== null && (!args.since || !hasGit
 
 const stdMatch = /Standard: pan-harness (\S+)/.exec(panText);
 const stdVersion = stdMatch ? stdMatch[1] : null;
+const atLeast = (v, w) => { // v >= w for x.y.z versions
+  const [a, b] = [v, w].map((x) => x.split('.').map(Number));
+  const i = [0, 1, 2].find((k) => (a[k] || 0) !== (b[k] || 0));
+  return i === undefined || (a[i] || 0) > (b[i] || 0);
+};
 
 // 2. mandatory standard files
 const mandatory = [path.join(ROOT, 'AGENTS.md'), path.join(ROOT, 'PAN-HARNESS.md'), ...STANDARD_FILES.map((f) => path.join(H, f)),
@@ -486,6 +492,10 @@ for (const [p, sections] of [[path.join(ROOT, 'AGENTS.md'), AGENTS_SECTIONS], [p
         warnings.push(`AGENTS.md: no ${label} line in the Boundaries block - that kind of hard rule is `
           + 'not visible at a glance; add the line');
       }
+    }
+    if (stdVersion && /^\d+\.\d+\.\d+$/.test(stdVersion) && atLeast(stdVersion, '1.2.0') && !/^\*\*Writing\*\*\s*$/m.test(text.get(p))) {
+      warnings.push("AGENTS.md: no '**Writing**' rule group - the rule that keeps harness rules out of texts for "
+        + "people (standard 1.2.0) is missing; add it from the template (references/changelog.md -> 1.2.0, step 1)");
     }
   }
 }
@@ -777,7 +787,7 @@ if (read(path.join(H, 'plan.md')).includes('✅')) {
 
 // 16. criteria: the newest history entry and plan.md
 const planText = read(path.join(H, 'plan.md'));
-const openItems = outsideCode(planText).filter((line) => line.includes('⏳')).map((line) => line.trim());
+const openItems = outsideCode(planText).filter((line) => /^\s*(?:[-*]|\d+\.|\|)\s/.test(line) && line.includes('⏳')).map((line) => line.trim()); // items, not the header text
 if (blocks.length) {
   const [name, block] = blocks[blocks.length - 1];
   const cm = /^- \*\*(?:Checks|Tekshiruv):\*\*([\s\S]*?)(?=^- \*\*[^*\n]+:\*\*|$(?![\s\S]))/m.exec(block);

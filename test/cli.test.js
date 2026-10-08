@@ -30,7 +30,7 @@ const read = (dir, rel) => fs.readFileSync(path.join(dir, rel), 'utf8');
 const manifest = (dir, base = '.agents/skills') => JSON.parse(read(dir, `${base}/.pan-harness.json`));
 
 test('the package ships the four ph-* skills', () => {
-  assert.deepEqual(SKILLS, ['ph-doctor', 'ph-grilling', 'ph-init', 'ph-update']);
+  assert.deepEqual(SKILLS, ['ph-doctor', 'ph-grilling', 'ph-init', 'ph-update', 'ph-writing-for-agents']);
 });
 
 test('init installs into .agents/skills and .claude/skills, writes commands, manifest and .gitignore', () => {

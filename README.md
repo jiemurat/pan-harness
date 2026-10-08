@@ -10,6 +10,7 @@ Panoramic Harness (pan-harness for short) is a set of plain-text rules and knowl
 | `ph-doctor` | Audits the harness against the standard, fixes mechanical issues at once and proposes structural ones |
 | `ph-update` | Updates the skills to the newest version, migrates the harness to it and runs a full `ph-doctor` |
 | `ph-grilling` | A planning interview in rounds (adapted from [mattpocock/skills](https://github.com/mattpocock/skills), MIT) |
+| `ph-writing-for-agents` | How to write any text an agent reads: skills, `AGENTS.md`, prompts (the writing-for-agents skill of [mattpocock/skills](https://github.com/mattpocock/skills), MIT, renamed only) |
 
 ## Install
 
@@ -48,7 +49,7 @@ your-project/
     └── project/                              knowledge specific to this project
 ```
 
-The harness is committed with the project, so every session and every agent starts from the same knowledge. Agents write it by rules made for agent readers (after Matt Pocock's [writing-for-agents](https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-for-agents)): every pointer says what is there and when to read it, every step ends on a checkable condition, rules say what to do, and each concept has one term. `ph-doctor` checks new text against them.
+The harness is committed with the project, so every session and every agent starts from the same knowledge. Agents write it by rules made for agent readers (after Matt Pocock's [writing-for-agents](https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-for-agents)): every pointer says what is there and when to read it, every step ends on a checkable condition, rules say what to do, and each concept has one term. `ph-doctor` checks new text against them. The same rules cover every other text an agent reads, such as agent context files, skills and prompts in your product, while texts for people (your README, letters, user guides) are written as you ask or in the document's own language and style, and when neither is clear, the agent uses the language of your conversation and tells you, so you can ask for another.
 
 ## Day to day
 
@@ -91,7 +92,7 @@ The CLI writes only inside the skill and command folders it manages (and its blo
 
 ## Language
 
-The skills' instructions are in Uzbek. The harness itself is written in the language the owner picks during `ph-init`. A full guide in Uzbek: [docs/uz.md](docs/uz.md).
+The skills' instructions are in Uzbek; `ph-grilling` and `ph-writing-for-agents` keep their English upstream text. The harness itself is written in the language the owner picks during `ph-init`. A full guide in Uzbek: [docs/uz.md](docs/uz.md).
 
 ## Requirements
 
@@ -103,4 +104,4 @@ Node.js 18 or newer, and git (`ph-init` installs git when it is missing).
 
 ## License
 
-MIT. `ph-grilling` is adapted from mattpocock/skills (MIT): see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+MIT. `ph-grilling` and `ph-writing-for-agents` come from mattpocock/skills (MIT): see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

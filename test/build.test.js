@@ -30,6 +30,8 @@ test('includes are resolved and the version is filled in', () => {
   assert.ok(built.get('ph-update').has('references/changelog.md'));
   assert.ok(built.get('ph-grilling').has('LICENSE'));
   assert.ok(!built.get('ph-grilling').has('references/init.md'));
+  for (const f of ['LICENSE', 'SKILL-MECHANICS.md', 'agents/openai.yaml']) assert.ok(built.get('ph-writing-for-agents').has(f), f);
+  assert.ok(!built.get('ph-writing-for-agents').has('references/init.md'));
 });
 
 test('every shipped skill passes the specification checks', () => {
@@ -68,7 +70,7 @@ test('the repository is a valid Claude Code plugin: version, default skills/ lay
   // Claude Code scans skills/ itself; a "skills" list would add the same folders a second time
   assert.equal(plugin.skills, undefined);
   assert.deepEqual(fs.readdirSync(path.join(ROOT, 'skills')).filter((n) => n.startsWith('ph-')).sort(),
-    ['ph-doctor', 'ph-grilling', 'ph-init', 'ph-update']);
+    ['ph-doctor', 'ph-grilling', 'ph-init', 'ph-update', 'ph-writing-for-agents']);
   // a plugin with a top-level bin/ is not installed by claude.ai and Cowork, and bin/ goes on the Bash PATH
   assert.ok(!fs.existsSync(path.join(ROOT, 'bin')));
   const market = JSON.parse(fs.readFileSync(path.join(ROOT, '.claude-plugin', 'marketplace.json'), 'utf8'));

@@ -2,10 +2,11 @@
 pan-harness template. Loyihada `AGENTS.md` nomi bilan saqlanadi.
 - `{{…}}` joylarini egasining javoblari (style-questions.md) va tekshirilgan faktlar bilan to'ldir.
 - `[profile: …]` belgilarini `structure.md` → "Profile" dagi qoida bo'yicha qo'lla.
-- Qoida va savol mosligi: R1 — S8, R2 — S6, R3 — S12, R4 — S11, R5 va R16 — D1 (pan-harness standarti), R6 — S9, R7–R8 — S14, R9 — live system haqidagi javob, R10 — S17, R11 va R13–R15 — S24, R12 — S2, S3, S5, R17 — S22, R18 — S13, R19 — S15, R20 — S16, R21 — S21, R22 — profile'dagi `pii` yoki `confidential`. Har qoidaning manbasi o'sha javob yozilgan F yoki D.
+- Qoida va savol mosligi: R1 — S8, R2 — S6, R3 — S12, R4 — S11, R5, R16 va R23 — D1 (pan-harness standarti), R6 — S9, R7–R8 — S14, R9 — live system haqidagi javob, R10 — S17, R11 va R13–R15 — S24, R12 — S2, S3, S5, R17 — S22, R18 — S13, R19 — S15, R20 — S16, R21 — S21, R22 — profile'dagi `pii` yoki `confidential`. Har qoidaning manbasi o'sha javob yozilgan F yoki D.
+- Egasi murojaat shaklini aytmagan bo'lsa (S3), `{{murojaat va uslub}}` o'rniga faqat uslubni yoz va R12 dagi "egasiga {{murojaat}}" bo'lagini olib tashla.
 - R4 S11 ning (a) javobi uchun yozilgan: commit'ni agent qiladi. Egasi (b) ni tanlasa, R4 o'rniga yoz: "**R4. Commit'ni egasi qiladi.** Sen o'zgargan fayllar ro'yxatini berasan; `git commit` va `git push` faqat egasi so'raganda.", `Boundaries` → `Never` dagi bandni "so'ralmagan commit yoki push (R4)" qil.
 - `**Planning.**` bloki S7 ning (a) javobi uchun yozilgan. Egasi boshqa tartibni tanlasa, blokni o'sha tartib bilan almashtir: maqsad, natija va kriteriyalar qismi (P21) har tartibda qoladi.
-- Egasi rad etgan yoki profile'ga mos bo'lmagan qoidani olib tashla, qolganlarini 1 dan ketma-ket raqamla va matndagi `(R…)` havolalarini yangila. Harness yaratilgandan keyin raqamlar o'zgarmaydi.
+- Egasi rad etgan yoki profile'ga mos bo'lmagan qoidani olib tashla, qolganlarini 1 dan ketma-ket raqamla va R raqami bilan yozilgan har havolani yangila (`(R…)`, "R23 da" kabi), `pan-harness/` va `PAN-HARNESS.md` da ham. Harness yaratilgandan keyin raqamlar o'zgarmaydi.
 - Sarlavhalar (`## Boundaries` ham), `**Never:**`, `**Ask first:**`, `**Always:**` va ish turlari nomlari inglizcha qoladi (standart). Gaplar egasining tilida.
 - `## Boundaries` fayl boshida turadi: model uzun matnning o'rtasidagi gapni kamroq hisobga oladi (P7). Zarar keltirishi mumkin bo'lgan har qoida unda bo'lsin.
 - Maqsadli hajm 100–150 qator. Shu izohni olib tashla.
@@ -96,7 +97,7 @@ Turi aniq bo'lmasa, ishni large task deb hisobla.
 - **R11. Agent muhitining ruxsat tizimi bloklagan amalni chetlab o'tma.** Egasidan so'ra yoki uni egasi bajarsin. ← F{{S24 javobi}}
 
 **Communication**
-- **R12. {{til}} va qisqa yoz,** egasiga {{murojaat}}. Texnik tafsilot faqat kerak bo'lganda. {{egasi yaxshi biladigan sohalar}} bo'yicha mutaxassis tilida gapir. ← F{{…}}
+- **R12. Egasi bilan suhbatda {{til}} va qisqa yoz,** egasiga {{murojaat}}. Texnik tafsilot faqat kerak bo'lganda. {{egasi yaxshi biladigan sohalar}} bo'yicha mutaxassis tilida gapir. Faylga yoziladigan matnning tili va uslubi R23 da. ← F{{…}}
 - **R13. Obyektiv bo'l.** Fikr so'ralsa, halol baho ber. Rozi bo'lmasang, sababini ayt. ← F{{…}}
 - **R14. Qaror egasi ko'rmagan narsaga bog'liq bo'lsa,** avval uni ko'rsat (ro'yxat, fayl mazmuni), keyin so'ra. ← F{{…}}
 
@@ -113,3 +114,8 @@ Turi aniq bo'lmasa, ishni large task deb hisobla.
 - **R20. Ko'p qismga tegadigan o'zgarishni** avval bittasida sina, keyin hammasiga qo'lla. ← F{{…}}
 - **R21. Structure savolida avval amaliyotni o'rgan.** Pan-harness yoki tizim structure'i bo'yicha variant berishdan oldin best practice'larni o'rgan. ← F{{…}}
 - [profile: sensitive-data=pii yoki confidential] **R22. Maxfiy mazmun o'rniga yo'l, ID va neytral tavsif yoz.** {{shaxsiy ma'lumot yoki maxfiy hujjatlar}} mazmuni (ism, raqam, iqtibos) harness'ga yozilmaydi. ← D{{…}}
+
+**Writing**
+- **R23. Matnni o'quvchisiga qarab yoz.** Har da'voni tekshirish (`Working style`) va `Boundaries` har matnga tegishli. ← D{{…}}
+  - Agent o'qiydigan matnni (masalan, harness, skill, prompt; to'liq ro'yxat `runbook.md` → `Writing the harness` da) o'sha bo'lim qoidalari bilan yoz. Harness tili va atamalari faqat harness fayllarida; boshqa agent matnini egasi so'ragan tilda yoz, so'ramasa mavjud faylda shu faylning tilida, yangi faylda suhbat tilida.
+  - Inson o'qiydigan matnning (README, loyiha hujjatlari, xat, qo'llanma, hisobot fayli) tilini va uslubini alohida-alohida shu tartibda tanla: (1) egasining ko'rsatmasi, suhbatda yoki harness'da yozilgan (masalan, `runbook.md` dagi `Commit xabari`); (2) hujjatning o'z tili va uslubi; (3) yangi hujjatda loyihadagi shu maqsaddagi hujjatlarniki; (4) bular bo'lmasa, suhbat tili va hujjat turiga mos uslub: tanlovni rejada yoki yakuniy xabarda egasiga ayt, egasi boshqasini aytsa, o'zgartir. Manba, fayl yo'li va ID qatorini inson matniga faqat egasi so'rasa qo'sh.

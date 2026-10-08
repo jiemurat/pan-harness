@@ -2,7 +2,7 @@
 
 Panoramic Harness (qisqasi pan-harness) — loyihaning AI agentlar uchun bilim va qoidalar tizimi. U loyiha papkasidagi oddiy matnli fayllardan iborat: `AGENTS.md` (loyiha, ish tartibi, qoidalar), `PAN-HARNESS.md` (harness qanday tuzilgani) va `pan-harness/` papkasi (joriy holat, rejalar, qarorlar, tarix). Har sessiyadagi agent oldingi suhbatni eslamaydi, shuning uchun loyihani davom ettirishga kerak hamma narsa shu fayllarda, git'da yoziladi. Ularni har qanday agent va model o'qiy oladi.
 
-`@jiemurat/pan-harness` paketi harness'ni yaratadigan va yuritadigan to'rt skill'ni loyihaga o'rnatadi:
+`@jiemurat/pan-harness` paketi harness'ni yaratadigan va yuritadigan besh skill'ni loyihaga o'rnatadi:
 
 | Skill | Nima qiladi |
 |---|---|
@@ -10,6 +10,7 @@ Panoramic Harness (qisqasi pan-harness) — loyihaning AI agentlar uchun bilim v
 | `ph-doctor` | Harness'ni standart bo'yicha bandma-band tekshiradi, mexanik xatolarni darhol tuzatadi, tuzilmaviy o'zgarishlarni reja bilan taklif qiladi |
 | `ph-update` | Paketni yangi versiyaga yangilaydi, harness'ni changelog bo'yicha ko'chiradi va oxirida to'liq `ph-doctor` o'tkazadi |
 | `ph-grilling` | Katta ishni rejalashtirish suhbati: savollar raund-raund, har biri tavsiya bilan ([mattpocock/skills](https://github.com/mattpocock/skills) asosida, MIT) |
+| `ph-writing-for-agents` | Agent o'qiydigan har matnni yozish usuli: skill, `AGENTS.md`, prompt ([mattpocock/skills](https://github.com/mattpocock/skills) dagi writing-for-agents skill'i, MIT, faqat nomi o'zgargan) |
 
 ## O'rnatish
 
@@ -54,7 +55,7 @@ loyihangiz/
     └── project/                              faqat shu loyihaga xos bilim
 ```
 
-Harness loyiha bilan birga git'ga commit qilinadi: har sessiya va har agent bir xil bilimdan boshlaydi. Agentlar uni agent o'quvchi uchun yozish qoidalari bilan yozadi (Matt Pocock'ning [writing-for-agents](https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-for-agents) skill'i asosida): har havola nima borligini va qachon o'qilishini aytadi, har qadam tekshirsa bo'ladigan shart bilan tugaydi, qoida nima qilishni aytadi, har tushuncha bitta atama bilan yoziladi. `ph-doctor` yangi matnni shu qoidalar bilan tekshiradi.
+Harness loyiha bilan birga git'ga commit qilinadi: har sessiya va har agent bir xil bilimdan boshlaydi. Agentlar uni agent o'quvchi uchun yozish qoidalari bilan yozadi (Matt Pocock'ning [writing-for-agents](https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-for-agents) skill'i asosida): har havola nima borligini va qachon o'qilishini aytadi, har qadam tekshirsa bo'ladigan shart bilan tugaydi, qoida nima qilishni aytadi, har tushuncha bitta atama bilan yoziladi. `ph-doctor` yangi matnni shu qoidalar bilan tekshiradi. Bu qoidalar agent o'qiydigan boshqa matnlarga ham (agent kontekst fayllari, skill'lar, mahsulotdagi prompt'lar) qo'llanadi, inson uchun matnlar (README, xat, foydalanuvchi qo'llanmasi) esa siz aytgan tarzda yoki hujjatning o'z tili va uslubida yoziladi, ikkalasi ham bo'lmasa, agent suhbat tilida yozadi va buni sizga aytadi: boshqa til kerak bo'lsa, ayting.
 
 ## Keyin
 
@@ -97,4 +98,4 @@ Node.js 18 yoki yangi: harness tekshiruvlari (`pan-harness/scripts/*.mjs`) Node'
 
 ## Til
 
-Skill'lar ko'rsatmasi o'zbekcha. Harness esa `ph-init` da siz tanlagan tilda yoziladi.
+Skill'lar ko'rsatmasi o'zbekcha, `ph-grilling` va `ph-writing-for-agents` esa upstream'dagidek inglizcha. Harness esa `ph-init` da siz tanlagan tilda yoziladi.

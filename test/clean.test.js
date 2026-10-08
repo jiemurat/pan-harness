@@ -42,7 +42,8 @@ test('the repository holds no history markers and no private details', (t) => {
   for (const f of files) {
     const text = fs.readFileSync(path.join(ROOT, f), 'utf8');
     text.split('\n').forEach((line, i) => {
-      for (const [name, rule] of RULES) if (rule.test(line)) found.push(`${f}:${i + 1}: ${name}: ${line.trim().slice(0, 100)}`);
+      const bare = line.replace(/\b[0-9a-f]{40}\b/g, '<commit>'); // a git commit id is public, not a private number
+      for (const [name, rule] of RULES) if (rule.test(bare)) found.push(`${f}:${i + 1}: ${name}: ${line.trim().slice(0, 100)}`);
       for (const m of line.match(EMAIL) || []) {
         if (!EXAMPLE_DOMAINS.test(m)) found.push(`${f}:${i + 1}: e-mail address: ${m}`);
       }

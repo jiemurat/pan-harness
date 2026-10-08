@@ -47,7 +47,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['1.0.0', '1.1.0'];
+const KNOWN = ['1.0.0', '1.1.0', '1.2.0'];
 const done = [];
 const byHand = [];
 
@@ -89,6 +89,12 @@ const OLD = {
   secret: "- **Maxfiy mazmun yozilmaydi:** shaxsiy ma'lumot va maxfiy hujjat mazmuni o'rniga yo'l, ID va neytral tavsif yoziladi.",
   mapRunbook: "- `runbook.md` — buyruqlar, skriptlar, hujjat yozish uslubi, topic tag'lar, accepted warnings (buyruq kerak bo'lganda va hujjat yozishdan oldin).",
 };
+// the 1.1.0 intro of "Writing the harness": step 2 below writes it, 1.2.0 step 3 replaces it
+const INTRO_110 = "Harness matni (`AGENTS.md`, `PAN-HARNESS.md`, `pan-harness/`) agent uchun yoziladi: kuchli va kichik model uni bir xil tushunib, har safar bir xil jarayon bilan bajarishi kerak. Qoidalar yangi va o'zgartirilgan matnga qo'llanadi, eski matn tegilganda moslanadi. Inson uchun matn (README, loyiha hujjatlari, hisobot, commit xabari, `feedback.md` dagi `Quote:`) o'z o'quvchisi uchun yoziladi.";
+const INTRO_120 = 'Harness matnini (`AGENTS.md`';
+// the 1.1.0 map line of runbook.md and the End of task writing item: 1.1.0 step 4 writes them, 1.2.0 step 4 replaces them
+const MAP_110 = "- `runbook.md` — buyruqlar, skriptlar, harness matnini yozish qoidalari, topic tag'lar, accepted warnings (buyruq kerak bo'lganda va harness'ga matn yozishdan oldin).";
+const END_110 = "- [ ] Shu ishda harness'ga yozgan har matnni `runbook.md` → `Writing the harness` qoidalari bilan solishtir va mos kelmaganini tuzat.";
 // 1.0.0 header lines of the journals and working files: standard text, replaced by the 1.1.0 header
 const OLD_HEADERS = {
   'pan-harness/decisions.md': [
@@ -173,7 +179,6 @@ function step2Rules() {
   const tStart = tmpl.findIndex((l) => /^## \d+\. Writing the harness/.test(l));
   const tEnd = tmpl.findIndex((l, i) => i > tStart && /^## /.test(l));
   const tSection = tmpl.slice(tStart, tEnd);
-  const intro = tSection.find((l) => l.startsWith('Harness matni ('));
   const ruleStarts = ['- **Buyruq shakli:**', '- **Context pointer:**', '- **Progressive disclosure va co-location:**',
     '- **Completion criterion:**', '- **Positive form:**', '- **Leading word:**', '- **Single source:**', '- **Manba:**', '- **No-op:**'];
   const rules = ruleStarts.map((s) => tline(tSection, s));
@@ -197,8 +202,8 @@ function step2Rules() {
   let end = f.lines.findIndex((l, i) => i > start && /^## /.test(l));
   if (end < 0) end = f.lines.length;
   const section = f.lines.slice(start, end);
-  if (!section.some((l) => l.startsWith('Harness matni ('))) {
-    f.lines.splice(start + 1, 0, '', intro);
+  if (!section.some((l) => l.startsWith('Harness matni (') || l.startsWith(INTRO_120))) {
+    f.lines.splice(start + 1, 0, '', INTRO_110);
     end += 2;
   }
   if (!f.lines.slice(start, end).some((l) => l.startsWith('- **Context pointer:**'))) {
@@ -228,9 +233,8 @@ function step3Terms() {
 
 function step4PanHarness() {
   const f = file('PAN-HARNESS.md');
-  const tmpl = template('PAN-HARNESS.md.tmpl');
-  const newMap = tline(tmpl, '- `runbook.md` —');
-  const newEnd = tline(tmpl, "- [ ] Shu ishda harness'ga yozgan har matnni");
+  const newMap = MAP_110;
+  const newEnd = END_110;
   let n = 0;
   f.lines = f.lines.map((l) => {
     if (l.trimEnd() === OLD.mapRunbook) { n += 1; return newMap; }
@@ -277,7 +281,104 @@ function step5Headers() {
   done.push(`1.1.0 step 5: headers brought to the template (${n} file(s)), entries untouched`);
 }
 
-const STEPS = { '1.1.0': [step1Rename, step2Rules, step3Terms, step4PanHarness, step5Headers] };
+// ---------------------------------------------------------------- 1.2.0 (agent text and human text)
+
+const RULE = /^- \*\*R(\d+)\./; // as pan-harness-check.mjs counts them
+const BOUNDARY = "**Writing**";
+let boundaryNo = null; // the number the text boundary rule (template R23) has in this project
+
+function hasD(n) {
+  return ['pan-harness/decisions.md', 'pan-harness/archive/decisions.md']
+    .some((rel) => file(rel)?.lines.some((l) => l.startsWith(`- **D${n}**`)));
+}
+
+function step1Boundary() {
+  const f = file('AGENTS.md');
+  const group = f.lines.findIndex((l) => l.trimEnd() === BOUNDARY); // language-neutral: the rule may be translated
+  const have = group >= 0 ? f.lines.slice(group + 1).find((l) => RULE.test(l)) : f.lines.find((l) => RULE.test(l) && l.includes("Matnni o'quvchisiga qarab yoz"));
+  if (have) { boundaryNo = Number(RULE.exec(have)[1]); done.push(`1.2.0 step 1: R${boundaryNo} is already the text boundary rule`); return; }
+  const ruleDocs = harnessDocs().filter((rel) => rel === 'AGENTS.md' || /^pan-harness\/(project\/)?playbooks\//.test(rel));
+  const next = Math.max(0, ...ruleDocs.flatMap((rel) => (file(rel)?.lines || []).map((l) => RULE.exec(l)).filter(Boolean).map((m) => Number(m[1])))) + 1;
+  const panRule = f.lines.find((l) => RULE.test(l) && l.includes('Pan-harness har qanday agent va model uchun'));
+  const ds = ((panRule && /← ([FLD0-9, ]+)$/.exec(panRule)) || [, ''])[1].match(/D\d+/g) || (hasD(1) ? ['D1'] : []);
+  const tmpl = template('AGENTS.md.tmpl');
+  const at = tmpl.findIndex((l) => l.startsWith('- **R23. '));
+  let end = at + 1;
+  while (end < tmpl.length && /^\s+\S/.test(tmpl[end])) end += 1; // the rule's sub-items
+  const rule = tmpl.slice(at, end);
+  rule[0] = rule[0].replace('**R23. ', `**R${next}. `).replace(/ ← D\{\{…\}\}$/, ds.length ? ` ← ${ds.join(', ')}` : '');
+  const rulesAt = f.lines.findIndex((l) => /^## Rules\s*$/.test(l));
+  let last = -1;
+  f.lines.forEach((l, i) => { if (i > rulesAt && RULE.test(l)) last = i; });
+  if (rulesAt < 0 || last < 0) { byHand.push(`1.2.0 step 1: AGENTS.md has no numbered rule under "## Rules"; add "${BOUNDARY}" and the template's R23 there as R${next}, then do steps 2 and 3`); return; }
+  while (last + 1 < f.lines.length && /^\s+\S/.test(f.lines[last + 1])) last += 1; // the last rule's own sub-lines
+  f.lines.splice(last + 1, 0, '', BOUNDARY, ...rule);
+  f.changed = true;
+  boundaryNo = next;
+  done.push(`1.2.0 step 1: AGENTS.md: R${boundaryNo} (the text boundary) added under "${BOUNDARY}"`);
+  if (!ds.length) byHand.push(`1.2.0 step 1: AGENTS.md: R${boundaryNo} has no source; add the D about the pan-harness standard ("← D<n>")`);
+}
+
+function step2Chat() {
+  if (!boundaryNo) { byHand.push('1.2.0 step 2: waits for step 1 (the rule number)'); return; }
+  const f = file('AGENTS.md');
+  const pointer = `Faylga yoziladigan matnning tili va uslubi R${boundaryNo} da.`;
+  if (f.lines.some((l) => RULE.test(l) && l.includes('Egasi bilan suhbatda'))) { done.push('1.2.0 step 2: the chat rule is already limited to the conversation'); return; }
+  // the chat rule: the first rule of the "**Communication**" group, in the template form "<til> va qisqa yoz,"
+  const group = f.lines.findIndex((l) => l.trimEnd() === '**Communication**');
+  const at = group < 0 ? -1 : f.lines.findIndex((l, i) => i > group && RULE.test(l));
+  const m = at < 0 ? null : /^(- \*\*R(\d+)\. )(\S+ va qisqa yoz,\*\*.*?)( ← [FLD0-9, ]+)?$/.exec(f.lines[at]);
+  if (!m) { byHand.push(`1.2.0 step 2: AGENTS.md: no chat rule in the template form (the first "**Communication**" rule, "<til> va qisqa yoz,"); start the project's chat rule with "Egasi bilan suhbatda" and end it with "${pointer}"`); return; }
+  f.lines[at] = `${m[1]}Egasi bilan suhbatda ${m[3][0].toLowerCase()}${m[3].slice(1)} ${pointer}${m[4] || ''}`;
+  f.changed = true;
+  done.push(`1.2.0 step 2: AGENTS.md: R${m[2]} (the chat rule) is limited to the conversation and points to R${boundaryNo}`);
+  const files = m[3].split(/(?<=\.)\s+/).filter((x) => /README|izoh|hujjat|fayl/i.test(x));
+  if (files.length) byHand.push(`1.2.0 step 2: AGENTS.md: R${m[2]} also sets file text (${files.map((x) => `"${x.replace(/\*\*/g, '')}"`).join(', ')}); move it out of the chat rule, for example to runbook.md -> "Writing the harness" -> "Til:"`);
+}
+
+function step3Intro() {
+  if (!boundaryNo) { byHand.push('1.2.0 step 3: waits for step 1 (the rule number)'); return; }
+  const f = file('pan-harness/runbook.md');
+  const intro = tline(template('pan-harness/runbook.md.tmpl'), INTRO_120).replace('R23', `R${boundaryNo}`);
+  if (!f) { byHand.push('1.2.0 step 3: pan-harness/runbook.md is missing'); return; }
+  const i = f.lines.findIndex((l) => l.trimEnd() === INTRO_110);
+  if (i >= 0) { f.lines[i] = intro; f.changed = true; done.push('1.2.0 step 3: runbook.md: the "Writing the harness" intro names every agent text and its rules'); return; }
+  if (f.lines.some((l) => l.startsWith(INTRO_120))) { done.push('1.2.0 step 3: the runbook intro is already the 1.2.0 one'); return; }
+  byHand.push(`1.2.0 step 3: runbook.md: the "Writing the harness" intro was reworded; bring it to the template's (every agent text, the rules for it by name, then R${boundaryNo})`);
+}
+
+function step4PanHarness120() {
+  const f = file('PAN-HARNESS.md');
+  const tmpl = template('PAN-HARNESS.md.tmpl');
+  const pairs = [[MAP_110, tline(tmpl, '- `runbook.md` —')], [END_110, tline(tmpl, '- [ ] Shu ishda yozgan har matnni').replace(/R23/g, `R${boundaryNo || 23}`)]];
+  let n = 0;
+  f.lines = f.lines.map((l) => {
+    const pair = pairs.find(([old]) => l.trimEnd() === old);
+    if (!pair || (pair[0] === END_110 && !boundaryNo)) return l;
+    n += 1;
+    return pair[1];
+  });
+  if (n) f.changed = true;
+  done.push(`1.2.0 step 4: PAN-HARNESS.md: the runbook.md map line and the End of task writing item (${n} of 2)`);
+  if (n < 2 && !pairs.every(([, now]) => f.lines.some((l) => l.trimEnd() === now))) {
+    byHand.push('1.2.0 step 4: PAN-HARNESS.md: bring the `runbook.md` map line and the End of task writing item to the template form (R23 as the step 1 number)');
+  }
+}
+
+function step5Playbook() {
+  const f = file('pan-harness/playbooks/pan-harness.md');
+  if (!f) return;
+  const old = '(`references/testing.md` → "Fixed question set")';
+  const now = "(`ph-doctor` skill'idagi testing.md, \"Fixed question set\" bo'limi)";
+  let n = 0;
+  f.lines = f.lines.map((l) => (l.includes(old) ? (n += 1, l.replace(old, now)) : l));
+  if (n) { f.changed = true; done.push('1.2.0 step 5: playbooks/pan-harness.md: the skill file is named without a project path'); }
+}
+
+const STEPS = {
+  '1.1.0': [step1Rename, step2Rules, step3Terms, step4PanHarness, step5Headers],
+  '1.2.0': [step1Boundary, step2Chat, step3Intro, step4PanHarness120, step5Playbook],
+};
 
 // ---------------------------------------------------------------- run
 

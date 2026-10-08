@@ -45,6 +45,9 @@ Entry point for any agent. The harness is described in \`PAN-HARNESS.md\`.
 ## Rules
 
 - **R1. One thing at a time.** Finish it and stop. ← F1
+
+**Writing**
+- **R2. Write for the reader.** Texts for people follow the owner. ← F1
 `,
   'PAN-HARNESS.md': `# PAN-HARNESS
 
@@ -192,6 +195,20 @@ test('scripts: a missing copy is an error, any other file in scripts/ a warning'
   const out = check(dir).out;
   assert.match(out, /^ERROR missing standard file: pan-harness[\\/]scripts[\\/]secret-check\.mjs/m);
   assert.match(out, /^WARN +pan-harness[\\/]scripts[\\/]helper\.sh: not one of the skill's scripts/m);
+});
+
+test('the Writing rule group: missing in a 1.2.0 harness is a warning, in an older one not', () => {
+  const dir = harness();
+  edit(dir, 'AGENTS.md', '**Writing**\n', '');
+  assert.match(check(dir).out, /^WARN +AGENTS\.md: no '\*\*Writing\*\*' rule group/m);
+  edit(dir, 'PAN-HARNESS.md', `Standard: pan-harness ${VERSION}`, 'Standard: pan-harness 1.1.0');
+  assert.doesNotMatch(check(dir).out, /'\*\*Writing\*\*' rule group/);
+});
+
+test('open criteria: a ⏳ in the plan.md header text is not an item', () => {
+  const dir = harness();
+  edit(dir, 'pan-harness/plan.md', '# Plan\n', '# Plan\n\nHar ⏳ band qachon tekshirilishi bilan yoziladi.\n');
+  assert.match(check(dir).out, /0 open ⏳/);
 });
 
 test('the standard version: another one points to ph-update, a missing line to ph-doctor', () => {
