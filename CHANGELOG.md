@@ -2,6 +2,16 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 1.3.0
+
+Messages to the owner carry meaning, not internal labels:
+
+- the owner does not read the harness files, so an agent writes questions, reports, proposals and status messages in plain words: no internal label (A1, P1, S2, K4: a letter and a number; rule, decision, feedback and lesson numbers too) and no step or section number of a document, the meaning instead; labels stay in the harness files. The rule is a sub-item of the chat rule in the `AGENTS.md` template, rule 14 of the skills' core rules and part of the report shape;
+- the question texts of `ph-init` no longer carry rule labels; the `ph-doctor` report gives counts per section and the findings in plain words, the full table (with item numbers) goes to the history entry;
+- `ph-doctor` checks the sub-item with the chat rule (A64); `pan-harness-check` warns when a 1.3.0 harness lacks it; `ph-update` adds it to the chat rule of a 1.2.0 harness (a chat rule the project reworded is left for the agent);
+- a test run before a change is no longer required: the fixed question set and the behaviour scenarios are run after the change and compared with the last recorded result (a run before is still possible when no result is recorded or the owner asks);
+- `ph-paket`, the name of this package in the texts for agents and owners, is in the glossary; `ph-update` and the skills' intro name it that way.
+
 ## 1.2.0
 
 Agent text and human text are kept apart:

@@ -48,6 +48,10 @@ Entry point for any agent. The harness is described in \`PAN-HARNESS.md\`.
 
 **Writing**
 - **R2. Write for the reader.** Texts for people follow the owner. ← F1
+
+**Communication**
+- **R3. Egasi bilan suhbatda write briefly.** ← F1
+  - Egasi harness fayllarini o'qimaydi: no labels like A1, P1, S2, K4 in the messages to the owner.
 `,
   'PAN-HARNESS.md': `# PAN-HARNESS
 
@@ -374,4 +378,14 @@ test('terms: before the first commit every line of the harness is new', () => {
   git(dir, 'init', '-q', '-b', 'main');
   put(dir, 'pan-harness/state.md', `# State\n\n**Last updated:** ${DAY}\n\nholat (state) yozildi\n`);
   assert.match(check(dir).out, /^WARN +terms: pan-harness\/state\.md:5: /m);
+});
+
+test('the rule against internal labels: missing in a 1.3.0 harness is a warning, in an older one not', () => {
+  const dir = harness();
+  edit(dir, 'PAN-HARNESS.md', `Standard: pan-harness ${VERSION}`, 'Standard: pan-harness 1.3.0');
+  assert.doesNotMatch(check(dir).out, /internal labels/);
+  edit(dir, 'AGENTS.md', "  - Egasi harness fayllarini o'qimaydi: no labels like A1, P1, S2, K4 in the messages to the owner.\n", '');
+  assert.match(check(dir).out, /^WARN +AGENTS\.md: no rule against internal labels in the messages to the owner/m);
+  edit(dir, 'PAN-HARNESS.md', 'Standard: pan-harness 1.3.0', 'Standard: pan-harness 1.2.0');
+  assert.doesNotMatch(check(dir).out, /internal labels/);
 });

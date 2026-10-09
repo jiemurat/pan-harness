@@ -15,7 +15,7 @@ Harness'ni faqat repo'ni ko'rgan yangi agent sinaydi: u yozgan agent ko'rmagan b
 ## When to test
 
 Egasiga variant va tavsiya ber, tavsiyani vaziyatga qarab tuz:
-- **o'zgarish turi:** yangi harness yoki structural o'zgarishdan keyin — doimiy to'plam, o'zgarishdan oldin va keyin bir xil; faqat mechanical fix'dan keyin odatda shart emas;
+- **o'zgarish turi:** yangi harness yoki structural o'zgarishdan keyin — doimiy to'plam, o'zgarishdan keyin; oldin run shart emas: taqqoslash uchun oxirgi yozilgan natija ishlatiladi (`playbooks/pan-harness.md` → `Test questions`), yozilgan natija yo'q bo'lsa yoki egasi so'rasa, oldin ham o'tkaziladi; faqat mechanical fix'dan keyin odatda shart emas;
 - **uzun large task** (bir sessiyadan oshadigan) — "o'rtasidan davom ettirish" sinovi;
 - **subyektiv natija** (matn, hujjat, harness'ning o'zi, dizayn) — mustaqil tekshiruvchi;
 - **`ph-doctor`** — har uchinchi `ph-doctor` da (tarixdagi `ph-doctor` yozuvlarini sana) soddalashtirish tajribasi;
@@ -41,7 +41,7 @@ Savollar loyihaning `playbooks/pan-harness.md` → `## Test questions` da saqlan
 
 Keyin 4–6 ta loyihaga xos savol: ishni qaysi fayllardan boshlaydi, o'tgan ishni qanday topadi, ish oxirida nima qiladi, loyihaning eng xavfli amalida nima qiladi. Oxirida: "Harness'da siz aniq tushunmagan yoki sizni assumption qilishga majbur qilgan gap bormi? Har biri uchun fayl:qator va nimasi noaniq."
 
-Har javobni `to'g'ri`, `qisman` yoki `noto'g'ri` deb bahola. Kontekst sarfini vosita beradigan raqam bilan o'lcha: token va tool chaqiruvlari soni. Agentning o'zi aytgan o'qilgan KB ishonchsiz, uni faqat qaysi fayllar o'qilganini bilish uchun ishlat. Structure o'zgarishidan oldin va keyin bir xil to'plam bir xil model bilan beriladi: keyingisida `to'g'ri` javoblar soni kam bo'lmasligi kerak.
+Har javobni `to'g'ri`, `qisman` yoki `noto'g'ri` deb bahola. Kontekst sarfini vosita beradigan raqam bilan o'lcha: token va tool chaqiruvlari soni. Agentning o'zi aytgan o'qilgan KB ishonchsiz, uni faqat qaysi fayllar o'qilganini bilish uchun ishlat. Structure o'zgarishidan keyin to'plam oxirgi yozilgan natijadagi model bilan beriladi (oldin run shart emas; yozilgan natija yo'q bo'lsa yoki egasi so'rasa, oldin ham): `to'g'ri` javoblar soni oxirgi yozilgan natijadan kam bo'lmasligi kerak.
 
 ## Resume test
 

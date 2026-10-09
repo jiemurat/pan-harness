@@ -1,6 +1,6 @@
 {
   "name": "@jiemurat/pan-harness",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Panoramic Harness (pan-harness): plain-text rules and knowledge that let any AI coding agent run a project like its owner. Installs the ph-init, ph-doctor, ph-update, ph-grilling and ph-writing-for-agents agent skills into a project.",
   "keywords": [
     "agent-skills",

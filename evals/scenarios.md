@@ -1,6 +1,6 @@
 # Skill evals: scenarios
 
-Skill o'zgargandan keyin skill muallifi uni shu ssenariylar bilan sinaydi. Har ssenariy faqat skill va maqsadli loyihani ko'rgan yangi agentda (masalan, sub-agentda) ishga tushiriladi. Sinov loyiha nusxasida yoki git'da hamma narsa commit qilingan loyihada qilinadi: natija `git diff` bilan ko'riladi va qaytariladi.
+Skill o'zgargandan keyin skill muallifi uni shu ssenariylar bilan sinaydi. Har ssenariy faqat skill va maqsadli loyihani ko'rgan yangi agentda (masalan, sub-agentda) ishga tushiriladi. Sinov loyiha nusxasida yoki git'da hamma narsa commit qilingan loyihada qilinadi: natija `git diff` bilan ko'riladi va qaytariladi. Sinov faqat o'zgartirishdan keyin o'tkaziladi: oldin run shart emas.
 
 Bitta ssenariy strong model bilan taxminan 150–300 ming token oladi. Sinovdan oldin qaysi ssenariy va qaysi model bilan o'tkazishni egasidan so'ra, tavsiyani skill'dagi o'zgarishga qarab ber: o'zgargan qismni tekshiradigan ssenariy birinchi. Sinovlarni bir vaqtda bittadan yoki ikkitadan ishga tushir: ko'p parallel agent sessiya limitiga urilishi mumkin.
 
@@ -63,6 +63,8 @@ Sinov agentiga yoz: live system buyruqlarini ishlatma, external side effect qilm
 - [ ] 5 nuqsonning kamida 4 tasi topilgan va moslik jadvalida `fail` bo'lib turibdi.
 - [ ] 1 va 3 kabi mechanical nuqsonlar tuzatilgan, 2 va 4 structural taklif sifatida berilgan.
 - [ ] Topilmagan nuqson bo'lsa, sababi tahlil qilinadi va `audit.md` yoki `doctor.md` yaxshilanadi.
+- [ ] Egasiga yozilgan hisobot va savollarda ichki belgi yo'q (`grep -nE '(^|[^[:alnum:]_])[ADFKLPRS][0-9]{1,3}([^[:alnum:]_]|$)' <fayl>` hisobot matnida 0 topilma): bandlar raqami emas, ma'nosi bilan nomlangan.
+- [ ] Hisobot tanasida fayl va inglizcha bo'lim nomi faqat egasi ochishi yoki shunga qarab qaror qilishi kerak bo'lgan joyda (`grep -nE '[A-Za-z0-9_./-]+\.(md|mjs|json)' <fayl>` ning har topilmasi shunday), qolgani mazmuni bilan yozilgan.
 
 ## E5. ph-init: hujjat loyihasi, git va live system yo'q (git o'rnatilgan, repo yo'q)
 
@@ -142,6 +144,7 @@ Sinov agentiga yoz: live system buyruqlarini ishlatma, external side effect qilm
 - [ ] Uch versiya solishtirilgan (o'rnatilgan, npm, `Standard:`), `npx @jiemurat/pan-harness@latest update` ishga tushirilgan; 3 kodi bo'lsa, ro'yxat egasiga ko'rsatilgan.
 - [ ] Migration yangi o'rnatilgan `references/changelog.md` bo'yicha: `mechanical` qadamlar bajarilgan, `structural` qadamlar egasiga taklif qilingan; skriptlar va hook yangi skill papkasidagilar bilan almashtirilgan; `Standard:` yangi versiyaga.
 - [ ] `pan-harness-check.mjs` 0 xato, keyin to'liq `ph-doctor` moslik jadvali, commit R4 bo'yicha, push yo'q.
+- [ ] 1.3.0 ga o'tishda `AGENTS.md` dagi suhbat qoidasi ostiga egasiga xabarda ichki belgi yozilmasligini aytadigan band qo'shilgan (suhbat qoidasi shablon shaklida bo'lmasa, u qo'lda bajariladigan ro'yxatda); hisobot bandlar raqami emas, ma'nosi bilan yozilgan.
 
 ## E12. Harness'ga yangi matn (P26)
 

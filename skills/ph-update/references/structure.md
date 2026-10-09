@@ -22,6 +22,7 @@ Skill va harness matnida atamalar inglizcha yoziladi, gaplar esa egasining tilid
 | Term | Ma'nosi |
 |---|---|
 | pan-harness | Panoramic Harness'ning qisqa nomi: loyihaning agentlar uchun bilim va qoidalar tizimi, `AGENTS.md`, `PAN-HARNESS.md` va `pan-harness/` |
+| ph-paket | `@jiemurat/pan-harness` npm paketi: `ph-*` skill'lari, ularni loyihaga o'rnatuvchi CLI, shablonlar va skriptlar. Skill'lar shundan o'rnatiladi va yangilanadi (`npx @jiemurat/pan-harness@latest init`, `ph-update`). Egasiga ham, agentga ham shu nom bilan aytiladi |
 | start set | Sessiya boshida o'qiladigan to'rt fayl: `AGENTS.md`, `PAN-HARNESS.md`, `state.md`, `plan.md` |
 | always-loaded layer | Agent vositasi sessiya boshida o'zi yuklaydigan fayl (`AGENTS.md`) |
 | progressive disclosure | Qolgan fayllar kerak bo'lganda o'qiladi: xarita qaysi faylni qachon o'qishni aytadi |
@@ -278,4 +279,4 @@ Harness matnini (`AGENTS.md`, `PAN-HARNESS.md`, `CLAUDE.md`, `pan-harness/`) quy
 
 ## Version
 
-`PAN-HARNESS.md` oxirida standart versiyasi turadi: `Standard: pan-harness <version>`. Versiya — `@jiemurat/pan-harness` paketining versiyasi (semver): `package.json`, har skill'dagi `metadata.version`, `pan-harness-check.mjs` dagi `VERSION` va `changelog.md` dagi oxirgi yozuv bir xil. MAJOR — eski harness yangi skript bilan xato beradi va migration'siz ishlamaydi; MINOR — yangi imkoniyat, check yoki qo'shiladigan `mechanical` migration qadami (eski harness ishlayveradi, yangi bandlar faqat `WARN` va audit beradi); PATCH — tuzatish. `ph-update` va `ph-doctor` loyihadagi versiyadan keyingi `changelog.md` yozuvlarini bajaradi: `mechanical` qadamlarni `scripts/migrate.mjs`, qolganini agent; skriptlar versiyadan qat'i nazar `diff` bilan ham tekshiriladi. Harness unknown standard'da bo'lsa ("Glossary"), `doctor.md` → "3. Migration" dagi tartib bajariladi.
+`PAN-HARNESS.md` oxirida standart versiyasi turadi: `Standard: pan-harness <version>`. Versiya — ph-paketning (`@jiemurat/pan-harness`) versiyasi (semver): `package.json`, har skill'dagi `metadata.version`, `pan-harness-check.mjs` dagi `VERSION` va `changelog.md` dagi oxirgi yozuv bir xil. MAJOR — eski harness yangi skript bilan xato beradi va migration'siz ishlamaydi; MINOR — yangi imkoniyat, check yoki qo'shiladigan `mechanical` migration qadami (eski harness ishlayveradi, yangi bandlar faqat `WARN` va audit beradi); PATCH — tuzatish. `ph-update` va `ph-doctor` loyihadagi versiyadan keyingi `changelog.md` yozuvlarini bajaradi: `mechanical` qadamlarni `scripts/migrate.mjs`, qolganini agent; skriptlar versiyadan qat'i nazar `diff` bilan ham tekshiriladi. Harness unknown standard'da bo'lsa ("Glossary"), `doctor.md` → "3. Migration" dagi tartib bajariladi.

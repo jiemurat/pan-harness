@@ -2,6 +2,8 @@
 
 `ph-init` suhbatida beriladi. Egasining uslubi so'raladi: har savol variantlar va tavsiya bilan beriladi, javob loyihaning harness'iga yoziladi. Egasining so'zlari `feedback.md` ga (F…), ulardan chiqqan qoida `AGENTS.md` ga (R…), structure tanlovi `decisions.md` ga (D…) yoziladi.
 
+Savolni egasiga shu jadvaldagi matn bilan ber: `#` va `Profile` ustunlari agent uchun. Javob yoziladigan qoida shablonda: S2 va S26 — matn chegarasi qoidasi (R23), S3 — suhbat qoidasi (R12), S22 — ildizdagi qoida (R17).
+
 Faqat repo'dan topilmagan javobni so'ra. Raundlar mavzu bo'yicha guruhlangan: bir-biriga bog'liq bo'lmaganlarini bitta raundda ber. Odatda 1-raund (maqsad, profile va faktlarni tasdiqlash, loyiha bilimi) alohida, 2–4-raundlar birga beriladi. Boshqa javobga bog'liq savol keyingi raundga qoladi. `Profile` ustunida shart bo'lsa, savol faqat o'sha profile'da beriladi.
 
 Egasi javob bermagan savolda tavsiya bo'yicha tanlov qilinsa, u `decisions.md` ga `(provisional: owner to confirm)` belgisi bilan yoziladi va `plan.md` → `Awaiting owner decision` ga qo'shiladi. `feedback.md` ga yozilmaydi: u faqat egasining so'zlari uchun.
@@ -14,12 +16,12 @@ Egasi javob bermagan savolda tavsiya bo'yicha tanlov qilinsa, u `decisions.md` g
 | S28 | Repo'dan aniqlangan profile (`live-system`, `code`, `sensitive-data`) to'g'rimi | Tasdiqlash yoki tuzatish | Repo'dan aniqlangani, har belgining sababi bilan | |
 | S11 | Commit'larni agent o'zi qilsinmi? Push'ni egasi qiladi, bu haqda so'ralmaydi. 1-raundda, chunki `ph-init` dagi `Pre-init state` commit'i shunga bog'liq | a) ha: agent har ish oxirida, katta ishda har bosqich oxirida, check'lar o'tgach o'zi commit qiladi; egasining commit qilinmagan o'zgarishlari agentnikidan oldin alohida commit'ga tushadi; b) yo'q: commit faqat egasi so'raganda (ish o'rtasidagi state'ni `handoff.md` saqlaydi) | a | |
 | S29 | Commit'larda qaysi ism va email turadi (git'ning `user.name`, `user.email`) | Ochiq savol; javob repo'ning lokal sozlamasiga yoziladi | — | Git'da identity yo'q bo'lsa |
-| S2 | Agent egasi bilan suhbatda qaysi tilda yozadi, harness qaysi tilda. README va boshqa loyiha hujjatlarining tili bu yerda so'ralmaydi: agent ularni `AGENTS.md` dagi matn chegarasi qoidasi (shablonda R23) bo'yicha yozadi | a) suhbat va harness egasining tilida; b) suhbat va harness ingliz tilida; c) aralash: suhbat va harness egasining tilida, kod izohlari inglizcha | c | |
+| S2 | Agent egasi bilan suhbatda qaysi tilda yozadi, harness qaysi tilda. README va boshqa loyiha hujjatlarining tili bu yerda so'ralmaydi: agent ularni `AGENTS.md` dagi matn chegarasi qoidasi bo'yicha yozadi | a) suhbat va harness egasining tilida; b) suhbat va harness ingliz tilida; c) aralash: suhbat va harness egasining tilida, kod izohlari inglizcha | c | |
 | S27 | Atamalar: harness'da inglizcha atama ishlatilsinmi (maydon nomlari va sarlavhalar baribir inglizcha) | a) ha: atamalar va bir necha ma'noli so'z o'rniga inglizcha atama, izohsiz (`structure.md` → "Glossary"); b) yo'q: har tushuncha uchun harness tilidagi bitta so'z, ro'yxati `runbook.md` → `Writing the harness` da | a | S2 b bo'lmasa |
-| S3 | Agent egasi bilan suhbatda qanday uslubda yozadi va egasiga qanday murojaat qiladi. Javob shablondagi R12 ga yoziladi | Uslub: a) qisqa, texnik tafsilot faqat kerak bo'lganda; b) batafsil, tushuntirishlar bilan; c) faqat texnik, izohsiz. Murojaat: ochiq savol | uslub a; murojaat tavsiyasiz, egasining so'zi bilan | |
+| S3 | Agent egasi bilan suhbatda qanday uslubda yozadi va egasiga qanday murojaat qiladi. Javob `AGENTS.md` dagi suhbat qoidasiga yoziladi | Uslub: a) qisqa, texnik tafsilot faqat kerak bo'lganda; b) batafsil, tushuntirishlar bilan; c) faqat texnik, izohsiz. Murojaat: ochiq savol | uslub a; murojaat tavsiyasiz, egasining so'zi bilan | |
 | S4 | Agent loyihada qancha ish qila oladi | a) egasi qila oladigan har qanday ishni, aniq `Boundaries` bilan; b) faqat kod; c) faqat o'qish va taklif | a | |
 | S5 | Egasining texnik darajasi: nimani soddalashtirmaslik kerak | Ochiq savol | — | |
-| S26 | Harness'dagi sana va vaqt qaysi vaqt zonasida (loyiha hujjatlaridagisi matn chegarasi qoidasi bo'yicha, shablonda R23) | a) egasining vaqt zonasi; b) server vaqt zonasi | a | |
+| S26 | Harness'dagi sana va vaqt qaysi vaqt zonasida (loyiha hujjatlaridagisi matn chegarasi qoidasi bo'yicha) | a) egasining vaqt zonasi; b) server vaqt zonasi | a | |
 
 ## Round 2: workflow
 
@@ -52,7 +54,7 @@ Egasi javob bermagan savolda tavsiya bo'yicha tanlov qilinsa, u `decisions.md` g
 | S20 | `ph-doctor` dagi mechanical fix'lar | a) qoidada belgilangan mechanical fix darhol, structural o'zgarish reja bilan; b) hammasi reja bilan | a | |
 | S21 | Structure savolida tadqiqot | a) variantdan oldin internetdagi amaliyot o'rganiladi, manbalar bilan; b) agentning o'z bilimi yetadi | a | |
 | S25 | Faqat o'qiydigan status script (`project/scripts/status-check.sh` kabi) yaratilsinmi | a) ha; b) yo'q, status qo'lda tekshiriladi | a | `live-system=yes` |
-| S22 | Loyihada boshqa maqsadli `AGENTS.md` lar bormi (ilovaning o'z agentlari, hujjatlar) | Repo'dan topiladi, borligi tasdiqlatiladi | Ildizdagi qoidada "ular tahrir obyekti" (R17) | Bunday fayl bo'lsa |
+| S22 | Loyihada boshqa maqsadli `AGENTS.md` lar bormi (ilovaning o'z agentlari, hujjatlar) | Repo'dan topiladi, borligi tasdiqlatiladi | Ildizdagi qoidada "ular tahrir obyekti" | Bunday fayl bo'lsa |
 | S23 | Mavjud `CLAUDE.md` | Repo'dan topiladi | `CLAUDE.md` faqat `@AGENTS.md` importi bilan qoladi, mazmuni pan-harness'ga move qilinadi | `CLAUDE.md` bo'lsa |
 
 ## Project knowledge (agar repo'dan topilmasa)

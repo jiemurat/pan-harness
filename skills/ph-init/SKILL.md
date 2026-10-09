@@ -3,7 +3,7 @@ name: ph-init
 description: Loyihaga harness quradi: AGENTS.md, PAN-HARNESS.md va pan-harness/ (Panoramic Harness). Harness yo'q loyihada ishlatiladi: bo'sh papka, kod yoki hujjat loyihasi, boshqa shakldagi AGENTS.md, CLAUDE.md yoki .cursor/rules bor loyiha.
 license: MIT
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
   package: "@jiemurat/pan-harness"
 ---
 
@@ -11,13 +11,13 @@ metadata:
 
 Panoramic Harness (qisqasi pan-harness) — loyihaning agentlar uchun bilim va qoidalar tizimi. Uni har qanday agent va model o'qiy oladi: hammasi oddiy Markdown, biror vositaga xos fayl yoki xotiraga tayanilmaydi. Har sessiyadagi agent yangi va oldingi suhbatni eslamaydi, shuning uchun loyihani davom ettirishga kerak hamma narsa repo'da yoziladi.
 
-Pan-harness `@jiemurat/pan-harness` npm paketidagi to'rt skill bilan ishlaydi:
+Pan-harness ph-paketdagi (`@jiemurat/pan-harness`) to'rt skill bilan ishlaydi:
 
 | Skill | When | Result |
 |---|---|---|
 | `ph-init` | Loyihada pan-harness yo'q: papka bo'sh yoki loyiha bor (boshqa shakldagi `AGENTS.md`, `CLAUDE.md` yoki `CONTEXT.md` bo'lishi mumkin) | Profile, standart structure, egasi bilan kelishilgan qoidalar, check'dan o'tgan harness |
 | `ph-doctor` | Pan-harness bor. Muntazam (masalan, oyda bir) yoki egasi so'raganda | Moslik jadvali, mechanical fix'lar, yangi standart versiyasiga migration, structural takliflar |
-| `ph-update` | Paketning yangi versiyasi chiqqan | Skill'lar yangilangan, harness yangi versiyaga migration qilingan, to'liq `ph-doctor` o'tkazilgan |
+| `ph-update` | ph-paketning yangi versiyasi chiqqan | Skill'lar yangilangan, harness yangi versiyaga migration qilingan, to'liq `ph-doctor` o'tkazilgan |
 | `ph-grilling` | Katta ishni rejalashtirish suhbati | Raund-raund savollar, kelishilgan qarorlar |
 
 Skill'lar loyihaga `npx @jiemurat/pan-harness@latest init` bilan o'rnatiladi va git'ga kirmaydi: ular asbob, loyiha bilimi esa harness'da. Egasi skill'ni agentida chaqiradi: Claude Code, Antigravity, Cursor, GitHub Copilot, Gemini CLI va OpenCode'da `/ph-init`, Codex'da `$ph-init`. Agent maqsadli loyihaning ildizida ishlaydi. Atama noaniq bo'lsa, `references/structure.md` → "Glossary" ni o'qi.
@@ -39,6 +39,7 @@ Skill bilan ishlaganda bu qoidalar maqsadli loyihaning qoidalaridan oldin ham am
 11. **Irreversible action faqat ruxsat bilan.** Fayl o'chirish va tarixni qayta yozish faqat egasining aniq ko'rsatmasi bilan. Push'ni egasi qiladi: agent uni faqat egasi aniq so'raganda bajaradi va bu haqda o'zi so'ramaydi. Commit loyihaning R4 qoidasi bo'yicha qilinadi, `ph-init` da esa S11 javobiga ko'ra. Hook xato bersa, sababini tuzat: `--no-verify` uchun egasi shu commit uchun alohida ruxsat bergan bo'lishi kerak.
 12. **Git doim bor.** Pan-harness git'da ishlaydi: tarix, checkpoint'lar va egasining hamda agentning o'zgarishlarini ajratish shunga tayanadi. Git yo'q bo'lsa, `ph-init` uni o'rnatadi va sozlaydi (`references/structure.md` → "Git"). Har ish oxirida agent `.gitignore` ni nazorat qiladi.
 13. **Skill fayllari faqat o'qiladi:** skill'ni uning muallifi takomillashtiradi. Skill'da nuqson topilsa, `references/doctor.md` → "6. Fix" dagi skill limitation tartibini bajar.
+14. **Egasiga tushunarli yoz.** Egasi harness fayllarini o'qimaydi: savol, hisobot, taklif va statusda gapni ma'nosi bilan ayt. Ichki belgi (A1, P1, S2, K4 kabi raqamli nom; qoida, qaror, fikr va saboq raqamlari ham shunday) va hujjat ichidagi qadam yoki bo'lim raqami o'rniga mazmunini oddiy so'z bilan yoz; atamani birinchi ishlatganingda tushuntir; harness bo'limi va fayl nomi (Working style, Awaiting owner decision, handoff kabi) ham atama: mazmunini yoz. Savol va band tartib raqamlari (1, 2, 3) qoladi: ular javob berishni osonlashtiradi. Fayl nomini egasi uni ochishi yoki shunga qarab qaror qilishi kerak bo'lganda, havola bilan yoz. Belgilar harness fayllarida (tarix yozuvi, `plan.md`, jurnallar) qoladi. Egasi belgini o'zi so'rasa yoki tilga olsa, ma'nosini ayt va kerak bo'lsa belgini ham ko'rsat. `references/style-questions.md` dagi savolni o'sha jadvaldagi matn bilan ber; `#` ustunidagi raqam agent uchun.
 
 ## Steps
 
@@ -79,12 +80,16 @@ Sinovni har safar egasidan so'ra: qaysi sinov, qaysi model va token estimate'i. 
 
 ## Report
 
-Egasining tilida, qisqa:
+Egasining tilida, qisqa va tushunarli: bandlar raqami emas, ma'nosi bilan nomlanadi (`Core rules` dagi egasiga tushunarli yozish qoidasi):
 - reja bilan qilingan ishda har kriteriya: ✅ (dalil bilan), ❌ yoki ⏳ (qachon tekshiriladi);
 - reja bilan qilingan ishda o'zgargan komponentlar xaritasi: har biri uchun nima o'zgardi, kimga ta'sir qiladi, kutilgan xarajat va sifat, qanday o'chiriladi yoki qaytariladi;
 - nima qilindi va nima topildi (raqamlar bilan);
-- `ph-doctor` da moslik jadvali: bo'lim bo'yicha `ok`, `fail`, `not checked`;
+- `ph-doctor` da: bo'lim bo'yicha `ok`, `fail`, `not checked` hisobi va topilgan nuqsonlar oddiy tilda; to'liq jadval (raqamlari bilan) tarix yozuvida qoladi;
 - `verified` va `unverified` alohida;
 - skill limitation'lar (bo'lsa);
-- egasining qarori kerak bo'lgan savollar (raqamlangan, variant va tavsiya bilan);
+- egasining qarori kerak bo'lgan savollar (raqamlangan, variant va tavsiya bilan; savolning o'zi tushunarli, ichki belgisiz);
 - o'zgargan fayllar ro'yxati, keyingi qadam.
+
+Yuborishdan oldin hisobot qoralamasini vaqtinchalik faylga yoz va ikki buyruqni ishga tushir:
+- `grep -nE '(^|[^[:alnum:]_])[ADFKLPRS][0-9]{1,3}([^[:alnum:]_]|$)' <fayl>`: topilgan har belgini ma'nosi bilan almashtir. Tugadi: buyruq hech narsa topmaydi.
+- `grep -nE '[A-Za-z0-9_./-]+\.(md|mjs|json)' <fayl>`: fayl nomini egasi ochishi yoki shunga qarab qaror qilishi kerak bo'lmasa, nom o'rniga mazmunini yoz (masalan, "ish rejasi", "sessiya holati"). Tugadi: tanada faqat egasi ochishi yoki qarori bog'liq bo'lgan fayl nomlari qoladi; boshqa nomlar "o'zgargan fayllar" ro'yxatida.

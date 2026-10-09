@@ -44,7 +44,8 @@ Warnings:
   - no Profile line;
   - the standard sections of AGENTS.md or PAN-HARNESS.md are out of order, or
     a Boundaries line (Never, Ask first, Always) is missing, or (standard 1.2.0
-    and newer) the **Writing** rule group;
+    and newer) the **Writing** rule group, or (standard 1.3.0 and newer) the
+    sub-item against internal labels in messages to the owner under the chat rule;
   - a journal entry without its required fields (D: Why, Where; F: Quote,
     Context, Result; L: Rule, Check; history: What and why, Checks, Files, and
     Downtime when live-system=yes); entries older than check.json "fields_from"
@@ -93,7 +94,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const VERSION = '1.2.0';
+const VERSION = '1.3.0';
 
 // Sizes in bytes. 24 KB fits the start set of a complex project written
 // compactly; 40 KB keeps any doc readable in one go. An agent reads a doc over
@@ -496,6 +497,10 @@ for (const [p, sections] of [[path.join(ROOT, 'AGENTS.md'), AGENTS_SECTIONS], [p
     if (stdVersion && /^\d+\.\d+\.\d+$/.test(stdVersion) && atLeast(stdVersion, '1.2.0') && !/^\*\*Writing\*\*\s*$/m.test(text.get(p))) {
       warnings.push("AGENTS.md: no '**Writing**' rule group - the rule that keeps harness rules out of texts for "
         + "people (standard 1.2.0) is missing; add it from the template (references/changelog.md -> 1.2.0, step 1)");
+    }
+    if (stdVersion && /^\d+\.\d+\.\d+$/.test(stdVersion) && atLeast(stdVersion, '1.3.0') && !/A1, P1, S2, K4/.test(text.get(p))) {
+      warnings.push('AGENTS.md: no rule against internal labels in the messages to the owner - the owner does not read the '
+        + 'harness files (standard 1.3.0); add the sub-item under the chat rule from the template (references/changelog.md -> 1.3.0, step 1)');
     }
   }
 }

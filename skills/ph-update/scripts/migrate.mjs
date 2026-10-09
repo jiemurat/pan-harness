@@ -47,7 +47,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['1.0.0', '1.1.0', '1.2.0'];
+const KNOWN = ['1.0.0', '1.1.0', '1.2.0', '1.3.0'];
 const done = [];
 const byHand = [];
 
@@ -375,9 +375,40 @@ function step5Playbook() {
   if (n) { f.changed = true; done.push('1.2.0 step 5: playbooks/pan-harness.md: the skill file is named without a project path'); }
 }
 
+// ---------------------------------------------------------------- 1.3.0 (messages to the owner)
+// the template's sub-item of the chat rule: the owner does not read the harness files, so no internal labels in messages
+const OWNER_ITEM = fs.readFileSync(path.join(TEMPLATES, 'AGENTS.md.tmpl'), 'utf8').split(/\r?\n/).find((l) => l.startsWith("  - Egasi harness fayllarini o'qimaydi: "));
+
+function step1OwnerMessages() {
+  const f = file('AGENTS.md');
+  if (!f) { byHand.push('1.3.0 step 1: no AGENTS.md'); return; }
+  if (f.lines.some((l) => l.includes('A1, P1, S2, K4'))) { done.push('1.3.0 step 1: AGENTS.md already has the rule against internal labels in the messages to the owner'); return; }
+  const at = f.lines.findIndex((l) => RULE.test(l) && l.includes('Egasi bilan suhbatda'));
+  if (at < 0) {
+    byHand.push('1.3.0 step 1: AGENTS.md: no chat rule in the template form (a numbered rule that starts with "Egasi bilan suhbatda"); add the template\'s sub-item under the project\'s chat rule (templates/AGENTS.md.tmpl, under R12: "Egasi harness fayllarini o\'qimaydi: ...")');
+    return;
+  }
+  let end = at + 1;
+  while (end < f.lines.length && /^ {2}- /.test(f.lines[end])) end += 1; // after the rule's own sub-items
+  f.lines.splice(end, 0, OWNER_ITEM);
+  f.changed = true;
+  done.push(`1.3.0 step 1: AGENTS.md: R${RULE.exec(f.lines[at])[1]} (the chat rule) got the sub-item against internal labels in the messages to the owner`);
+}
+
+function step2Playbook130() {
+  const f = file('pan-harness/playbooks/pan-harness.md');
+  if (!f) return;
+  const old = "structure o'zgarishidan oldin va keyin bir xil beriladi, natijalar solishtiriladi.";
+  const now = "structure o'zgarishidan keyin beriladi, natijalar oxirgi yozilgan natija bilan solishtiriladi (oldin run shart emas).";
+  let n = 0;
+  f.lines = f.lines.map((l) => (l.includes(old) ? (n += 1, l.replace(old, now)) : l));
+  if (n) { f.changed = true; done.push('1.3.0 step 2: playbooks/pan-harness.md: the fixed question set is given after the change, the last recorded result is the comparison'); }
+}
+
 const STEPS = {
   '1.1.0': [step1Rename, step2Rules, step3Terms, step4PanHarness, step5Headers],
   '1.2.0': [step1Boundary, step2Chat, step3Intro, step4PanHarness120, step5Playbook],
+  '1.3.0': [step1OwnerMessages, step2Playbook130],
 };
 
 // ---------------------------------------------------------------- run

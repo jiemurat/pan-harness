@@ -3,7 +3,7 @@ name: ph-writing-for-agents
 description: Writing documents for agents. Use when creating or editing skills, or modifying AGENTS.md or CLAUDE.md.
 license: MIT (Copyright (c) 2026 Matt Pocock), see LICENSE
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
   package: "@jiemurat/pan-harness"
   source: "https://github.com/mattpocock/skills/blob/321658273cb1d20b76026717d027d505790106d4/skills/productivity/writing-for-agents/SKILL.md"
   changes: "renamed to ph-writing-for-agents"

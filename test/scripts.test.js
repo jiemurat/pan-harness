@@ -177,6 +177,7 @@ test('migrate: a 1.0.0 harness moves to the current standard, entries keep their
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.ok(r.stdout.includes(`migrate: 1.0.0 -> ${VERSION};`), r.stdout);
   assert.match(r.stdout, /^by hand 1\.2\.0 step 2: AGENTS\.md: no chat rule in the template form/m, 'the demo has no chat rule');
+  assert.match(r.stdout, /^by hand 1\.3\.0 step 1: AGENTS\.md: no chat rule in the template form/m, 'and so no place for the sub-item against internal labels');
   const runbook = read(dir, 'pan-harness/runbook.md');
   assert.match(runbook, /^## 4\. Writing the harness$/m);
   assert.match(runbook, /^Harness matnini \(`AGENTS\.md`.* R2 da\. /m);
@@ -206,7 +207,8 @@ test('migrate: a 1.0.0 harness moves to the current standard, entries keep their
   assert.equal(read(dir, 'pan-harness/scripts/pan-harness-check.mjs'), fs.readFileSync(path.join(SKILL, 'scripts', 'pan-harness-check.mjs'), 'utf8'));
   const check = spawnSync(process.execPath, [path.join(dir, 'pan-harness/scripts/pan-harness-check.mjs'), '--root', dir], { encoding: 'utf8' });
   assert.equal(check.status, 0, check.stdout);
-  assert.doesNotMatch(check.stdout, /^WARN/m, check.stdout);
+  assert.doesNotMatch(check.stdout, /^WARN(?! +AGENTS\.md: no rule against internal labels)/m, check.stdout); // only what is left by hand
+  assert.match(check.stdout, /^WARN +AGENTS\.md: no rule against internal labels/m);
 
   const again = run('migrate.mjs', '--root', dir);
   assert.ok(again.stdout.includes(`migrate: ${VERSION} -> ${VERSION}; 0 done, 0 by hand`), again.stdout);
@@ -240,9 +242,9 @@ test('migrate: a 1.1.0 harness gets the text boundary rule, its chat rule points
   const dir = harness110(RULES_110);
   const r = run('migrate.mjs', '--root', dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  assert.ok(r.stdout.includes(`migrate: 1.1.0 -> ${VERSION}; 6 done, 0 by hand`), r.stdout);
+  assert.ok(r.stdout.includes(`migrate: 1.1.0 -> ${VERSION}; 8 done, 0 by hand`), r.stdout);
   const agents = read(dir, 'AGENTS.md');
-  assert.ok(agents.includes(`${CHAT_110.replace("**R2. O'zbekcha", "**R2. Egasi bilan suhbatda o'zbekcha").replace(' ← F1', ' Faylga yoziladigan matnning tili va uslubi R5 da. ← F1')}\n${REPORT_RULE}\n`), agents);
+  assert.ok(agents.includes(`${CHAT_110.replace("**R2. O'zbekcha", "**R2. Egasi bilan suhbatda o'zbekcha").replace(' ← F1', ' Faylga yoziladigan matnning tili va uslubi R5 da. ← F1')}\n${templateItem()}${REPORT_RULE}\n`), agents);
   assert.match(agents, /\n\n\*\*Writing\*\*\n- \*\*R5\. Matnni o'quvchisiga qarab yoz\.\*\* .* ← D1\n  - Agent o'qiydigan .*\n  - Inson o'qiydigan .*\n$/);
   assert.match(read(dir, 'pan-harness/runbook.md'), /^Harness matnini \(`AGENTS\.md`.* R5 da\. /m);
   const pan = read(dir, 'PAN-HARNESS.md');
@@ -250,7 +252,7 @@ test('migrate: a 1.1.0 harness gets the text boundary rule, its chat rule points
   assert.match(pan, /^- \[ \] Shu ishda yozgan har matnni o'quvchisiga qarab tekshir \(R5\)/m);
   assert.match(read(dir, 'pan-harness/playbooks/pan-harness.md'), /\(`ph-doctor` skill'idagi testing\.md, "Fixed question set" bo'limi\)/);
   const changed = git(dir, 'diff', '--numstat').trim().split('\n').sort();
-  assert.deepEqual(changed, ['1\t1\tpan-harness/playbooks/pan-harness.md', '1\t1\tpan-harness/runbook.md', '3\t3\tPAN-HARNESS.md', '6\t1\tAGENTS.md'].sort(), 'only the changed lines');
+  assert.deepEqual(changed, ['1\t1\tpan-harness/playbooks/pan-harness.md', '1\t1\tpan-harness/runbook.md', '3\t3\tPAN-HARNESS.md', '7\t1\tAGENTS.md'].sort(), 'only the changed lines');
   const check = spawnSync(process.execPath, [path.join(dir, 'pan-harness/scripts/pan-harness-check.mjs'), '--root', dir], { encoding: 'utf8' });
   assert.equal(check.status, 0, check.stdout);
   assert.doesNotMatch(check.stdout, /^WARN/m, check.stdout);
@@ -291,4 +293,55 @@ test('migrate: a dry run writes nothing, an unknown standard stops, CRLF files k
   const r = run('migrate.mjs', '--root', unknown);
   assert.equal(r.status, 3);
   assert.match(r.stdout, /unknown standard \(no Standard line\)/);
+});
+
+// 1.3.0: the chat rule gets a sub-item against internal labels in the messages to the owner
+const OWNER_ITEM = /^ {2}- Egasi harness fayllarini o'qimaydi: .*\n/m;
+const templateItem = () => (OWNER_ITEM.exec(fs.readFileSync(path.join(SKILL, 'templates', 'AGENTS.md.tmpl'), 'utf8')) || [])[0];
+
+/** a 1.2.0 harness: the migrated 1.1.0 one with the sub-item taken out of the chat rule and the Standard line put back */
+function harness120(rules = RULES_110) {
+  const dir = harness110(rules);
+  run('migrate.mjs', '--root', dir);
+  const edit = (rel, f) => fs.writeFileSync(path.join(dir, rel), f(read(dir, rel)));
+  edit('AGENTS.md', (s) => s.replace(OWNER_ITEM, ''));
+  edit('PAN-HARNESS.md', (s) => s.replace(`Standard: pan-harness ${VERSION}`, 'Standard: pan-harness 1.2.0'));
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-q', '-m', 'harness 1.2.0');
+  return dir;
+}
+
+test('migrate 1.3.0: the chat rule gets the sub-item against internal labels, the check is clean, a second run changes nothing', () => {
+  const item = templateItem();
+  assert.ok(item, 'the AGENTS.md template has the sub-item');
+  const dir = harness120();
+  const sentence = "structure o'zgarishidan oldin va keyin bir xil beriladi, natijalar solishtiriladi.";
+  fs.appendFileSync(path.join(dir, 'pan-harness/playbooks/pan-harness.md'), `\nDoimiy savollar to'plami (\`ph-doctor\` skill'idagi testing.md, "Fixed question set" bo'limi): ${sentence}\n`);
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-q', '-m', 'the playbook sentence of 1.2.0');
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(read(dir, 'pan-harness/playbooks/pan-harness.md'), /structure o'zgarishidan keyin beriladi, natijalar oxirgi yozilgan natija bilan solishtiriladi \(oldin run shart emas\)\./);
+  assert.match(r.stdout, new RegExp(`migrate: 1\\.2\\.0 -> ${VERSION.replace(/\./g, '\\.')}; \\d+ done, 0 by hand`), r.stdout);
+  assert.ok(read(dir, 'AGENTS.md').includes(`Faylga yoziladigan matnning tili va uslubi R5 da. ← F1\n${item}${REPORT_RULE}\n`), read(dir, 'AGENTS.md'));
+  const check = spawnSync(process.execPath, [path.join(dir, 'pan-harness/scripts/pan-harness-check.mjs'), '--root', dir], { encoding: 'utf8' });
+  assert.equal(check.status, 0, check.stdout);
+  assert.doesNotMatch(check.stdout, /^WARN/m, check.stdout);
+  assert.ok(run('migrate.mjs', '--root', dir).stdout.includes(`migrate: ${VERSION} -> ${VERSION}; 0 done, 0 by hand`));
+});
+
+test('migrate 1.3.0: a chat rule the project reworded is left by hand, a sub-item that is already there stays', () => {
+  const reworded = harness120(RULES_110.replace(CHAT_110, '- **R2. Always answer in Uzbek, briefly.** ← F1'));
+  const before = read(reworded, 'AGENTS.md');
+  const r = run('migrate.mjs', '--root', reworded);
+  assert.match(r.stdout, /^by hand 1\.3\.0 step 1: AGENTS\.md: no chat rule in the template form/m, r.stdout);
+  assert.equal(read(reworded, 'AGENTS.md'), before);
+
+  const have = harness120();
+  run('migrate.mjs', '--root', have); // the sub-item is there now
+  const once = read(have, 'AGENTS.md');
+  fs.writeFileSync(path.join(have, 'PAN-HARNESS.md'), read(have, 'PAN-HARNESS.md').replace(`Standard: pan-harness ${VERSION}`, 'Standard: pan-harness 1.2.0'));
+  const again = run('migrate.mjs', '--root', have);
+  assert.match(again.stdout, /^done +1\.3\.0 step 1: AGENTS\.md already has the rule against internal labels/m, again.stdout);
+  assert.equal(read(have, 'AGENTS.md'), once, 'no second copy');
 });

@@ -84,7 +84,7 @@ test('the text boundary is in the AGENTS.md template, the runbook, structure.md,
 
   const style = read('references/style-questions.md');
   const row = (id) => new RegExp(`^\\| ${id} \\|(.*)$`, 'm').exec(style)[1];
-  assert.match(row('S2'), /suhbatda .* harness .* loyiha hujjatlarining tili bu yerda so'ralmaydi: .* \(shablonda R23\)/);
+  assert.match(row('S2'), /suhbatda .* harness .* loyiha hujjatlarining tili bu yerda so'ralmaydi: agent ularni .* matn chegarasi qoidasi bo'yicha yozadi/);
   assert.match(row('S26'), /^ Harness'dagi sana va vaqt/);
   const s3 = row('S3').split(' | ');
   assert.match(s3[0], /egasiga qanday murojaat qiladi/);
@@ -122,4 +122,68 @@ test('an upstream skill names one commit, the same in its source and in THIRD_PA
     assert.ok(notices.includes(`(commit ${m[1]}, \`${m[2]}`), `${name}: THIRD_PARTY_NOTICES.md names commit ${m[1]} and ${m[2]}`);
     assert.ok(fs.existsSync(path.join(ROOT, 'skills-src', name, 'LICENSE')), `${name}: LICENSE`);
   }
+});
+
+// The owner does not read the harness files (1.3.0): what an agent writes to the owner carries no
+// internal label (A1, P1, S2, K4: a letter and a number; rule, decision, feedback and lesson numbers too), only the meaning.
+const LABEL = /\b[ADFKLPRS][0-9]{1,3}\b/;
+
+test('the texts meant for the owner hold no internal label', () => {
+  const hits = [];
+  const style = fs.readFileSync(path.join(CORE, 'references', 'style-questions.md'), 'utf8');
+  style.split('\n').forEach((line, i) => {
+    if (!/^\| S\d+ \|/.test(line)) return;
+    for (const cell of line.split(' | ').slice(1, 4)) { // question, options, recommendation; the row number and the Profile condition are for the agent only
+      const m = LABEL.exec(cell);
+      if (m) hits.push(`style-questions.md:${i + 1}: ${m[0]}`);
+    }
+  });
+  fs.readFileSync(path.join(CORE, 'skill-parts', 'report.md'), 'utf8').split('\n').forEach((line, i) => {
+    const m = LABEL.exec(line);
+    if (m) hits.push(`report.md:${i + 1}: ${m[0]}`);
+  });
+  assert.deepEqual(hits, []);
+});
+
+test('the rule against internal labels is in the AGENTS.md template, the core rules, the report and the audit', () => {
+  const read = (rel) => fs.readFileSync(path.join(CORE, rel), 'utf8');
+  const sub = /^- \*\*R12\. Egasi bilan suhbatda .*\n  - (Egasi harness fayllarini o'qimaydi: .*)\n/m.exec(read('templates/AGENTS.md.tmpl'));
+  assert.ok(sub, 'R12 of the AGENTS.md template has a sub-item for the messages to the owner');
+  for (const part of ['xabarda (savol, hisobot, taklif, status) gapni ma\'nosi bilan ayt', 'Ichki belgi (A1, P1, S2, K4 kabi raqamli nom; qoida, qaror, fikr va saboq raqamlari ham shunday)',
+    'hujjat ichidagi qadam raqami o\'rniga mazmunini yoz', 'havola bilan yoz', 'Egasi belgini o\'zi so\'rasa yoki tilga olsa, ma\'nosini ayt']) {
+    assert.ok(sub[1].includes(part), `R12 sub-item: ${part}`);
+  }
+  const rule = /^14\. \*\*Egasiga tushunarli yoz\.\*\* (.*)$/m.exec(read('skill-parts/core-rules.md'));
+  assert.ok(rule, 'core rule 14');
+  for (const part of ["Egasi harness fayllarini o'qimaydi", 'Ichki belgi (A1, P1, S2, K4 kabi raqamli nom; qoida, qaror, fikr va saboq raqamlari ham shunday)', "oddiy so'z bilan yoz",
+    'Belgilar harness fayllarida', "`#` ustunidagi raqam agent uchun"]) {
+    assert.ok(rule[1].includes(part), `core rule 14: ${part}`);
+  }
+  const report = read('skill-parts/report.md');
+  for (const part of ["ma'nosi bilan nomlanadi", "to'liq jadval (raqamlari bilan) tarix yozuvida qoladi", 'Yuborishdan oldin hisobot qoralamasini', "grep -nE '[A-Za-z0-9_./-]+\\.(md|mjs|json)' <fayl>", "grep -nE '(^|[^[:alnum:]_])[ADFKLPRS][0-9]{1,3}([^[:alnum:]_]|$)' <fayl>"]) assert.ok(report.includes(part), `report: ${part}`);
+  assert.match(read('references/audit.md'), /^\| A64 \| .*A1, P1, S2, K4.* \| Rule leak \|/m);
+});
+
+test('a test run before the change is not required: the last recorded result is the comparison', () => {
+  const read = (p) => fs.readFileSync(p, 'utf8');
+  for (const rel of ['references/testing.md', 'references/doctor.md', 'templates/pan-harness/playbooks/pan-harness.md.tmpl']) {
+    const text = read(path.join(CORE, rel));
+    assert.match(text, /oldin run shart emas/, rel);
+    assert.match(text, /oxirgi yozilgan natija/, rel);
+  }
+  assert.match(read(path.join(ROOT, 'evals', 'scenarios.md')), /faqat o'zgartirishdan keyin/);
+});
+
+test('the package is called ph-paket in the agent texts, and the glossary says what it is', () => {
+  const ok = /npm paketi|paket menejeri|Paketlarga xos|paket nomi/; // the npm package of the glossary row, a package manager, packages of a monorepo
+  const hits = [];
+  for (const p of agentTexts) {
+    fs.readFileSync(p, 'utf8').split('\n').forEach((line, i) => {
+      for (const m of line.matchAll(/(?<![\w-])[Pp]aket\w*/g)) {
+        if (!ok.test(line.slice(Math.max(0, m.index - 12), m.index + m[0].length + 12))) hits.push(`${path.relative(ROOT, p)}:${i + 1}: ${m[0]}`);
+      }
+    });
+  }
+  assert.deepEqual(hits, []);
+  assert.match(fs.readFileSync(path.join(CORE, 'references', 'structure.md'), 'utf8'), /^\| ph-paket \| `@jiemurat\/pan-harness` npm paketi: /m);
 });
