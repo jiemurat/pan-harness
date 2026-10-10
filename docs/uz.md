@@ -37,7 +37,7 @@ Agentni loyiha papkasida oching va yozing:
 | Claude Code, Antigravity, Cursor, GitHub Copilot, Gemini CLI, OpenCode | `/ph-init` |
 | Codex | `$ph-init` |
 
-Agent loyihani o'rganadi, savollarni raund-raund beradi (har biri variant va tavsiya bilan), reja tuzadi va sizning "boshla" deganingizdan keyin harness'ni yaratadi. Git bo'lmasa, uni o'rnatadi (`sudo` kerak bo'lsa, buyruqni sizga ko'rinadigan terminalda ishga tushiradi, parolni siz kiritasiz), `.gitignore` va dastlabki commit qiladi. Commit'larni agent o'zi qilsinmi, birinchi raundda so'raydi (standart javob — ha); push'ni har doim siz qilasiz.
+Agent loyihani o'rganadi, faqat siz bila oladigan narsani so'raydi (maqsad, "tayyor" degani nima, chegaralar), qisqa reja ko'rsatadi va sizning "boshla" deganingizdan keyin harness'ni yaratadi. Git bo'lmasa, uni o'rnatadi (`sudo` kerak bo'lsa, buyruqni sizga ko'rinadigan terminalda ishga tushiradi, parolni siz kiritasiz), `.gitignore` va dastlabki commit qiladi. Commit'larni agent o'zi qilsinmi, birinchi raundda so'raydi (standart javob — ha); push'ni har doim siz qilasiz.
 
 ## Nima yaratiladi
 

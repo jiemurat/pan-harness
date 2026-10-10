@@ -40,3 +40,7 @@ Quyidagi qadamlarni `node <skill>/scripts/migrate.mjs --root .` bajaradi; u `by 
 3. `mechanical` — `runbook.md` → `Writing the harness`: kirish gapini shablondagi gap bilan almashtir, undagi R23 o'rniga 1-qadamdagi raqamni yoz; bandlar o'z holicha qoladi. Tugadi: kirish gapi agent matnlarini va ularga qo'llanadigan qoidalarni nomma-nom sanaydi, R<n> ga havola beradi.
 4. `mechanical` — `PAN-HARNESS.md`: `Map` dagi `runbook.md` qatorini va `End of task` dagi yozish bandini shablondagidek qil, R23 o'rniga 1-qadamdagi raqam. Tugadi: `git diff PAN-HARNESS.md` da shu ikki qator va `Standard:` qatoridan boshqa qator o'zgarmagan.
 5. `mechanical` — `playbooks/pan-harness.md`: skill faylini loyiha yo'li bilan emas, skill nomi bilan yoz: "(`ph-doctor` skill'idagi testing.md, \"Fixed question set\" bo'limi)". Tugadi: check'da `references/testing.md` yo'li haqida xato yo'q.
+
+## 1.3.1
+
+`ph-init` savollari va rejasi qisqardi: egasidan faqat maqsad, "tayyor degani nima" va chegaralar so'raladi, uslub va ish tartibi standart tanlov, reja qisqa va egasi qaror qiladigan narsadan iborat. Harness standarti o'zgarmadi: migration qadamlari yo'q. `node <skill>/scripts/migrate.mjs --root .` 1.3.0 harness'da faqat `Standard:` qatorini va standart skriptlarni yangilaydi; mavjud harness matni o'z holicha qoladi.

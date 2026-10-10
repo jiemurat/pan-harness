@@ -2,6 +2,16 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 1.3.1
+
+`ph-init` asks the owner only what nobody else can know, and its plan holds only what the owner decides on:
+
+- the interview is three things: the goal (with near plans and known problems the repo does not show), what "done" means (how the result is made and checked) and the limits (private data, the most dangerous action, outside services); the git name is asked only when git has none. An empty folder is asked in two short rounds, an existing project in one. For a project without code, a server or secrets that is 3 to 5 questions instead of up to 22;
+- the style, workflow and safety choices (language, terms, tone, authority, time zone, kinds of work, report, irreversible actions, upkeep) are standard choices: the plan shows them in four lines, nobody waits on them, and they are written as one decision that the approval of the plan confirms. A fact the agent can find (the language of the conversation, the time zone of the computer) is stated in the plan, not asked; the form of address and the owner's technical level are not written into the rules unless the owner says them;
+- an open question comes with the agent's own suggestion and a short reason on a line of its own; "I do not know" is an answer, listed in the plan as an open issue;
+- the plan is short (15 lines, 3,000 characters): goal and result, criteria the owner can see, what changes outside the harness, the standard choices, open issues, the owner's part, risk and the way back. No file list, no internal label or harness term (three `grep` checks); the migration table only when old content moves;
+- the harness standard is unchanged, so there are no migration steps: for a 1.3.0 harness `ph-update` only sets the `Standard:` line and the standard scripts.
+
 ## 1.3.0
 
 Messages to the owner carry meaning, not internal labels:

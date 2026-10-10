@@ -6,7 +6,7 @@
 | `references/audit.md` | Moslik ro'yxati (A1…): har talab, uning smell'i, tekshirish usuli va tuzatish turi | `ph-doctor` ning 4-qadamida va `ph-init` oxirida |
 | `references/changelog.md` | Standart versiyalari va har versiyaning migration qadamlari | `ph-doctor` va `ph-update` da, loyiha versiyasi skill'nikidan farq qilsa |
 | `references/principles.md` | Tamoyillar (P1…) va ularning manbalari | Structure yoki qoida haqidagi qarordan oldin |
-| `references/style-questions.md` | Egasining ish uslubi haqidagi savollar (S1…), variantlar va tavsiyalar | `ph-init` suhbatida |
+| `references/style-questions.md` | Egasiga beriladigan savollar (`Asked`) va standart tanlovlar (S1…) | `ph-init` suhbatida va rejasida |
 | `references/init.md` | `ph-init` qadamlari va checklist | `ph-init` da; `ph-doctor` da migration qarori va migration table kerak bo'lganda |
 | `references/doctor.md` | `ph-doctor` qadamlari, migration, mechanical va structural fix boundary'si, skill limitation | `ph-doctor` va `ph-update` da |
 | `references/testing.md` | Sinov tartiblari: doimiy savollar to'plami, "o'rtasidan davom ettirish" sinovi, mustaqil tekshiruvchi va skeptik rejimi, soddalashtirish tajribasi, A51 | Sinovni egasiga taklif qilishdan oldin (`ph-init` va `ph-doctor` oxirida, structural o'zgarishdan keyin) |

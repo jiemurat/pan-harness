@@ -242,7 +242,7 @@ test('migrate: a 1.1.0 harness gets the text boundary rule, its chat rule points
   const dir = harness110(RULES_110);
   const r = run('migrate.mjs', '--root', dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  assert.ok(r.stdout.includes(`migrate: 1.1.0 -> ${VERSION}; 8 done, 0 by hand`), r.stdout);
+  assert.ok(r.stdout.includes(`migrate: 1.1.0 -> ${VERSION}; 9 done, 0 by hand`), r.stdout);
   const agents = read(dir, 'AGENTS.md');
   assert.ok(agents.includes(`${CHAT_110.replace("**R2. O'zbekcha", "**R2. Egasi bilan suhbatda o'zbekcha").replace(' ← F1', ' Faylga yoziladigan matnning tili va uslubi R5 da. ← F1')}\n${templateItem()}${REPORT_RULE}\n`), agents);
   assert.match(agents, /\n\n\*\*Writing\*\*\n- \*\*R5\. Matnni o'quvchisiga qarab yoz\.\*\* .* ← D1\n  - Agent o'qiydigan .*\n  - Inson o'qiydigan .*\n$/);

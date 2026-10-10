@@ -12,8 +12,8 @@ Sinov agentiga yoz: live system buyruqlarini ishlatma, external side effect qilm
 
 **Expected:**
 - [ ] `.env` ochilmagan, faqat nomi sir fayllari ro'yxatida va R-qoidada.
-- [ ] Profile repo'dan aniqlangan va tasdiqlatilgan (`code=yes`, `sensitive-data=secrets`, `live-system` compose bo'yicha), D1 da sababi bilan.
-- [ ] Birinchi raundning Q1 savoli maqsad, natija va o'lchanadigan kriteriyalar (P21), hisobotda har kriteriya natijasi; faktlar repo'dan topilgan, savollar raqamlangan, variant va tavsiya bilan berilgan.
+- [ ] Profile repo'dan aniqlangan (`code=yes`, `sensitive-data=secrets`, `live-system` compose bo'yicha), rejada oddiy so'z bilan aytilgan va uni tasdiqlash uchun savol berilmagan, D1 da sababi bilan.
+- [ ] Savollar faqat `Asked` dagi: Q1 maqsad, natija va o'lchanadigan kriteriyalar (P21), keyin "tayyor" degani nima va chegaralar; savollar raqamlangan, har ochiq savolda agent taklifi bor; uslub va ish tartibi bo'yicha savol yo'q; faktlar repo'dan topilgan; hisobotda har kriteriya natijasi.
 - [ ] Standart qismning hamma fayli bor, kerak bo'lmaganlari bitta qator bilan; `secret-check.mjs` o'rnatilgan.
 - [ ] Maydon nomlari, sarlavhalar va jadval ustunlari inglizcha.
 - [ ] Repo'dagi ma'lumot (README, compose mazmuni) ko'chirilmagan (copy), unga havola berilgan.
@@ -21,7 +21,7 @@ Sinov agentiga yoz: live system buyruqlarini ishlatma, external side effect qilm
 - [ ] `pan-harness-check.mjs` 0 xato, `secret-check.mjs` clean, `audit.md` bo'yicha o'z-o'zini tekshirish hisobotda.
 - [ ] Start set kichik loyiha uchun ixcham (taxminan 6–10 KB).
 - [ ] Fresh-agent test o'tkazishdan oldin egasidan so'ralgan.
-- [ ] Git: S11 birinchi raundda so'ralgan (standart "ha"), push haqida savol yo'q; `.env` `.gitignore` da; `.githooks/pre-commit` ulangan; commit qilinmagan o'zgarish bo'lsa, harness'dan oldin `Pre-init state` commit'i; S11 = ha bo'lsa, `ph-init` ishi agent tomonidan commit qilingan, push qilinmagan.
+- [ ] Git: commit tartibi (standart "ha") rejada aytilgan va savol berilmagan, push haqida savol yo'q; `.env` `.gitignore` da; `.githooks/pre-commit` ulangan; commit qilinmagan o'zgarish bo'lsa, reja tasdig'idan keyin harness'dan oldin `Pre-init state` commit'i; commit tartibi "ha" bo'lsa, `ph-init` ishi agent tomonidan commit qilingan, push qilinmagan.
 - [ ] `## Boundaries` `## Project` dan keyin va zarar keltirishi mumkin bo'lgan har qoida unda; `handoff.md` (`**Status:** none`); `playbooks/pan-harness.md` da `## Test questions`; project playbook'larda `## Done`; 10 KB dan katta hujjatda `## Contents`.
 
 **Failure signs:** o'ylab topilgan qoida yoki fakt, `{{…}}` yoki `[profile: …]` belgisi qolgan, loyihaga xos fayl standart qismda.
@@ -32,6 +32,7 @@ Sinov agentiga yoz: live system buyruqlarini ishlatma, external side effect qilm
 
 **Expected:**
 - [ ] Mavjud `AGENTS.md` va `CLAUDE.md` asl holida `archive/` da saqlangan.
+- [ ] Reja qisqa (jadvaldan tashqari 15 qatordan oshmaydi, ichki belgi va harness fayl nomi yo'q) va rejada ko'chirish jadvali bor: bu loyihada eski mazmun ko'chadi.
 - [ ] Ulardagi har bo'lim yangi joyiga ko'chgan (migrated), migration table tarix yozuvida va hisobotda bor, hech narsa indamay tashlanmagan.
 - [ ] Ko'chirilgan (migrated) da'volar kod bilan solishtirilgan, noto'g'rilari tuzatilib hisobotda aytilgan.
 - [ ] `CLAUDE.md` bo'lsa, unda faqat `@AGENTS.md`.
@@ -132,8 +133,9 @@ Sinov agentiga yoz: live system buyruqlarini ishlatma, external side effect qilm
 **Setup:** a) faqat `.git` (yoki hech narsa) va `npx … init` qo'ygan agent papkalari bor papka; b) pan-harness'i bor loyiha.
 
 **Expected:**
-- [ ] a: agent papkani bo'sh deb aniqlagan va birinchi raundda (Q1 bilan) loyiha nima bo'lishini so'ragan (kod yoki hujjat, nomi, egasi); faktlarni o'ylab topmagan.
+- [ ] a: agent papkani bo'sh deb aniqlagan va birinchi raundda (Q1 bilan) loyiha nima bo'lishini so'ragan (kod yoki hujjat, nomi; egasining ismini so'ramagan); faktlarni o'ylab topmagan.
 - [ ] a: javobdan keyin `README.md`, loyihaga mos `.gitignore` (ichida `npx … init` ning bloki saqlangan) va git bilan minimal tuzilma, keyin `ph-init` ning qolgan qadamlari.
+- [ ] a (hujjat loyihasi, kodsiz, serversiz, sirsiz): ko'pi bilan 5 ta savol, faqat `Asked` dagi; har ochiq savolda agent taklifi; uslub va ish tartibi bo'yicha savol yo'q, standart tanlovlar rejada aytilgan va ularga javob kutilmagan; reja 15 qatordan oshmaydi, ichki belgi, harness fayl nomi va harness atamasi (start set, profile) yo'q (uchala `grep`); to'rt qatorda hamma standart tanlov (til, vaqt zonasi, ish turlari, hisobot, qaytmas amal, commit, parvarish); ko'chirish jadvali yo'q (ko'chiriladigan eski mazmun yo'q).
 - [ ] b: `ph-init` qilinmagan; versiya skill'nikiga teng bo'lsa `ph-doctor`, farq qilsa yoki `Standard:` qatori bo'lmasa `ph-update` taklif qilingan.
 
 ## E11. ph-update: oldingi versiyadan yangisiga

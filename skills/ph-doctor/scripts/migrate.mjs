@@ -47,7 +47,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['1.0.0', '1.1.0', '1.2.0', '1.3.0'];
+const KNOWN = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.3.1'];
 const done = [];
 const byHand = [];
 

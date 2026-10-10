@@ -53,7 +53,7 @@ Pan-harness shu tamoyillarga tayanadi. Har biri: qoida, nega (manba), pan-harnes
 ## Decisions
 
 - **P19. Structure bo'yicha variant tamoyilga asoslanadi.** Har variantda u qaysi tamoyilga tayanishi aytiladi. Internetdagi yangi amaliyot loyihaning o'z qoidasi (style-questions S21) yoki egasining so'rovi bo'yicha o'rganiladi, variantlar shunda manbalar bilan beriladi. Bu pan-harness tanlovi, tashqi manbasi yo'q.
-- **P20. Faktni agent topadi, qarorni egasi qiladi.** Repo, hujjat va live system'dan topiladigan narsa egasidan so'ralmaydi. Har savolda variantlar va agentning sababli tavsiyasi bo'ladi. Bu pan-harness tanlovi, tashqi manbasi yo'q.
+- **P20. Faktni agent topadi, qarorni egasi qiladi.** Repo, hujjat va live system'dan topiladigan narsa egasidan so'ralmaydi. Har savolda agentning sababli tavsiyasi bo'ladi: variantli savolda variantlar bilan, ochiq savolda taklif sifatida. Tavsiyasi aniq va xavfsiz standart tanlov (uslub, ish tartibi, ehtiyot choralari) savolsiz olinadi, rejada ko'rsatiladi va egasi o'zgartiradi: egasining e'tibori yagona ketma-ket resurs, javobi odatda "ha" bo'ladigan savol esa uni bekorga sarflaydi. Savol faqat egasi bila oladigan narsaga qoladi: maqsad, "tayyor" degani nima, chegaralar. GitHub Spec Kit ham aniqlashtirish savollarini bir sessiyada 5 tagacha cheklaydi, tavsiyani sababi bilan birinchi o'ringa qo'yadi va mayda uslub tanlovlarini so'ramaydi [31]. Cheklash va standart tanlov — pan-harness tanlovi.
 
 ## Planning and verification
 
@@ -116,3 +116,4 @@ Pan-harness shu tamoyillarga tayanadi. Har biri: qoida, nega (manba), pan-harnes
 28. walkinglabs, "Learn Harness Engineering", ma'ruzalar L03–L05, L07–L14 (2026): https://walkinglabs.github.io/learn-harness-engineering/en/lectures/ (masalan, `lecture-04-why-one-giant-instruction-file-fails/`). Ma'ruzalarning raqamli misollari o'qitish uchun estimate; ular tayangan manbalar: [2], [6], [18], Liu va boshq. "Lost in the Middle" (2023), Anthropic "Harness design for long-running application development".
 29. Matt Pocock, "writing-for-agents" skill (MIT): https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-for-agents
 30. Anthropic, "Prompting best practices": https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
+31. GitHub Spec Kit, `/speckit.clarify` buyrug'i: https://github.com/github/spec-kit/blob/main/templates/commands/clarify.md
