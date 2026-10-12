@@ -159,7 +159,7 @@ Har ish uchun bitta yozuv, yangisi oxiriga qo'shiladi. Har oy o'z faylida: oy bo
 function oldHarness() {
   const dir = repo();
   for (const [rel, body] of Object.entries(OLD)) put(dir, rel, body);
-  put(dir, 'AGENTS.md', '# Demo\n\n## Project\n\n- Demo.\n\n## Boundaries\n\n- **Never:** push (R1).\n- **Ask first:** deleting files (R1).\n- **Always:** one thing at a time (R1).\n\n## Session start\n\n1. Read this file.\n\n## Workflow\n\n1. **Question** — read only.\n\n## Working style\n\n- Check every claim.\n\n## Rules\n\n- **R1. One thing at a time.** Finish it and stop. ← F1\n');
+  put(dir, 'AGENTS.md', '# Demo\n\n## Project\n\n- Demo.\n\n## Boundaries\n\n- **Never:** push (R1).\n- **Ask first:** deleting files (R1).\n- **Always:** one thing at a time (R1).\n\n## Session start\n\n1. Read this file.\n\n## Workflow\n\n1. **Question** — read only.\n\n**Execution.**\n- Update `handoff.md` after every step.\n- Finish the checks.\n\n## Working style\n\n- Check every claim.\n\n## Rules\n\n- **R1. One thing at a time.** Finish it and stop. ← F1\n');
   put(dir, 'pan-harness/state.md', `# State\n\n**Last updated:** ${DAY}\n`);
   put(dir, 'pan-harness/system-map.md', '# System map\n\n- Chapters in `docs/`.\n');
   put(dir, 'pan-harness/playbooks/pan-harness.md', '# Playbook: pan-harness\n\n- Run ph-doctor monthly.\n');
@@ -242,7 +242,7 @@ test('migrate: a 1.1.0 harness gets the text boundary rule, its chat rule points
   const dir = harness110(RULES_110);
   const r = run('migrate.mjs', '--root', dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  assert.ok(r.stdout.includes(`migrate: 1.1.0 -> ${VERSION}; 9 done, 0 by hand`), r.stdout);
+  assert.ok(r.stdout.includes(`migrate: 1.1.0 -> ${VERSION}; 11 done, 0 by hand`), r.stdout);
   const agents = read(dir, 'AGENTS.md');
   assert.ok(agents.includes(`${CHAT_110.replace("**R2. O'zbekcha", "**R2. Egasi bilan suhbatda o'zbekcha").replace(' ← F1', ' Faylga yoziladigan matnning tili va uslubi R5 da. ← F1')}\n${templateItem()}${REPORT_RULE}\n`), agents);
   assert.match(agents, /\n\n\*\*Writing\*\*\n- \*\*R5\. Matnni o'quvchisiga qarab yoz\.\*\* .* ← D1\n  - Agent o'qiydigan .*\n  - Inson o'qiydigan .*\n$/);
@@ -344,4 +344,64 @@ test('migrate 1.3.0: a chat rule the project reworded is left by hand, a sub-ite
   const again = run('migrate.mjs', '--root', have);
   assert.match(again.stdout, /^done +1\.3\.0 step 1: AGENTS\.md already has the rule against internal labels/m, again.stdout);
   assert.equal(read(have, 'AGENTS.md'), once, 'no second copy');
+});
+
+// 1.3.2: the usage limit rule, three bullets at the end of the Execution section
+const LIMIT_LINE = /^- (Limitni ko'ra olsang|Byudjet oshsa|Limitni ko'ra olmasang),/;
+const executionOf = (agents) => agents.split('**Execution.**\n')[1].split(/\n\n/)[0].split('\n');
+const templateLimitLines = () => executionOf(fs.readFileSync(path.join(SKILL, 'templates', 'AGENTS.md.tmpl'), 'utf8')).filter((l) => LIMIT_LINE.test(l));
+
+test('the AGENTS.md template and scaffold carry the usage limit rule in Execution, within 620 bytes', () => {
+  const lines = templateLimitLines();
+  assert.equal(lines.length, 3, 'three bullets');
+  assert.ok(Buffer.byteLength(lines.join('\n')) <= 620, `${Buffer.byteLength(lines.join('\n'))} bytes`);
+  const dir = repo();
+  assert.equal(run('scaffold.mjs', '--root', dir).status, 0);
+  assert.deepEqual(executionOf(read(dir, 'AGENTS.md')).filter((l) => LIMIT_LINE.test(l)), lines);
+});
+
+/** a 1.3.1 harness: the migrated old one with the limit bullets taken out of Execution and the Standard line put back */
+function harness131() {
+  const dir = oldHarness();
+  run('migrate.mjs', '--root', dir);
+  const edit = (rel, f) => fs.writeFileSync(path.join(dir, rel), f(read(dir, rel)));
+  edit('AGENTS.md', (s) => s.split('\n').filter((l) => !LIMIT_LINE.test(l)).join('\n'));
+  edit('PAN-HARNESS.md', (s) => s.replace(`Standard: pan-harness ${VERSION}`, 'Standard: pan-harness 1.3.1'));
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-q', '-m', 'harness 1.3.1');
+  return dir;
+}
+
+test('migrate 1.3.2: Execution gets the limit bullets at its end, the check is clean, a second run changes nothing', () => {
+  const dir = harness131();
+  assert.deepEqual(executionOf(read(dir, 'AGENTS.md')), ['- Update `handoff.md` after every step.', '- Finish the checks.']);
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^done +1\.3\.2 step 1: AGENTS\.md: Execution got the usage limit rule/m, r.stdout);
+  assert.match(r.stdout, new RegExp(`migrate: 1\\.3\\.1 -> ${VERSION.replace(/\./g, '\\.')}; 2 done, 0 by hand`), r.stdout);
+  assert.deepEqual(executionOf(read(dir, 'AGENTS.md')), ['- Update `handoff.md` after every step.', '- Finish the checks.', ...templateLimitLines()]);
+  const check = spawnSync(process.execPath, [path.join(dir, 'pan-harness/scripts/pan-harness-check.mjs'), '--root', dir], { encoding: 'utf8' });
+  assert.equal(check.status, 0, check.stdout);
+  assert.ok(run('migrate.mjs', '--root', dir).stdout.includes(`migrate: ${VERSION} -> ${VERSION}; 0 done, 0 by hand`));
+});
+
+test('migrate 1.3.2: a limit rule the project wrote itself is left by hand, the template bullets already there stay once, no Execution is left by hand', () => {
+  const own = harness131();
+  fs.writeFileSync(path.join(own, 'AGENTS.md'), read(own, 'AGENTS.md').replace('- Finish the checks.\n', "- Finish the checks.\n- Katta ish oldidan limitning qolgan qismi va yangilanish vaqtini tekshir.\n"));
+  const before = read(own, 'AGENTS.md');
+  const r = run('migrate.mjs', '--root', own);
+  assert.match(r.stdout, /^by hand 1\.3\.2 step 1: AGENTS\.md: a limit rule in the project's own words/m, r.stdout);
+  assert.equal(read(own, 'AGENTS.md'), before);
+
+  const have = harness131();
+  run('migrate.mjs', '--root', have);
+  const once = read(have, 'AGENTS.md');
+  fs.writeFileSync(path.join(have, 'PAN-HARNESS.md'), read(have, 'PAN-HARNESS.md').replace(`Standard: pan-harness ${VERSION}`, 'Standard: pan-harness 1.3.1'));
+  const again = run('migrate.mjs', '--root', have);
+  assert.match(again.stdout, /^done +1\.3\.2 step 1: AGENTS\.md already has the usage limit rule/m, again.stdout);
+  assert.equal(read(have, 'AGENTS.md'), once, 'no second copy');
+
+  const bare = harness131();
+  fs.writeFileSync(path.join(bare, 'AGENTS.md'), read(bare, 'AGENTS.md').replace('**Execution.**', '**Doing.**'));
+  assert.match(run('migrate.mjs', '--root', bare).stdout, /^by hand 1\.3\.2 step 1: AGENTS\.md: no Execution section/m);
 });

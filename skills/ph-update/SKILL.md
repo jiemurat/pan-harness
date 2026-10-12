@@ -3,7 +3,7 @@ name: ph-update
 description: ph-paketni (Panoramic Harness, @jiemurat/pan-harness) yangilaydi, harness'ni yangi standart versiyasiga migration qiladi va oxirida to'liq ph-doctor o'tkazadi. Pan-harness'ni yangilash so'ralganda ishlatiladi.
 license: MIT
 metadata:
-  version: "1.3.1"
+  version: "1.3.2"
   package: "@jiemurat/pan-harness"
 ---
 

@@ -22,7 +22,7 @@ Har qator natijasi `ok`, `fail` (nima topilgani va fayl:qator), `not checked` (s
 - Version: A38
 - Writing: A39–A43, A59–A65
 - Principles: A44–A50
-- Continuity and checks: A51–A58
+- Continuity and checks: A51–A58, A66
 
 ## Root files
 
@@ -150,3 +150,4 @@ P26 bandlari (A20 dagi kalit so'z tartibi va trigger, A43, A59–A63) va matn ch
 | A56 | `check.json` → `co_change` loyihaning har kod va hujjat papkasini uni tasvirlaydigan hujjatga bog'laydi; tugallanmagan ish belgilari bo'ladigan loyihada `markers` sozlangan (P23) | Stale doc | manual (sozlama), script (ogohlantirish) | structural: xarita egasi bilan kelishiladi |
 | A57 | Murakkab ish oqimi (bir necha qadam, tekshiruvchi va qaytish yo'li) domain faylida jadval bilan: qadam, tekshiruvchi, xato bo'lsa qayerga, state qayerda; `live-system=yes` da jim zaxira yo'l kuzatiladi | Hidden fallback | manual | structural |
 | A58 | Loyiha git'da (`structure.md` → "Git"): `.githooks/pre-commit` bor va `core.hooksPath` unga ulangan, `.gitignore` bor, `never_track` ogohlantirishlari yo'q; `AGENTS.md` → R4 va `End of task` dagi commit bandi S11 javobiga mos | No git setup | script (repo, `never_track`), manual (hook, R4) | mechanical: hook va `.gitignore`; structural: git o'rnatish, R4 |
+| A66 | `AGENTS.md` → `Execution` da limit qoidasi bor: shablondagi uchta band, yoki loyiha o'z so'zlari bilan yozgan va egasi tanlagan shu mazmundagi qoida (limitni ko'ra olsa, bosqich oldidan byudjetni qolgan ulush bilan solishtiradi; oshsa, ish hajmi o'zgarmay, qolgani `plan.md` → `Scheduled` ga yoziladi; ko'ra olmasa, ish to'xtamaydi va egasidan so'ralmaydi) | Interrupted work | manual: `grep -n 'limit' AGENTS.md` | mechanical (`changelog.md` → 1.3.2) |

@@ -47,7 +47,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.3.1'];
+const KNOWN = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.3.1', '1.3.2'];
 const done = [];
 const byHand = [];
 
@@ -405,10 +405,42 @@ function step2Playbook130() {
   if (n) { f.changed = true; done.push('1.3.0 step 2: playbooks/pan-harness.md: the fixed question set is given after the change, the last recorded result is the comparison'); }
 }
 
+// ---------------------------------------------------------------- 1.3.2 (usage limit rule)
+// the template's three bullets at the end of Execution: compare the budget with the limit, move what does not fit, no stop when the limit is invisible
+const LIMIT_ITEMS = (() => {
+  const t = template('AGENTS.md.tmpl');
+  const at = t.findIndex((l) => l.startsWith('**Execution.**'));
+  const items = [];
+  for (let i = at + 1; i < t.length && t[i].startsWith('- '); i += 1) if (/^- (Limitni ko'ra olsang|Byudjet oshsa|Limitni ko'ra olmasang),/.test(t[i])) items.push(t[i]);
+  return items;
+})();
+
+function step1UsageLimit() {
+  const f = file('AGENTS.md');
+  if (!f) { byHand.push('1.3.2 step 1: no AGENTS.md'); return; }
+  const at = f.lines.findIndex((l) => l.startsWith('**Execution.**'));
+  if (at < 0) {
+    byHand.push('1.3.2 step 1: AGENTS.md: no Execution section (a line that starts with "**Execution.**"); add the template\'s three usage limit bullets at the end of the project\'s section that holds the execution rules (templates/AGENTS.md.tmpl, the last three bullets of Execution)');
+    return;
+  }
+  if (LIMIT_ITEMS.length !== 3) { byHand.push('1.3.2 step 1: the skill\'s template has no three usage limit bullets'); return; }
+  if (LIMIT_ITEMS.every((l) => f.lines.includes(l))) { done.push('1.3.2 step 1: AGENTS.md already has the usage limit rule'); return; }
+  if (f.lines.some((l) => /limit/i.test(l) && /yangilanish/.test(l))) {
+    byHand.push('1.3.2 step 1: AGENTS.md: a limit rule in the project\'s own words; show the difference from the template (templates/AGENTS.md.tmpl, the last three bullets of Execution) to the owner and keep one of them');
+    return;
+  }
+  let end = at + 1;
+  while (end < f.lines.length && f.lines[end].startsWith('- ')) end += 1;
+  f.lines.splice(end, 0, ...LIMIT_ITEMS);
+  f.changed = true;
+  done.push('1.3.2 step 1: AGENTS.md: Execution got the usage limit rule (3 bullets)');
+}
+
 const STEPS = {
   '1.1.0': [step1Rename, step2Rules, step3Terms, step4PanHarness, step5Headers],
   '1.2.0': [step1Boundary, step2Chat, step3Intro, step4PanHarness120, step5Playbook],
   '1.3.0': [step1OwnerMessages, step2Playbook130],
+  '1.3.2': [step1UsageLimit],
 };
 
 // ---------------------------------------------------------------- run

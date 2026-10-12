@@ -44,3 +44,11 @@ Quyidagi qadamlarni `node <skill>/scripts/migrate.mjs --root .` bajaradi; u `by 
 ## 1.3.1
 
 `ph-init` savollari va rejasi qisqardi: egasidan faqat maqsad, "tayyor degani nima" va chegaralar so'raladi, uslub va ish tartibi standart tanlov, reja qisqa va egasi qaror qiladigan narsadan iborat. Harness standarti o'zgarmadi: migration qadamlari yo'q. `node <skill>/scripts/migrate.mjs --root .` 1.3.0 harness'da faqat `Standard:` qatorini va standart skriptlarni yangilaydi; mavjud harness matni o'z holicha qoladi.
+
+## 1.3.2
+
+`AGENTS.md` shablonining `Execution` bo'limiga limit qoidasi qo'shildi (uch band): agent limitni ko'ra olsa, large task, sub-agent run va 5 soatlik limit oynasining 10% idan ortig'ini sarflaydigan bosqich oldidan byudjetni qolgan ulush va yangilanish vaqti bilan solishtiradi; sig'maganda ish hajmi o'zgarmaydi, sig'adigan qism boshlanadi, qolgani `plan.md` → `Scheduled` ga yoziladi; limitni ko'ra olmasa ish to'xtamaydi va egasidan so'ralmaydi. `ph-doctor` qoidani A66 bilan tekshiradi.
+
+Quyidagi qadamni `node <skill>/scripts/migrate.mjs --root .` bajaradi; u `by hand` deb chiqargan bandni shu qadam bo'yicha qo'lda bajar. Harness o'zbekcha bo'lmasa, qo'shilgan bandlarni harness tiliga o'gir: skript qoidani shablondagi uch bandning o'zidan taniydi.
+
+1. `mechanical` — `AGENTS.md` → `Execution`: shablondagi uchta limit bandini bo'limning oxiriga qo'sh (shablondagi `**Execution.**` ning oxirgi uchta bandi). Loyiha limit qoidasini o'z so'zlari bilan yozgan bo'lsa (qatorda "limit" va "yangilanish" so'zlari bor), tegma: farqni egasiga ko'rsat va bittasini qoldir. Tugadi: `Execution` oxirida uchta band bor yoki loyihaning o'z limit qoidasi egasi tanlagan holda qolgan; `AGENTS.md` da limit qoidasi ikki nusxada emas.

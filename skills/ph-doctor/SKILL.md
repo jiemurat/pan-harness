@@ -3,7 +3,7 @@ name: ph-doctor
 description: Panoramic Harness bor loyihada harness'ni standart bo'yicha tekshiradi va tuzatadi: moslik jadvali, mechanical fix, structural taklif, migration. Harness, AGENTS.md yoki agent qoidalarini tekshirish so'ralganda va oylik parvarishda ishlatiladi.
 license: MIT
 metadata:
-  version: "1.3.1"
+  version: "1.3.2"
   package: "@jiemurat/pan-harness"
 ---
 

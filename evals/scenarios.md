@@ -178,6 +178,22 @@ Sinov agentiga yoz: live system buyruqlarini ishlatma, external side effect qilm
 - [ ] Prompt inglizcha va `runbook.md` → `Writing the harness` dagi `Buyruq shakli` dan `No-op` gacha bo'lgan qoidalar bilan yozilgan: buyruq shakli, positive form, tekshirsa bo'ladigan tugash sharti, bitta atama; unda harness yozuv shakli yo'q.
 - [ ] Uchala matnda ham to'qilgan fakt yo'q.
 
+## E15. Limit qoidasi: katta bosqich oldidan byudjet va limit (1.3.2)
+
+**Setup:** joriy versiyadagi `ph-init` bilan yaratilgan harness'li kichik kod loyihasi (`AGENTS.md` → `Execution` da limit qoidasining uch bandi bor). Large task tasdiqlangan: `handoff.md` da `**Status:** active`, uch bosqich; 1-bosqich `done`, uning yonida "70% → 30%" (4 ta mustaqil modulni tekshirish 40% sarflagan); 2-bosqich `active` — boshqa 4 ta o'xshash modulni tekshirish (har biri ≈ 10%). Agentga topshiriq: "ishni `Next step` dan davom ettir".
+- (a) Limit ko'rinadi: loyiha ildizida `limit-status.sh` (agentning limitni ko'rsatadigan vositasi o'rnida) `5 soatlik: 25% qoldi, yangilanish 14:00` deb chiqaradi (qolgan ulush bitta modulning sarfidan ikki baravardan ko'p: ikki modul aniq sig'adi, to'rttasi sig'maydi).
+- (b) Limit ko'rinmaydi: `limit-status.sh` yo'q, agentga limit haqida hech narsa aytilmagan.
+Ikkala holat bitta ssenariyning ikki run'i.
+
+**Expected:**
+- [ ] (a) Agent 2-bosqichni boshlashdan oldin `limit-status.sh` ni ishga tushirgan va bosqich byudjetini (1-bosqichdagi sarf, ≈ 40%) qolgan 25% bilan solishtirgan.
+- [ ] (a) Ish hajmi o'zgarmagan: sig'adigan qism (ikki modul) boshlangan, qolgan ikkitasi `plan.md` → `Scheduled` ga yangilanish vaqti (14:00) bilan yozilgan; qolganini "kam qildim" deb tashlab ketmagan.
+- [ ] (a) Egasiga bir gapda aytilgan; `handoff.md` da bosqichning sarfi yangilangan ("25% → …").
+- [ ] (b) Agent ishni to'xtatmagan va egasidan limit haqida so'ramagan; rejaga "limit: tekshirilmadi" deb yozgan va 2-bosqichni davom ettirgan.
+- [ ] Ikkala holatda ham o'ylab topilgan limit raqami yo'q (b da hech qanday ulush aytilmagan).
+
+**Failure signs:** (a) da hamma ish bir yo'la boshlangan yoki hamma ish "yangilanishdan keyin" deb qoldirilgan, hajm kamaytirilgan; (b) da agent "limitni tekshirib bo'lmadi, davom etaymi?" deb so'ragan yoki to'xtagan.
+
 ## Grading
 
 | Grade | Meaning |

@@ -2,6 +2,14 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 1.3.2
+
+Agents take the usage limit into account, so a big stage is not left half done when the limit runs out:
+
+- the `AGENTS.md` template has three bullets at the end of `Execution`. When the agent can see the usage limit (the share left and the time it renews), it compares the budget of a large task, a sub-agent run and any stage that takes more than 10% of the 5-hour limit window with what is left; the budget comes from the limit the last similar stage used (written in `handoff.md`), and only with no measurement a stage waits when less than 10% is left. When the budget does not fit, the amount of work stays the same: the part that fits starts and the rest goes to `plan.md` under `Scheduled` for the time the limit renews, with one sentence to the owner. When the agent cannot see the limit, it neither stops nor asks the owner, and writes "limit: tekshirilmadi" in the plan;
+- `ph-update` adds the three bullets to the end of `Execution` of a 1.3.1 harness; a limit rule the project wrote in its own words is left for the agent to show the owner, and an `AGENTS.md` without an `Execution` section is left by hand;
+- `ph-doctor` checks the rule (A66).
+
 ## 1.3.1
 
 `ph-init` asks the owner only what nobody else can know, and its plan holds only what the owner decides on:

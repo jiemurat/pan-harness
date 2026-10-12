@@ -187,3 +187,17 @@ test('the package is called ph-paket in the agent texts, and the glossary says w
   assert.deepEqual(hits, []);
   assert.match(fs.readFileSync(path.join(CORE, 'references', 'structure.md'), 'utf8'), /^\| ph-paket \| `@jiemurat\/pan-harness` npm paketi: /m);
 });
+
+test('the usage limit rule (1.3.2) is in the AGENTS.md template, the structure description, the audit and the changelog', () => {
+  const read = (rel) => fs.readFileSync(path.join(CORE, rel), 'utf8');
+  const execution = read('templates/AGENTS.md.tmpl').split('**Execution.**\n')[1].split(/\n\n/)[0];
+  for (const part of ["Limitni ko'ra olsang, large task, sub-agent run va 5 soatlik limit oynasining", "10% idan ortig'ini", 'qolgan ulush va yangilanish vaqti', "faqat o'lchov yo'q bo'lsa, qolgan ulush 10% dan kam bo'lganda",
+    "Byudjet oshsa, ish hajmi o'zgarmaydi", '`plan.md` → `Scheduled` ga yoz', "Limitni ko'ra olmasang, ishni to'xtatma va egasidan so'rama", 'limit: tekshirilmadi']) {
+    assert.ok(execution.includes(part), `Execution: ${part}`);
+  }
+  assert.match(read('references/structure.md'), /`\*\*Execution\.\*\*` \(.*limit.*\)\./);
+  const audit = read('references/audit.md');
+  assert.match(audit, /^- Continuity and checks: A51–A58, A66$/m);
+  assert.match(audit, /^\| A66 \| .*Execution.*limit.* \| Interrupted work \| manual.* \| mechanical.*1\.3\.2.* \|$/m);
+  assert.match(read('references/changelog.md'), /^## 1\.3\.2$/m);
+});

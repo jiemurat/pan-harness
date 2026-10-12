@@ -141,7 +141,7 @@ Profile: live-system=yes, code=yes, sensitive-data=secrets+pii
 2. `## Project`: egasi, maqsad, egasi bilan muloqot qoidasi.
 3. `## Boundaries`: `**Never:**`, `**Ask first:**`, `**Always:**` qatorlari, qoidalarga `(R…)` havolasi bilan. Fayl boshida turadi, chunki model uzun matnning o'rtasidagi gapni kamroq hisobga oladi (P7). Zarar keltirishi mumkin bo'lgan har qoida (uzilish, ma'lumot yo'qolishi, sir, tashqi ta'sir, qaytarib bo'lmaydigan amal) shu yerda.
 4. `## Session start`: qaysi fayllar qaysi tartibda o'qiladi, faol ish bo'lsa `handoff.md` dan davom etish, state'ni tekshirish.
-5. `## Workflow`: task types, `**Planning.**` (birinchi savol: maqsad, natija va kriteriyalar; yakuniy rejada istisnolar, byudjet va bosqichlar, P21), `**Execution.**` (`handoff.md` ni yangilash, kriteriyalarni dalil bilan tekshirish).
+5. `## Workflow`: task types, `**Planning.**` (birinchi savol: maqsad, natija va kriteriyalar; yakuniy rejada istisnolar, byudjet va bosqichlar, P21), `**Execution.**` (`handoff.md` ni yangilash, kriteriyalarni dalil bilan tekshirish, limit qoidasi: katta bosqich oldidan byudjetni qolgan limit bilan solishtirish).
 6. `## Working style`: har da'voni tekshirish, oldin va keyin, avval sinov, kichik qadamlar, raqam bilan gapirish, ko'lamni ushlash, halol hisobot.
 7. `## Rules`: domain rules ko'rsatkichi, keyin raqamli qoidalar `R1…` manbasi bilan (`← F…`, `← L…`, `← D…`). Domain rules raqami bilan soha playbook'i boshida turadi, `AGENTS.md` da faqat ko'rsatkich qatori qoladi (P9).
 

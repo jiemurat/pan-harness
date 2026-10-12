@@ -3,7 +3,7 @@ name: ph-init
 description: Loyihaga harness quradi: AGENTS.md, PAN-HARNESS.md va pan-harness/ (Panoramic Harness). Harness yo'q loyihada ishlatiladi: bo'sh papka, kod yoki hujjat loyihasi, boshqa shakldagi AGENTS.md, CLAUDE.md yoki .cursor/rules bor loyiha.
 license: MIT
 metadata:
-  version: "1.3.1"
+  version: "1.3.2"
   package: "@jiemurat/pan-harness"
 ---
 
