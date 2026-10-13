@@ -1,49 +1,52 @@
 <!--
-pan-harness template. `{{…}}` joylarini to'ldir, `[profile: …]` belgilarini `structure.md` → "Profile" dagi qoida bo'yicha qo'lla. Shu izohni olib tashla.
+pan-harness template. Fill the `{{…}}` places, apply the `[profile: …]` marks by the rule in `structure.md` → "Profile". Remove this note.
 -->
 # Runbook
 
-Ko'p ishlatiladigan buyruqlar va harness matnini yozish qoidalari. Loyihaning README yoki Makefile'ida bor buyruqqa havola ber.
+Frequently used commands and the rules for writing the harness. For a command the project's README or Makefile already has, give a link.
 
 ## 1. Environment and access
 
-{{qayerda ishlanadi: server, konteyner, lokal; kirish usuli; vaqt zonasi. Profile'da `code=no` bo'lsa: hujjat formatlari va ularni o'qish vositalari, masalan pdf uchun `pdftotext`, docx uchun `pandoc`, xlsx uchun LibreOffice}}
+{{where the work runs: server, container, local; how to get in; the time zone. With `code=no` in the profile: the document formats and the tools that read them, for example `pdftotext` for pdf, `pandoc` for docx, LibreOffice for xlsx}}
 
 ## 2. Status checks
 
-{{status check buyruqlari yoki "`PAN-HARNESS.md` → `Project checks`". Live system bo'lmasa: "Yo'q."}}
+{{status check commands or "`PAN-HARNESS.md` → `Project checks`". Without a live system: "None."}}
 
 ## 3. Scripts
 
 | Script | Runs on | Purpose |
 |---|---|---|
-| `pan-harness/scripts/pan-harness-check.mjs` | lokal | Pan-harness structure, ID, maydon, yo'l, hajm va atama check'i |
-| [profile: sensitive-data=secrets] `pan-harness/scripts/secret-check.mjs` | lokal | Sirga o'xshash qatorlarni qidirish, qiymat chiqarilmaydi |
-| {{`pan-harness/project/scripts/<name>`}} | {{qayerda}} | {{nima qiladi}} |
+| `pan-harness/scripts/pan-harness-check.mjs` | local | Pan-harness check: structure, IDs, fields, paths, sizes and terms |
+| [profile: sensitive-data=secrets] `pan-harness/scripts/secret-check.mjs` | local | Search for lines that look like secrets; no value is printed |
+| {{`pan-harness/project/scripts/<name>`}} | {{where}} | {{what it does}} |
 
 ## 4. Writing the harness
 
-Harness matnini (`AGENTS.md`, `PAN-HARNESS.md`, `CLAUDE.md`, `pan-harness/`) shu bo'limning hamma qoidalari bilan yoz; `feedback.md` dagi `Quote:` egasining so'zlari bilan qoladi. Agent o'qiydigan boshqa matnni (boshqa agentlarning kontekst fayllari: `CLAUDE.local.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursor/rules/`, `CONTEXT.md`, ichki papkalardagi `AGENTS.md`; skill, buyruq va subagent fayllari; mahsulotdagi prompt'lar; boshqa tizim agentlarining fayllari) `Buyruq shakli`, `Context pointer`, `Progressive disclosure va co-location`, `Completion criterion`, `Positive form`, `Leading word`, `Single source`, `Manba` va `No-op` qoidalari bilan yoz; uning tili va inson o'qiydigan matn R23 da. Batafsil usul va misollar `ph-writing-for-agents` skill'ida (o'rnatilgan bo'lsa); loyiha qoidalari undan ustun. Kuchli va kichik model matnni bir xil tushunib, har safar bir xil jarayon bilan bajarishi kerak. Qoidalarni yangi va o'zgartirilgan matnga qo'lla, eski matnni tegilganda moslashtir.
+Write the harness text (`AGENTS.md`, `PAN-HARNESS.md`, `CLAUDE.md`, `pan-harness/`) with all the rules of this section; a `Quote:` in `feedback.md` keeps the owner's words. Write any other text an agent reads (the context files of other agents: `CLAUDE.local.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursor/rules/`, `CONTEXT.md`, `AGENTS.md` in subfolders; skill, command and subagent files; the prompts in the product; the files of other systems' agents) with the rules `Command form`, `Context pointer`, `Progressive disclosure and co-location`, `Completion criterion`, `Positive form`, `Leading word`, `Single source`, `Source` and `No-op`; its language and the text people read: `Language of other texts` below. The detailed method and examples are in the `ph-writing-for-agents` skill (when installed); the project's rules win over it. A strong and a small model must read the text the same way and follow it with the same process every time. Apply the rules to new and changed text, and fit old text to them when you touch it.
 
-- **Til:** {{harness tili}}. Kod izohlari inglizcha.
-- **Atamalar:** {{S27 javobi, masalan: "atamalar inglizcha; bir necha ma'noli so'z o'rniga inglizcha atama, izohsiz: structure, copy, move, migration, state, status, check, test, limit, boundary"}}.
-- Maydon nomlari, sarlavhalar va jadval ustunlari inglizcha (pan-harness standarti). Buyruq, yo'l, ID va sozlama kalitlari backtick ichida yoziladi.
-- **Buyruq shakli:** bajaruvchi va shart aniq, bitta bandda bitta fikr: "`state.md` ni yangila".
-- **Context pointer:** xarita qatori va havola avval nima borligini (kalit so'zlar boshida), keyin qachon o'qilishini aytadi; har vaziyatga bitta trigger.
-- **Progressive disclosure va co-location:** hamma ishga keragi `AGENTS.md` da, bitta sohaga keragi o'sha soha playbook'ida. Bir tushunchaning qoidasi, sababi va istisnosi bir joyda, fayl uchun yozuv shakli shu faylning boshida.
-- **Completion criterion:** har qadam va ⏳ band tekshirsa bo'ladigan to'liq shart bilan tugaydi: "har D ning `Where:` maydoni tekshirildi".
-- **Positive form:** qoida va `Rule:` nima qilishni aytadi. Taqiq faqat qat'iy qoida uchun (`AGENTS.md` → `Boundaries` → `Never`), yonida nima qilish kerakligi bilan.
-- **Leading word:** har tushuncha har joyda bitta atama bilan yoziladi.
-- **Single source:** har fakt bitta joyda yuritiladi (`PAN-HARNESS.md` → `Map`): joriy state `state.md` da, kelajakdagi ishlar va sanalar `plan.md` da, structure `system-map.md` da. Repo'dagi narsaga havola beriladi.
-- **Manba:** har fakt manbasi bilan yoziladi: egasining xabari, repo yoki ishga tushirilgan buyruq natijasi. Manbasi yo'q sabab, kriteriya, rol yoki sanani yozishdan oldin egasidan so'ra; `Checks:` dagi har natija yonida uni bergan buyruq yoki dalil turadi.
-- **No-op:** har gap agentning xatti-harakatini o'zgartiradi: model shusiz ham qiladigan ishni aytgan gapni o'chir.
-- **Sana va vaqt:** sanalar `YYYY-MM-DD`, vaqt {{vaqt zonasi}} bo'yicha.
-- **Commit xabari** (R4): birinchi qatorda 72 belgigacha nima o'zgargani, bo'sh qatordan keyin qisqa ro'yxat va tegishli D, L ID'lari. Til — kod izohlari tili. Agent vositasining imzosi (masalan, `Co-Authored-By`) vositaning o'z qoidasida.
-- Hujjatlarda egasi "{{egasi uchun so'z, masalan "egasi"}}" deb ataladi. `feedback.md` yozuvlaridagi "men" — o'sha yozuvni yozgan agent.
-- **Oddiy so'z:** yozuv nima haqida ekanini oddiy so'z bilan aytadi, vositaning ichki raqami (band, bosqich) o'rniga.
-- [profile: sensitive-data=pii yoki confidential] **Maxfiy mazmun o'rniga** (shaxsiy ma'lumot, maxfiy hujjat) yo'l, ID va neytral tavsif yoziladi.
-- **Topic tags:** `[docs]` `[workflow]` `[config]` `[security]` `[upgrade]` {{loyiha tag'lari}}. Jurnallardagi har yozuv sarlavhasida kamida bitta tag turadi. Yangi tag kerak bo'lsa, uni shu qatorga qo'sh.
+- **Language:** English, the harness is always in English. Code comments in English.
+- **Terms:** one term per concept, with no gloss in brackets (for example: structure, copy, move, migration, state, status, check, verification, test, limit, boundary, estimate, assumption, project, artifact, project-folder, artifact-folder).
+- Field names, headings and table columns stay as the pan-harness standard has them. Commands, paths, IDs and settings keys go in backticks.
+- **Command form:** the doer and the condition are clear, one idea per item: "update `state.md`".
+- **Context pointer:** a map line and a link say first what is there (keywords at the start), then when it is read; one trigger per situation.
+- **Progressive disclosure and co-location:** what every task needs is in `AGENTS.md`, what one domain needs is in that domain's playbook. A concept's rule, reason and exception stand in one place, a file's entry format at the top of that file.
+- **Completion criterion:** each step and ⏳ item ends with a full condition one can check: "the `Where:` field of each D is checked".
+- **Positive form:** a rule and a `Rule:` say what to do. A ban only for a hard rule (`AGENTS.md` → `Boundaries` → `Never`), with what to do next to it.
+- **Leading word:** each concept is written with one term everywhere.
+- **Single source:** each fact is kept in one place (`PAN-HARNESS.md` → `Map`): the current state in `state.md`, future work and dates in `plan.md`, the structure in `system-map.md`. Link to what is in the repo.
+- **Source:** each fact is written with its source: the owner's message, the repo or the result of a command that ran. Ask the owner before writing a reason, criterion, role or date without a source; each result in `Checks:` has the command or evidence that gave it next to it.
+- **No-op:** each sentence changes the agent's behaviour: delete a sentence that says what the model would do anyway.
+- **Date and time:** dates as `YYYY-MM-DD`, time by {{time zone}}.
+- **Commit message** (the commit rule in `AGENTS.md` → `Rules`): the first line says what changed in up to 72 characters, after an empty line a short list and the D and L IDs concerned. Language: that of the code comments. The signature of the agent's tool (for example, `Co-Authored-By`) is in the tool's own rule.
+- In the documents the owner is called "{{word for the owner, for example "the owner"}}". "I" in a `feedback.md` entry is the agent that wrote the entry.
+- **Plain words:** an entry says what it is about in plain words, in place of a tool's internal number (an item, a stage).
+- [profile: sensitive-data=pii or confidential] **In place of confidential content** (personal data, a confidential document), a path, an ID and a neutral description are written.
+- **Language of other texts** (R23):
+  - Write another text an agent reads in the language the owner asked for, else in the existing file's language; a new file in English. The harness language and terms stay in the harness files.
+  - For a text people read (README, project documents, a letter, a guide, a report file), choose the language and the style separately, in this order: (1) the owner's instruction, given in the chat or written in the harness (for example, `Commit message` above); (2) the document's own language and style; (3) in a new document, those of the project's documents with the same purpose; (4) otherwise, the chat language and a style that fits the document type: tell the owner the choice in the plan or the final message, and change it if the owner names another. Add a source, file path or ID line to a text for people only when the owner asks.
+- **Topic tags:** `[docs]` `[workflow]` `[config]` `[security]` `[upgrade]` {{project tags}}. Each journal entry has at least one tag in its heading. Add a new tag to this line when one is needed.
 
 ## 5. Accepted warnings
 
-{{check'larda chiqadigan, sababi bilan qabul qilingan ogohlantirishlar yoki "Yo'q."}}
+{{warnings the checks give that are accepted with their reason, or "None."}}

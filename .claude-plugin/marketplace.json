@@ -9,7 +9,7 @@
     {
       "name": "pan-harness",
       "source": "./",
-      "description": "ph-init, ph-doctor, ph-update and ph-grilling: create, audit, update and plan a Panoramic Harness (AGENTS.md, PAN-HARNESS.md, pan-harness/).",
+      "description": "ph-init, ph-doctor, ph-update, ph-grilling and ph-writing-for-agents: create, audit, update and plan a Panoramic Harness (AGENTS.md, PAN-HARNESS.md, pan-harness/) and write text for agents.",
       "category": "productivity",
       "keywords": [
         "agents-md",

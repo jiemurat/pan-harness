@@ -1,53 +1,53 @@
 <!--
-pan-harness template. Loyihada `pan-harness/handoff.md` nomi bilan saqlanadi.
-- Faol large task bo'lmasa, fayl shu izohsiz, sarlavha, ikki paragraf va `**Status:** none` qatoridan iborat: ikkinchi paragraf faol ish shaklini saqlaydi.
-- Bo'limlar va status so'zlari (`todo`, `active`, `blocked`, `done`) inglizcha qoladi (standart): skript ularni o'qiydi. Gaplar egasining tilida.
-- Hali yo'q, yaratiladigan fayl backtick'siz va "(new)" belgisi bilan yoziladi, aks holda skript uni yo'q yo'l deb ko'rsatadi.
-- Shu izohni olib tashla.
+pan-harness template. Saved in the project as `pan-harness/handoff.md`.
+- Without an active large task, the file holds the heading, the two paragraphs and the `**Status:** none` line, without this note: the second paragraph keeps the form of an active task.
+- The sections and the status words (`todo`, `active`, `blocked`, `done`) stay as they are (standard): the script reads them.
+- A file still to be made is written without backticks and with the mark "(new)", else the script reports it as a missing path.
+- Remove this note.
 -->
 # Handoff
 
-Faol large task'ning state'i. Agent uni har status xabarida, egasidan savol so'rab to'xtashdan oldin va kontekst tugashiga yaqin yangilaydi; kontekst tugayotganda ham check'lar to'liq o'tkaziladi. Yangi sessiya ishni shu fayldan davom ettiradi.
+The state of the active large task. The agent updates it with each status message, before stopping to ask the owner a question and near the end of the context; the checks run in full even when the context is running out. A new session goes on with the work from this file.
 
-Large task tasdiqlangach `**Status:** active` deb yoz va bo'limlarni to'ldir: `## Task` (ish, maqsad, qilinmaydi, byudjet), `## Criteria` (K1…: nima kuzatiladi, threshold, qanday va qachon tekshiriladi, status), `## Steps` (har qadam natijasi va completion criterion bilan; status — `todo`, `active`, `blocked` yoki `done`, bir vaqtda bitta `active`), `## Changed files` (shu ish allaqachon o'zgartirgan fayllar), `## Checks`, `## Decisions`, `## Open questions`, `## Next step`, `## Work files` (rejadagi va vaqtinchalik fayllar). Ish tugagach, qarorlarni `decisions.md` ga, qolganini tarix yozuviga move qil va bu yerda `**Status:** none` qoldir.
+When a large task is approved, write `**Status:** active` and fill the sections: `## Task` (task, goal, not done, budget), `## Criteria` (K1…: what is observed, the threshold, how and when it is checked, status), `## Steps` (each step with its outcome and completion criterion; status — `todo`, `active`, `blocked` or `done`, one `active` at a time), `## Changed files` (the files this task has changed so far), `## Checks`, `## Decisions`, `## Open questions`, `## Next step`, `## Work files` (the planned and the temporary files). When the task ends, move the decisions into `decisions.md` and the rest into the history entry, and leave `**Status:** none` here.
 
-**Status:** {{none yoki active}}
+**Status:** {{none or active}}
 
 ## Task
 
-- **Ish:** {{nomi, boshlangan sana, `plan.md` dagi bandi}}
-- **Maqsad:** {{2–3 gap}}
-- **Qilinmaydi:** {{kelishilgan istisnolar}}
-- **Byudjet:** {{vaqt, token yoki sub-agentlar soni, pullik API xarajati; ikki barobar oshsa, to'xtab egasidan so'raladi}}
+- **Task:** {{name, start date, its item in `plan.md`}}
+- **Goal:** {{2–3 sentences}}
+- **Not done:** {{the agreed exceptions}}
+- **Budget:** {{time, tokens or the number of sub-agents, paid API cost; if it doubles, stop and ask the owner}}
 
 ## Criteria
 
-- {{K1: nima kuzatiladi, threshold, qanday va qachon tekshiriladi. Status: `todo`, `active`, `blocked` (sababi), `done` (dalili) yoki ⏳ (qachon)}}
+- {{K1: what is observed, the threshold, how and when it is checked. Status: `todo`, `active`, `blocked` (reason), `done` (evidence) or ⏳ (when)}}
 
 ## Steps
 
-- {{`active` — bosqich yoki qadam: natijasi va completion criterion'i (tekshirsa bo'ladigan shart). Bir vaqtda faqat bitta qadam `active`. `done` dalil bilan, `blocked` sababi bilan}}
+- {{`active` — a stage or step: its outcome and completion criterion (a condition one can check). Only one step `active` at a time. `done` with evidence, `blocked` with the reason}}
 
 ## Changed files
 
-- {{shu ish o'zgartirgan fayllar, loyiha ildiziga nisbatan yo'l bilan. `git status` dagi bu ro'yxatda yo'q o'zgarish egasiniki: u agentning commit'iga kirmaydi, alohida commit qilinadi (R4)}}
+- {{the files this task changed, by their path from the project-folder. A change in `git status` not on this list is the owner's: it stays out of the agent's commit and gets its own (R4)}}
 
 ## Checks
 
-- {{qaysi check qachon ishga tushdi va natijasi, raqam bilan}}
+- {{which check ran when and its result, in numbers}}
 
 ## Decisions
 
-- {{ish davomida qabul qilingan qaror: nima, nega, rad etilgan variant. Ish oxirida `decisions.md` ga o'tadi}}
+- {{a decision taken during the work: what, why, the rejected option. It moves into `decisions.md` at the end}}
 
 ## Open questions
 
-- {{egasining javobini kutayotgan savollar va to'siqlar. Bo'lmasa: "Yo'q."}}
+- {{questions and blockers waiting for the owner. If none: "None."}}
 
 ## Next step
 
-{{keyingi aniq qadam: nima qilinadi va qaysi fayldan boshlanadi}}
+{{the next concrete step: what is done and which file it starts from}}
 
 ## Work files
 
-- {{rejadagi fayllar ro'yxati (ish oxirida o'zgarganlar bilan solishtiriladi) va ish uchun vaqtinchalik fayllar: loyiha ichidagi, git'ga kirmaydigan papkada (masalan, `temp/<sana>-<ish>/`), agent vositasining vaqtinchalik papkasida emas}}
+- {{the planned files (compared with the changed ones at the end) and the task's temporary files: in a folder inside the project-folder that git does not track (for example, `temp/<date>-<task>/`), not in the agent tool's temporary folder}}

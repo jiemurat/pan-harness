@@ -1,24 +1,24 @@
-# ph-init: pan-harness yaratish
+# ph-init: making a pan-harness
 
-Loyihada pan-harness yo'q: papka bo'sh yoki loyiha bor. Boshqa shakldagi agent fayllari (`AGENTS.md`, `CLAUDE.md`, `CONTEXT.md`, `.cursor/rules`, `GEMINI.md`, `.github/copilot-instructions.md`) bo'lishi mumkin: ulardagi bilim to'liq migration qilinadi.
+The project has no pan-harness: the folder is empty or a project is there. Agent files of another shape (`AGENTS.md`, `CLAUDE.md`, `CONTEXT.md`, `.cursor/rules`, `GEMINI.md`, `.github/copilot-instructions.md`) may be there: their knowledge is migrated in full.
 
-Shu checklist'ni javobingga copy qilib, belgilab bor:
+Copy this checklist into your answer and tick it as you go:
 
 ```
 ph-init:
-- [ ] 0. Vaziyat: harness bor, bo'sh papka yoki mavjud loyiha
-- [ ] 1. Preparation: git (o'rnatish, `git init`, `.gitignore`, dastlabki commit), agent fayllari, sir fayllari (faqat nomlar), Node
-- [ ] 2. Facts: stack, ishga tushirish, live system, hujjatlar, profile loyihasi
-- [ ] 3. Interview: maqsad (S1), "tayyor" degani nima (S30), chegaralar (S31), git identity bo'sh bo'lsa; qolgani standart tanlov
-- [ ] 4. Plan: qisqa reja (kriteriyalar, harness'dan tashqari o'zgarish, standart tanlovlar), egasining tasdig'i
-- [ ] 5. Create: standart qism, project/, jurnallar, migration, hook
-- [ ] 6. Check: pan-harness-check, secret-check, hajm, audit.md, fresh-agent test (so'rab)
-- [ ] 7. Report va commit (S11 = a)
+- [ ] 0. Situation: a harness, an empty folder or an existing project; without a harness, the language question
+- [ ] 1. Preparation: git (install, `git init`, `.gitignore`, first commit), agent files, secret files (names only), Node
+- [ ] 2. Facts: stack, how it runs, live system, docs, the profile draft
+- [ ] 3. Interview: goal (S1), what "done" means (S3), boundaries (S4), the artifact-folder (S31), the git identity when empty; the rest are standard choices
+- [ ] 4. Plan: a short plan (criteria, changes outside the harness, standard choices), the owner's approval
+- [ ] 5. Create: the standard part, project/, journals, migration, hook
+- [ ] 6. Check: pan-harness-check, secret-check, size, audit.md, fresh-agent test (asked)
+- [ ] 7. Report and commit (S6 = a)
 ```
 
 ## Contents
 
-- 0. Vaziyatni aniqlash
+- 0. Finding the situation
 - 1. Preparation
 - 2. Facts
 - 3. Interview
@@ -28,134 +28,153 @@ ph-init:
 - 7. Report
 - Common cases
 
-## 0. Vaziyatni aniqlash
+## 0. Finding the situation
 
-Papkada nima borligini ko'r (`ls -A`, `git status`):
-- **Harness bor** (`PAN-HARNESS.md` yoki `pan-harness/`): `ph-init` shu yerda tugaydi. `PAN-HARNESS.md` → `Standard:` dagi versiya skill'nikiga teng bo'lsa, egasiga `ph-doctor` ni (harness'ni tekshirish va tuzatish) taklif qil. Versiya farq qilsa yoki harness unknown standard'da bo'lsa, `ph-update` ni taklif qil: u harness'ni migration qiladi va oxirida `ph-doctor` ni ham o'tkazadi.
-- **Bo'sh papka** (faqat `.git`, `.gitignore` va agent papkalari: `.agents/`, `.claude/`, `.gemini/`, `.opencode/` bor): birinchi savollar raundida, Q1 bilan birga, loyiha nima bo'lishini so'ra: kod (til, nima qiladi) yoki hujjat (qanday hujjatlar, kim uchun) va nomi (egasining ismi so'ralmaydi). Git'ni o'rnatish va `git init` (1-qadam) javobni kutmaydi. Javobdan keyin minimal structure yarat: `README.md` (maqsad 2–3 gapda, suhbat tilida), loyiha turiga mos `.gitignore` va dastlabki commit (1-qadam), keyin `ph-init` ning qolgan qadamlari. Faktlar egasining javobidan olinadi; repo'da bor narsa yo'q, shuning uchun `Facts` qisqa bo'ladi.
-- **Mavjud loyiha** (kod yoki hujjat): 1-qadamdan boshla.
+Look at what the folder holds (`ls -A`, `git status`):
+- **A harness is there** (`PAN-HARNESS.md` or `pan-harness/`): `ph-init` ends here, with no language question. When the version in `PAN-HARNESS.md` → `Standard:` equals the skill's, offer the owner `ph-doctor` (checking and fixing the harness). When the version differs or the harness is on an unknown standard, offer `ph-update`: it migrates the harness and runs `ph-doctor` at the end too.
+- **An empty folder** (only `.git`, `.gitignore` and the agent tool folders: `.agents/`, `.claude/skills/`, `.gemini/commands/`, `.opencode/commands/`): in the first round of questions, together with Q1, ask what the project will be: code (language, what it does) or documents (which documents, for whom) and its name (the owner's name is not asked). Installing git and `git init` (step 1) do not wait for the answer. After the answer, make the minimal structure: `README.md` (the goal in 2–3 sentences, in the chat language), a `.gitignore` that fits the project type and the first commit (step 1), then the rest of `ph-init`. The facts come from the owner's answer; the repo holds nothing yet, so `Facts` is short.
+- **An existing project** (code or documents): start from step 1.
 
-Tugadi: uch vaziyatdan biri aniqlangan; harness bor bo'lsa, taklif egasida.
+**The language question.** Without a harness, the first message to the owner is always this question, in three languages, as it is:
+
+```
+Which language should we talk in? / Qaysi tilda gaplashamiz? / На каком языке будем общаться?
+a. English
+b. O'zbek
+c. Русский
+d. Other
+```
+
+It has no Q number, no recommendation line and does not count toward the question limit (`style-questions.md` → `Language question`). When the owner picks "d" without naming the language, ask again in the three languages. From the answer on, every message, the plan and the report are in the chosen language (a message the owner writes in another language is answered in that one: `SKILL.md` → "Core rules", rule 14); the harness is in English. The rounds: in an existing project 2 (the language question, then the interview), in an empty folder 3.
+
+Done when: one of the three situations is found; with a harness, the offer is with the owner; without one, the owner has answered the language question.
 
 ## 1. Preparation
 
-1. Loyiha ildizini aniqla. Skill'lar loyihaga `npx @jiemurat/pan-harness@latest init` bilan o'rnatiladi va `.gitignore` da turadi (ular asbob, loyiha bilimi emas). Bu buyruq `playbooks/pan-harness.md` ga yoziladi.
-2. **Git.** Pan-harness git'da ishlaydi (`structure.md` → "Git"). Bu qadamlar `ph-init` buyrug'ining bir qismi, ularni darhol bajar:
-   - `git --version`. Git o'rnatilmagan bo'lsa, o'rnat: macOS — `xcode-select --install`, Windows — `winget install --id Git.Git -e`, Linux — paket menejeri (`sudo apt install git`, `sudo dnf install git`). `sudo` yoki parol kerak bo'lsa, agentda egasiga ko'rinadigan terminal bo'lsa, buyruqni o'sha yerda ishga tushir, parolni egasi kiritadi, keyin `git --version` bilan tekshirib davom et. Bunday terminal bo'lmasa, buyruqni egasiga ber va kut.
-   - Papka git repo bo'lmasa (`git rev-parse --is-inside-work-tree` xato beradi), `git init -b main` qil.
-   - Identity: avval `git config user.name` va `git config user.email` ni ko'r (global va lokal sozlama birga chiqadi). Ikkalasi bor bo'lsa, commit'lar shu nom bilan qilinadi, sozlama o'z holicha qoladi. Bo'sh bo'lsa, birinchi savollar raundida so'ra (S29), javobni repo'ning lokal sozlamasiga yoz va commit'ni javobdan keyin qil. Ism va email'ni faqat egasining javobidan ol: commit muallifi egasi.
-   - `.gitignore`: bo'lmasa yarat, bo'lsa to'ldir (`structure.md` → "Git"). Faqat shu loyihada bor yoki ishda paydo bo'ladigan narsani yoz:
-     - sir: 4-qadamda topilgan sir fayllarining aniq nomi, `.env` va `.env.*` (`!.env.example` bilan), `*.pem`, `*.key`. 4-qadamdagi qidiruv naqshlari (`*secret*`, `*token*`, `credentials*`) faqat topish uchun: `.gitignore` ga topilgan aniq nomlar yoziladi, chunki keng naqsh oddiy fayllarni ham yashiradi;
-     - loyihaning build yoki eksport papkasi (README, skript yoki manifestda qayerga yozilishi aytilgan bo'ladi), loyiha tilining keshi va bog'liqliklari, log;
-     - OS va muharrir fayllari, hujjat loyihasida ofis qulf fayllari (`~$*`, `.~lock.*#`).
+These steps are part of the `ph-init` command: do them at once, before the plan's approval (the read-only rule until approval covers the harness itself, `SKILL.md` → "Core rules", rule 5).
+1. Find the project-folder. The skills are installed into it with `npx @jiemurat/pan-harness@latest init` and stand in `.gitignore` (they are tools, not project knowledge). This command goes into `playbooks/pan-harness.md`.
+2. **Git.** The pan-harness works in git (`structure.md` → "Git"):
+   - `git --version`. If git is not installed, install it: macOS — `xcode-select --install`, Windows — `winget install --id Git.Git -e`, Linux — the package manager (`sudo apt install git`, `sudo dnf install git`). When `sudo` or a password is needed: if the agent has a terminal the owner can see, run the command there, the owner types the password, then check with `git --version` and go on. Without such a terminal, give the command to the owner and wait.
+   - If the folder is not a git repo (`git rev-parse --is-inside-work-tree` gives an error), run `git init -b main`.
+   - Identity: first look at `git config user.name` and `git config user.email` (the global and the local setting come out together). When both are set, the commits are made with that name and the setting stays as it is. When they are empty, ask in the first round of questions (S2), write the answer into the repo's local setting and commit after the answer; take the name and the email only from the owner's answer: the commit author is the owner.
+   - `.gitignore`: make it when there is none, complete it when there is one (`structure.md` → "Git"). Write only what this project has or what the work makes:
+     - secrets: the exact names of the secret files found in item 4 below, `.env` and `.env.*` (with `!.env.example`), `*.pem`, `*.key`. The search patterns of item 4 (`*secret*`, `*token*`, `credentials*`) only serve to find files: `.gitignore` gets the exact names found, because a broad pattern hides ordinary files too;
+     - the project's build or export folder (the README, a script or a manifest says where it is written), the cache and dependencies of the project's language, logs;
+     - OS and editor files, office lock files in a document project (`~$*`, `.~lock.*#`).
 
-     Umumiy papka nomlari (`lib/`, `parts/`, `var/`, `build/`) faqat ular shu loyihada build natijasi bo'lsa yoziladi: aks holda loyiha mazmunini yashiradi. Yozgach, `git status --short --ignored` ni ko'r: ignore qilinganlarning har biri yuqoridagi turlardan biri bo'lishi kerak: sir, kesh va bog'liqliklar, log, build, OS, muharrir va qulf fayllari.
-   - Repo'da hali commit bo'lmasa, dastlabki commit qil. Avval commit'ga tushadigan fayllarni skill'dagi skript bilan tekshir: `git ls-files -z --others --exclude-standard | xargs -0 node <skill>/scripts/secret-check.mjs --root .`. Sir topilsa, fayl `.gitignore` ga tushadi yoki egasidan so'raladi. Keyin `git add -A` va `git commit -m "Initial commit"`. Bu commit'da faqat egasining fayllari bo'ladi, harness hali yo'q.
-   - Repo'da commit qilinmagan o'zgarish bor bo'lsa, u egasining ishi. O'zing kiritgan `.gitignore` o'zgarishi egasining commit qilinmagan o'zgarishi emas: u `Pre-init state` ga kirmaydi, harness bilan birga commit qilinadi. Commit tartibi (S11) standart tanlov: reja uni ko'rsatadi, savol berilmaydi. Reja tasdig'idan keyin, harness yozilishidan oldin (5-qadam, 1-band): (a) bo'lsa, uni alohida commit qil (`Pre-init state`), o'zgargan fayllarni o'sha buyruq bilan tekshirib (`git ls-files -z --modified --others --exclude-standard`). (b) bo'lsa, egasidan so'ra.
-3. Mavjud agent fayllarini top: ildiz va ichki papkalardagi `AGENTS.md`, `CLAUDE.md`, `CLAUDE.local.md`, `.claude/`, `GEMINI.md`, `.cursor/`, `.github/copilot-instructions.md`, `CONTEXT.md`, `docs/`. Ichki papkadagi `AGENTS.md` loyihaning o'z agentlari uchun yozilgan bo'lishi mumkin: uni o'z holicha qoldir, faqat xaritaga va qoidaga yoz.
-4. Sir fayllari ro'yxatini faqat nomlar bo'yicha tuz: `.env*` (`.env.example` dan tashqari), `*secret*`, `*.pem`, `*.key`, `credentials*`, `*token*`. Faqat nom va qaysi biri git'da ekanini yoz. Git'dagi sir fayli bo'lsa, egasiga darhol ayt.
-5. Skanerlashda bu papkalarni o'tkazib yubor: `.git`, `node_modules`, `venv`, `.venv`, `__pycache__`, `dist`, `build`, `volumes`, ma'lumotlar papkalari.
-6. `node --version` ni tekshir (18 yoki yangi). Node bo'lmasa, `structure.md` → "Profile" dagi tartib bilan ishla.
+     Common folder names (`lib/`, `parts/`, `var/`, `build/`) are written only when they are a build output in this project: otherwise they hide the project's files. After writing, look at `git status --short --ignored`: each ignored path must be one of the kinds above: secrets, cache and dependencies, logs, build, OS, editor and lock files.
+   - When the repo has no commit yet, make the first commit. First check the files that go into it with the skill's script: `git ls-files -z --others --exclude-standard | xargs -0 node <skill>/scripts/secret-check.mjs --root .`. When a secret is found, the file goes into `.gitignore` or the owner is asked. Then `git add -A` and `git commit -m "Initial commit"`. This commit holds only the owner's files; the harness is not there yet.
+   - When the repo has uncommitted changes, they are the owner's work. The `.gitignore` change you made is not the owner's uncommitted change: it does not go into `Pre-init state` but is committed with the harness. The commit order (S6) is a standard choice: the plan shows it, no question is asked. After the plan's approval, before the harness is written (step 5, item 1): with (a), commit them separately (`Pre-init state`), checking the changed files with the same command (`git ls-files -z --modified --others --exclude-standard`). With (b), ask the owner.
+3. Find the existing agent files in the root and in subfolders: `AGENTS.md`, `CLAUDE.md`, `CLAUDE.local.md`, `.claude/` (apart from `.claude/skills/`), `GEMINI.md`, `.cursor/rules/`, `.github/copilot-instructions.md`, `CONTEXT.md`, `docs/`. The tool folders (`.agents/`, `.claude/skills/`, `.gemini/commands/`, `.opencode/commands/`) hold installed skills and commands: they are tools, not agent files of the project. An `AGENTS.md` in a subfolder may be written for the project's own agents: leave it as it is, put it only into the map and a rule.
+4. Make the list of secret files by names only: `.env*` (except `.env.example`), `*secret*`, `*.pem`, `*.key`, `credentials*`, `*token*`, outside the tool folders of item 3 (their scripts have such names). Write only the name and which ones are in git. When a secret file is in git, tell the owner at once.
+5. Skip these folders when scanning: `.git`, `node_modules`, `venv`, `.venv`, `__pycache__`, `dist`, `build`, `volumes`, data folders.
+6. Check `node --version` (18 or newer). Without Node, work by the procedure in `structure.md` → "Profile".
 
-Tugadi: `git status` ishlaydi, `.gitignore` va dastlabki commit bor, agent va sir fayllari ro'yxatlangan, Node bor-yo'qligi ma'lum.
+Done when: `git status` works, `.gitignore` and the first commit are there, the agent and secret files are listed, whether Node is there is known.
 
 ## 2. Facts
 
-Repo'dan shularni o'rgan: README va manifestlar (`package.json`, `pyproject.toml`, `requirements.txt`, `Dockerfile`, `docker-compose*.yml`, `Makefile`, CI fayllari). Hujjat loyihasida ildizdagi va birinchi darajadagi papkalarni va fayl turlarini (pdf, docx, xlsx, md) sana. Quyidagilarni aniqla:
-- til va stack, ishga tushirish, test va deploy buyruqlari (qayerda yozilgani);
-- mavjud check'lar va ular qanday ishga tushadi: testlar, linter, CI, hujjat linterlari (markdownlint, Vale, havola tekshiruvchi), loyihaning to'liq check buyrug'i bormi;
-- loyihaning invariant'lari, repo'da yozilgani: kodda arxitektura qatlamlari va bog'liqlik qoidalari, hujjatda atamalar, structure, iqtibos shakli;
-- live system bormi (compose, systemd, cron, server), u qayerda ishlaydi;
-- tashqi xizmatlar va sir nomlari (env o'zgaruvchilar nomi, qiymatsiz);
-- shaxsiy ma'lumot yoki maxfiy hujjatlar bor-yo'qligi: uni fayl nomlari va papka structure'idan aniqla, faqat nomlarga qara;
-- mavjud hujjatlar va ularning state'i;
-- kompyuterning vaqt zonasi: `date '+%Z %z'` (masalan, `+05 +0500` — UTC+5); u standart tanlov (S26) va rejada axborot sifatida aytiladi.
+Study these in the repo: the README and the manifests (`package.json`, `pyproject.toml`, `requirements.txt`, `Dockerfile`, `docker-compose*.yml`, `Makefile`, CI files). In a document project, count the folders of the root and the first level and the file types (pdf, docx, xlsx, md). Find:
+- the language and the stack, the commands to run, test and deploy (where they are written);
+- the existing checks and how they run: tests, linters, CI, document linters (markdownlint, Vale, a link checker), whether the project has a full check command;
+- the project's invariants written in the repo: in code the architecture layers and the dependency rules, in documents the terms, the structure, the quotation form;
+- whether there is a live system (compose, systemd, cron, a server), where it runs;
+- the outside services and the secret names (the names of environment variables, without values);
+- whether there is personal data or confidential documents: find it from the file names and the folder structure, look only at the names;
+- the existing docs and their state;
+- where the artifacts stand: in one folder (which), in several, in the root;
+- the computer's time zone: `date '+%Z %z'` (for example, `+05 +0500` — UTC+5); it is a standard choice (S11) and goes into the plan as information.
 
-Faktlardan profile loyihasini tuz (`structure.md` → "Profile"): `live-system`, `code`, `sensitive-data`. Faktlarni o'zingga qayd qil, har birini `verified` yoki `unverified` deb belgila.
+Make the profile draft from the facts (`structure.md` → "Profile"): `live-system`, `code`, `sensitive-data`. Note the facts for yourself, each marked `verified` or `unverified`.
 
 ## 3. Interview
 
-Egasidan faqat `style-questions.md` → `Asked` dagi savollar so'raladi: egasidan boshqa hech kim bila olmaydigan narsa. Uslub, ish tartibi va ehtiyot choralari savol emas, standart tanlov (`style-questions.md` → `Standard choices`): u rejada ko'rsatiladi, javob kutilmaydi. Egasining vaqti yagona ketma-ket resurs, shuning uchun kodsiz, serversiz, sirsiz loyihada savollar soni ko'pi bilan 5, odatda 3–4 (reja tasdig'i bu songa kirmaydi); ko'proq bo'lsa, sababi hisobotda aytiladi.
+The owner is asked only the questions of `style-questions.md` → `Asked`: what nobody but the owner can know. Style, way of working and precautions are not questions but standard choices (`style-questions.md` → `Standard choices`): the plan shows them, no answer is waited for. The owner's time is the one sequential resource, so in a project without code, a server and secrets the questions number at most 5, usually 4 (neither the language question nor the plan's approval counts); when there are more, the report says why.
 
-Savollarni `ph-grilling` formatida ber, ikki raundda:
-1. 1-raund: Q1 — maqsad, natija va kriteriyalar loyihasi (S1). Q1 ni yozishdan oldin `templates/AGENTS.md.tmpl` → `Planning` ni o'qi: kriteriya shakli shu yerda (P21). Misol kriteriya: "yangi agent harness'dan loyihaning 4–6 ta odatiy savoliga to'g'ri javob beradi". Bo'sh papkada shu savolda loyiha nima bo'lishini so'ra, kriteriyalarni egasidan so'rama: maqsad javobidan keyin o'zing taklif qil va rejada tasdiqlat. Git'da identity bo'lmasa, uni ham shu raundda so'ra (S29).
-2. 2-raund: 1-javobga moslab "tayyor" degani nima (S30) va chegaralar (S31). Mavjud loyihada (repo bor) loyiha turi repo'dan ma'lum, shuning uchun ikkala raund birlashadi: S1, S30 va S31 bitta xabarda.
+Ask the questions in the `ph-grilling` format in two rounds, after the language question, in the chosen language:
+1. Round 1: Q1 — the draft of the goal, the outcome and the criteria (S1). Before writing Q1, read `templates/pan-harness/playbooks/large-task.md.tmpl` → `Planning`: the criteria form is there (P21). An example criterion: "a new agent answers 4–6 usual questions of the project correctly from the harness". In an empty folder, this question asks what the project will be; do not ask the owner for the criteria: propose them yourself after the goal's answer and have them approved in the plan. When git has no identity, ask it in this round too (S2).
+2. Round 2: what "done" means (S3), the boundaries (S4) and the artifact-folder (S31), fitted to the first answer. In an existing project (a repo is there) the project type is known from the repo, so the two rounds merge: S1, S3, S4 and S31 in one message.
 
-Har ochiq savolda `Suggestion` ustunidagi taklifni Facts dan topilganlar bilan to'ldirib, o'z taklifingni yoz `➡️` qatorida, 1–2 gap sababi bilan: egasi "ha" desa qabul qilinadi. `Suggestion` ustunida "—" bo'lsa (git ismi; bo'sh papkada maqsad), taklif yozilmaydi: egasining javobisiz taklif qilib bo'lmaydi. Mavjud loyihada maqsadni README dan topib, taklif sifatida yoz. Variantli savol qolsa (masalan, 50 MB dan katta fayl), tavsiya alohida qatorda, sababi bilan beriladi. Bilmayman yoki "hali hal qilmaganman" javob hisoblanadi (savol javobsiz qolgan emas): u ochiq masala sifatida rejada ro'yxatlanadi va 5-qadamda `plan.md` → `Awaiting owner decision` ga yoziladi, ish to'xtamaydi. Savolning bir qismiga javob bo'lmasa, o'sha qism ochiq masala bo'ladi. Egasi javob o'rniga topshiriq bersa (masalan, "o'zing hal qil" yoki "internetdan o'rgan"), uni bajar va savolni yangi taklif bilan qayta ber.
+**The artifact-folder (S31).** The artifacts are the project's work products, its inputs and outputs: code, documents, data. The artifact-folder is the one folder of the project-folder that holds them, apart from the harness and the tool folders. Ask with the options of S31 for the artifacts' type, the recommended one first and the owner's own folder name last. Ask it with the term artifact-folder, explained in one sentence at its first use; the plan and the report say project-folder and artifact-folder too. When the artifacts of an existing project are not in one folder, propose moving them there: say the goal and the expected benefit in 1–2 sentences (the work and the harness stay apart, an agent finds the work in one place) and list what moves (source code, tests, documents, data) and what stays in the root (manifests and lock files such as `package.json` and `requirements.txt`, `Dockerfile` and compose files, CI settings, `README.md`, `LICENSE`, `.gitignore`, `.env*`, the harness and the tool folders: the tools look for them there). `src/` beside `tests/` counts as more than one folder: the owner decides. `ph-init` moves no artifact: when the owner agrees, the move goes into `plan.md` → `Queue` as the first large task, with its own plan and checks; when the owner declines, the artifact-folder holds the new artifacts and the old ones stay where they are (a decision).
 
-Agent topadigan fakt (suhbat tili, kompyuterning vaqt zonasi, profile) savol ham, tasdiq savoli ham emas: u rejada axborot sifatida aytiladi, noto'g'ri bo'lsa egasi aytadi. Repo'dan topilmagan boshqa bilim ham yangi savol emas: u S1, S30 va S31 ga kiradi.
+In each open question, write your proposal on a `➡️` line, filling the `Suggestion` column with what Facts found, with a reason of 1–2 sentences: when the owner says "yes", it is accepted. When `Suggestion` holds "—" (the git name; the goal in an empty folder), no proposal is written: it cannot be proposed without the owner's answer. In an existing project, find the goal in the README and write it as a proposal. When a question with options remains (for example, a file over 50 MB), the recommendation comes on its own line, with the reason. "I don't know" or "not decided yet" counts as an answer (the question is not left open): it goes into the plan's list of open issues and in step 5 into `plan.md` → `Awaiting owner decision`, and the work does not stop. When a part of a question has no answer, that part becomes an open issue. When the owner gives a task in place of an answer (for example, "decide yourself" or "study it on the internet"), do it and ask the question again with a new proposal.
 
-Savollar egasiga Q1, Q2 … bilan raqamlanadi, raqamlar ish oxirigacha davom etadi. `style-questions.md` dagi S-raqamlar jadval ID'si, ular savol raqami emas.
+A fact the agent finds (the computer's time zone, the profile) is neither a question nor a confirmation question: the plan gives it as information, and the owner says so when it is wrong. Other knowledge the repo does not give is not a new question either: it belongs to S1, S3 and S4.
 
-Tugadi: har so'ralgan savolga javob ("ha" ham) yoki ochiq masala sifatida yozilgan "bilmayman" bor; savollar soni sanalgan.
+The questions are numbered for the owner Q1, Q2 …, and the numbers run on to the end of the work. The S numbers in `style-questions.md` are table IDs, not question numbers.
+
+Done when: each question asked has an answer ("yes" too) or an "I don't know" written as an open issue; the artifact-folder is agreed; the questions are counted.
 
 ## 4. Plan
 
-Qisqa reja ber: 15 qatordan oshmasin (3 000 belgigacha; migration table qator hisobiga kirmaydi, belgi hisobiga ham). U egasi qaror qiladigan narsadan iborat, chunki egasi harness fayllarini o'qimaydi (`Core rules` dagi egasiga tushunarli yozish qoidasi): harness fayl nomi, ichki belgi va faqat agent ishlatadigan tafsilot rejaga kirmaydi.
-- maqsad va natija: egasi oxirida nimaga ega bo'lishi, 2–3 gap, oddiy til;
-- kriteriyalarning oxirgi ro'yxati (1–5 ta): har biri egasi ko'radigan natija, ya'ni nima kuzatiladi, threshold, qanday va qachon tekshiriladi. Doimiy check'lar (fayl bor, skript 0 xato, hajm) kriteriya emas. Harness ichida qoida yoki ro'yxat borligi kriteriya emas (egasi harness fayllarini o'qimaydi): kriteriya yangi agent yoki egasi ko'radigan xatti-harakat. Egasining tasdig'i kriteriyalarni ham qamraydi;
-- egasining loyihasida harness'dan tashqari nima o'zgaradi: git (init, commit oldidan tekshiruv, `.gitignore`), bo'sh papkada `README.md` va uning tili (suhbat tili, egasi aytsa boshqasi), egasining mavjud fayllari ko'chirilsa;
-- migration table: mavjud har fayl yoki bo'lim qayerga tushadi (qoida → `AGENTS.md`, fakt → `system-map.md` yoki `state.md`, playbook → `project/playbooks/`, qaror → `decisions.md`; asl fayllar asl holida `archive/` ga ham saqlanadi). U faqat eski mazmun ko'chirilganda beriladi, `CLAUDE.md` bilan nima bo'lishi shu bilan birga;
-- profile oddiy so'z bilan (kod bormi, doimiy ishlaydigan xizmat bormi, sir yoki shaxsiy ma'lumot bormi) va agent topgan faktlar (suhbat tili, vaqt zonasi) axborot sifatida;
-- standart tanlovlar (`style-questions.md` → `Standard choices`) to'rt qatorda, har qatorda shu so'zlar bo'lsin: suhbat tili, vaqt zonasi va uslub; ish turlari, bittadan va hisobot; qaytmas amal, sir va push; commit tartibi va parvarish. Murojaat shaklini va texnik darajani yozma: aytilmasa qoidaga yozilmaydi. Javob kutilmaydi, egasi o'zgartirmoqchi bo'lsa aytadi;
-- ochiq masalalar (egasi "bilmayman" degan narsalar, bo'lsa): ular ishni to'xtatmaydi, 5-qadamda `plan.md` ga yoziladi;
-- egasining qo'li qayerda kerak (parol, `sudo`, kirish), xavf va orqaga qaytish yo'li.
+Give a short plan: up to 15 lines (up to 3 000 characters; the migration table counts neither in the lines nor in the characters). It holds what the owner decides, because the owner does not read the harness files (the rule in `Core rules` on writing clearly for the owner): a harness file name, an internal label and a detail only the agent uses stay out of the plan.
+- the goal and the outcome: what the owner has at the end, 2–3 sentences, plain words;
+- the final list of criteria (1–5): each an outcome the owner sees, that is what is observed, the threshold, how and when it is checked. The constant checks (a file exists, the script gives 0 errors, the size) are not criteria. A rule or a list inside the harness is not a criterion (the owner does not read the harness files): a criterion is a behaviour a new agent or the owner sees. The owner's approval covers the criteria too;
+- what changes in the owner's project outside the harness: git (init, the check before a commit, `.gitignore`), in an empty folder `README.md` and its language (the chat language, another when the owner says so) and the empty artifact-folder, in an existing project the agreed move of the artifacts as the first large task, the owner's existing files when they move;
+- the migration table: where each existing file or section goes (a rule → `AGENTS.md`, a fact → `system-map.md` or `state.md`, a playbook → `project/playbooks/`, a decision → `decisions.md`; the originals are kept as they are in `archive/` too). It is given only when old content moves, together with what happens to `CLAUDE.md`;
+- the profile in plain words (is there code, a service that runs all the time, secrets or personal data) and the facts the agent found (the time zone) as information;
+- the standard choices (`style-questions.md` → `Standard choices`) in four lines, each with these words: chat language, time zone and style; task types, one at a time and the report; irreversible actions, secrets and push; commit order and upkeep. Leave out the form of address and the technical level: unless named, they do not go into a rule. No answer is waited for; when the owner wants a change, the owner says so;
+- the open issues (what the owner said "I don't know" to, when there are some): they do not stop the work and go into `plan.md` in step 5;
+- where the owner's hand is needed (a password, `sudo`, a sign-in), the risk and the way back.
 
-Fayllar ro'yxati rejada emas: u hisobotda "o'zgargan fayllar" bo'ladi. Harness atamasini (start set, profile, playbook, handoff, migration table) rejada ishlatma: ma'nosini oddiy so'z bilan yoz (sessiya boshida o'qiladigan fayllar, loyiha turi, ko'chirish jadvali). Yuborishdan oldin rejani loyiha papkasidan tashqarida vaqtinchalik faylga yoz (`mktemp`), unda `wc -lm`, `Report` dagi ikki `grep` va `grep -niE 'start set|profile|playbook|handoff|migration' <fayl>` ni ishga tushir, so'ng faylni o'chir: u sening faylingdir, egasiniki emas. Egasining tasdig'igacha faqat o'qi. Tugadi: reja 15 qatordan va 3 000 belgidan oshmaydi, uchala `grep` natijasi toza (fayl nomi faqat egasining o'z fayllari, masalan, ko'chiriladigan eski fayllar), vaqtinchalik fayl o'chirilgan, egasi rejani tasdiqlagan.
+The file list is not in the plan: it goes into the report as "changed files". The plan calls the folders the project-folder and the artifact-folder, by these English terms. Leave the harness terms (start set, profile, playbook, handoff, migration table) out of the plan: write their meaning in plain words (the files read at session start, the project type, the table of moves). Before sending, write the plan into a temporary file outside the project-folder (`mktemp`), run `LC_ALL=C.UTF-8 wc -lm` (characters, not bytes), the three `grep` commands of `Report` and `grep -niE 'start set|profile|playbook|handoff|migration' <file>` on it, then delete the file: it is your file, not the owner's. Until the owner's approval, write no harness file. Done when: the plan is within 15 lines and 3 000 characters, the four `grep` results are clean (file names only of the owner's own files, for example the old files to move), the temporary file is deleted, the owner approved the plan.
 
 ## 5. Create
 
-1. Commit tartibi (S11) a bo'lsa va egasining commit qilinmagan o'zgarishi bo'lsa, avval uni `Pre-init state` commit'iga ol (1-qadam, 2-band). Boshqa shakldagi agent fayllari bo'lsa (`AGENTS.md`, `CLAUDE.md`, `CONTEXT.md`), ildizdagi eski `AGENTS.md` ni `pan-harness/archive/AGENTS-<date>.md` ga move qil, qolganlarining asl nusxasini o'sha papkaga copy qil: skript mavjud faylga tegmaydi, mazmun 6-bandda joyiga o'tadi. Keyin `node <skill>/scripts/scaffold.mjs --root .` ni ishga tushir, profile'da `secrets` bo'lsa `--secrets` bilan. U har standart faylni, `pan-harness-check.mjs` (va `secret-check.mjs`) ni va `.githooks/pre-commit` ni shablondan copy qiladi, `Standard:` qatori va tarix oyini qo'yadi, git'ni hook'ga ulaydi; mavjud faylga tegmaydi va uni `kept` deb ko'rsatadi.
-2. Har yaratilgan faylni to'ldir: shablon matni o'z holicha qoladi, `{{…}}` joylarini egasining javoblari va tekshirilgan faktlar bilan to'ldir (`{{egasi}}` ga egasi o'zi aytgan ism, aytmagan bo'lsa "egasi" so'zi yoziladi), `[profile: …]` belgilarini `structure.md` → "Profile" dagi qoida bo'yicha qo'lla, boshidagi shablon izohini o'chir. Bo'sh qolgan majburiy fayl bitta qator bilan qoladi. `kept` fayllarni shablon bilan qo'lda solishtir.
-3. Jurnallarni boshla:
-   - `feedback.md`: egasining javoblari va ish uslubi haqidagi har gapi (F1…, iloji bo'lsa aynan; "ha" bo'lsa, qabul qilingan taklif matni bilan) va u qaysi qoidaga aylangani;
-   - `decisions.md`: structure tanlovlari (D1…). Masalan: pan-harness standarti, versiyasi va profile (D1, unga R5 va R16 havola beradi), standart tanlovlar (D2: ro'yxati va qiymati `style-questions.md` → `Standard choices` dan, reja tasdig'i bilan tasdiqlangan; uslub va ish tartibi qoidalari unga `← D2` bilan havola beradi), hajm limit'i, parvarish tartibi, migration qilingan fayllar. Migration haqidagi D birinchi `ph-doctor` gacha `decisions.md` da qoladi, keyin bajarilgan bir martalik ish sifatida arxivga o'tadi;
-   - `lessons.md`: faqat sarlavha va shakl (yoki egasi aytgan o'tgan xatolar);
-   - `handoff.md`: `**Status:** none` (`ph-init` o'zi large task bo'lsa va bir sessiyaga sig'masa — `active` va qadamlari);
-   - `history/<joriy oy>.md`: birinchi yozuv, `ph-init` ishi. Migration table (eski fayl bo'limi → yangi joyi) shu yozuvga yoziladi, migration qarorining `Where:` maydoni unga ishora qiladi.
-4. `AGENTS.md` qoidalari F va D ga havola beradi (`← F2, D1`). Har qoida egasining javobidan, standart tanlovlar qaroridan yoki tekshirilgan faktdan chiqadi, o'ylab topilmaydi.
-5. Loyihaga xos bilimni `project/` ga yoz: domain fayllari, loyiha playbook'lari, skriptlari. Har biri `PAN-HARNESS.md` → `Map` da "nima bor, qachon o'qiladi" va kalit so'zlar bilan turadi (`structure.md` → "Writing").
-6. Migration: `archive/` dagi asl nusxalar (1-band) mazmunini jadval bo'yicha joyiga move qil. Har da'voni kod va konfiguratsiya bilan solishtir: eski fayllarda eskirgan yoki noto'g'ri gaplar bo'ladi, ularni tuzatib move qil va hisobotda ayt. `CLAUDE.md` bo'lsa, unda faqat `@AGENTS.md` qoladi.
-7. Loyihada boshqa maqsadli `AGENTS.md` lar bo'lsa, `AGENTS.md` ga qoida qo'sh: ular tahrir obyekti (shablondagi R17).
-8. Hook: `scaffold.mjs` uni yaratib, git'ni unga ulaydi. Loyihada boshqa hook bo'lsa (`.git/hooks/pre-commit`, pre-commit framework yoki boshqa `core.hooksPath`), skript ulamaydi va buni aytadi: o'sha hook'ni saqla, egasidan so'rab ikkalasini bitta hook'da birlashtir, keyin `git config core.hooksPath .githooks`.
-9. `PAN-HARNESS.md` → `Project checks` ga loyihaning to'liq check buyrug'ini yoz (topilgan bo'lsa). `project/check.json` → `co_change` da egasi bilan kelishib, har kod va hujjat papkasini (masalan, `src/`, `docs/`) uni tasvirlaydigan hujjatga bog'la; tugallanmagan ish belgilari bo'ladigan loyihada `markers` ham (`structure.md` → "Extensions and settings").
-10. Live system bo'lsa va egasi rozi bo'lsa (S25), faqat o'qiydigan status script'ni `project/scripts/` ga yoz (`sudo`, tarmoq va sir fayllarisiz) va uni `PAN-HARNESS.md` → `Project checks` ga qo'sh. `project/scripts/check-*.mjs --live` extension'i esa faqat harness'dagi faktlarni live system bilan solishtirish uchun.
-11. Profile'da `pii` yoki `confidential` bo'lsa, egasiga `project/scripts/secret-check-pii.mjs` extension'ini yozishni taklif qil. Naqshlarni (masalan, pasport yoki telefon formati) egasi bilan kelish. Asosiy himoya baribir qoida: harness'ga mazmun o'rniga yo'l, ID va neytral tavsif yoziladi.
+1. When the commit order (S6) is a and the owner has uncommitted changes, first put them into the `Pre-init state` commit (step 1, item 2). When there are agent files of another shape (`AGENTS.md`, `CLAUDE.md`, `CONTEXT.md`), move the old root `AGENTS.md` to `pan-harness/archive/AGENTS-<date>.md` and copy the originals of the others into that folder: the script does not touch an existing file, and the content goes to its place in item 6. Then run `node <skill>/scripts/scaffold.mjs --root .`, with `--secrets` when the profile lists `secrets`. It copies each standard file, `pan-harness-check.mjs` (and `secret-check.mjs`) and `.githooks/pre-commit` from the templates, puts in the `Standard:` line and the history month, and connects git to the hook; it does not touch an existing file and reports it as `kept`.
+2. Fill each file made: the template text stays as it is, fill the `{{…}}` places with the owner's answers and checked facts (`{{owner}}` gets the name the owner gave, otherwise the word "owner"), apply the `[profile: …]` marks by the rule in `structure.md` → "Profile", delete the template note at the top. A mandatory file left empty stays with one line. Compare the `kept` files with the templates by hand.
+3. Start the journals:
+   - `feedback.md`: the owner's answers and each word about the way of working (F1…, verbatim where possible; for a "yes", with the text of the accepted proposal) and which rule it became;
+   - `decisions.md`: the structure choices (D1…). For example: the pan-harness standard, its version and the profile (D1, R5 and R16 link to it), the standard choices (D2: their list and values from `style-questions.md` → `Standard choices`, approved with the plan; the style and way-of-working rules link to it with `← D2`), the size limit, the upkeep order, the migrated files. The migration D stays in `decisions.md` until the first `ph-doctor`, then moves to the archive as a done one-off;
+   - `lessons.md`: only the heading and the format (or past mistakes the owner named);
+   - `handoff.md`: `**Status:** none` (`active` with its steps when `ph-init` itself is a large task that does not fit one session);
+   - `history/<current month>.md`: the first entry, the `ph-init` work. The migration table (old file section → new place) goes into this entry, and the `Where:` field of the migration decision points to it.
+4. The rules of `AGENTS.md` link to F and D (`← F2, D1`). Each rule comes from the owner's answer, the standard choices decision or a checked fact; none is made up.
+5. Write the project's own knowledge into `project/`: domain files, the project's playbooks and scripts. Each stands in `PAN-HARNESS.md` → `Map` with "what is there, when it is read" and keywords (`structure.md` → "Writing").
+6. Migration: move the content of the originals in `archive/` (item 1) to its places by the table. Compare each claim with the code and the configuration: old files hold stale or wrong sentences; fix them as you move them and say so in the report. When there is a `CLAUDE.md`, only `@AGENTS.md` stays in it.
+7. When the project has other `AGENTS.md` files with a purpose of their own, add a rule to `AGENTS.md`: they are objects of editing (template R17).
+8. The hook: `scaffold.mjs` makes it and connects git to it. When the project has another hook (`.git/hooks/pre-commit`, the pre-commit framework or another `core.hooksPath`), the script does not connect it and says so: keep that hook, ask the owner and merge both into one hook, then `git config core.hooksPath .githooks`.
+9. Write the project's full check command into `PAN-HARNESS.md` → `Project checks` (when found). In `project/check.json` → `co_change`, agreeing with the owner, tie each code and document folder (for example, `src/`, `docs/`) to the doc that describes it; in a project where unfinished-work marks occur, `markers` too (`structure.md` → "Extensions and settings").
+10. When there is a live system and the owner agrees (S28), write a read-only status script into `project/scripts/` (without `sudo`, network and secret files) and add it to `PAN-HARNESS.md` → `Project checks`. A `project/scripts/check-*.mjs --live` extension only compares the harness facts with the live system.
+11. When the profile lists `pii` or `confidential`, offer the owner to write a `project/scripts/secret-check-pii.mjs` extension. Agree on the patterns with the owner (for example, a passport or phone number format). The main protection is still the rule: the harness gets a path, an ID and a neutral description in place of the content.
 
-Tugadi: har standart fayl shablondan yaratilgan va unda `{{…}}` qolmagan, hook va `project/` fayllari bor, migration table'ning har qatori yangi joyini ko'rsatadi.
+12. Write the agreed artifact-folder into `AGENTS.md` → `Project`; when the move waits in `plan.md`, the line says where the artifacts stand now; when the owner has not chosen, the line says so and points to the open issue. In an empty folder, make the artifact-folder empty: no file in it and no commit (git takes it with its first file). When the owner agreed to move the artifacts, write the move into `plan.md` → `Queue` as the first large task.
+
+Done when: each standard file is made from its template and holds no `{{…}}`, the hook and the `project/` files are there, each row of the migration table shows its new place, `AGENTS.md` names the artifact-folder.
 
 ## 6. Check
 
-1. `node pan-harness/scripts/pan-harness-check.mjs` ni ishga tushir: 0 xato va 0 ta `never_track` ogohlantirishi bo'lishi kerak. Xato bo'lsa, avval yaratgan faylingni shablon bilan solishtir: ko'p xato shablondan chetga chiqilgan joyda bo'ladi. Qolgan ogohlantirishlarni hisobotda ayt.
-2. Profile'da `secrets` bo'lsa, `node pan-harness/scripts/secret-check.mjs` ni ishga tushir: `RESULT: clean` bo'lishi kerak.
-3. Start set hajmini `wc -c` bilan o'lcha.
-4. Harness'ni `audit.md` bo'yicha bandma-band tekshir va topilganini tuzat. A51 (start set 5 ta asosiy savolga javob beradimi) token sarflamaydi, uni albatta bajar.
-5. Fresh-agent test o'tkazish yoki o'tkazmaslikni egasidan so'ra (`testing.md`). O'tkazilsa, topilgan bo'shliqlarni tuzat va natijani `playbooks/pan-harness.md` → `## Test questions` ga yoz.
+1. Run `node pan-harness/scripts/pan-harness-check.mjs`: 0 errors and 0 `never_track` warnings. On an error, first compare the file you made with its template: most errors are where the template was left. Name the other warnings in the report.
+2. When the profile lists `secrets`, run `node pan-harness/scripts/secret-check.mjs`: it must give `RESULT: clean`.
+3. Measure the start set size with `wc -c`.
+4. Check the harness by `audit.md` item by item and fix what is found. A58 (does the start set answer the 5 main questions) costs no tokens: always do it.
+5. Ask the owner whether to run the fresh-agent test (`testing.md`). When it runs, fix the gaps found and write the result into `playbooks/pan-harness.md` → `## Test questions`.
 
 ## 7. Report
 
-- Har kriteriya: ✅ (dalil bilan), ❌ yoki ⏳ (qachon tekshiriladi, `plan.md` → `Later and watch`).
-- Yaratilgan va migration qilingan fayllar, `git diff --stat`, commit raqamlari (dastlabki, `Pre-init state`, `ph-init`).
-- Profile, yozilgan F, D, R'lar soni va har R ning bir qatorlik mazmuni.
-- `unverified` deb belgilangan faktlar: egasi tasdiqlashi kerak.
-- Egasining qarorini kutayotgan savollar.
-- Keyingi qadam: `ph-doctor` eslatmasini sozlashni taklif qil (S19).
+- Each criterion: ✅ (with evidence), ❌ or ⏳ (when it is checked, `plan.md` → `Later and watch`).
+- The files made and migrated, `git diff --stat`, the commit numbers (the first one, `Pre-init state`, `ph-init`).
+- The profile, the number of F, D and R written and the content of each R in one line.
+- The facts marked `unverified`: the owner has to confirm them.
+- The questions waiting for the owner's decision.
+- The next step: offer to set up the `ph-doctor` reminder (S25).
 
-Commit tartibi (S11) a bo'lsa, hisobotdan oldin `ph-init` ishini commit qil (`End of task` dagi commit bandi). (b) bo'lsa, fayllar ro'yxatini ber, commit'ni egasi qiladi.
+When the commit order (S6) is a, commit the `ph-init` work before the report (the commit item of `playbooks/end-of-task.md`). With (b), give the file list; the owner commits.
 
-Tugadi: hisobot egasida, har kriteriya natijasi dalil bilan.
+Done when: the report is with the owner, with each criterion's result and its evidence.
 
 ## Common cases
 
 | Case | What to do |
 |---|---|
-| Git o'rnatilmagan yoki repo yo'q | 1-qadam, 2-band (Git) |
-| Identity yo'q (`user.name`, `user.email`: global ham, lokal ham bo'sh) | 1-qadam, 2-band (Identity) |
-| 50 MB dan katta fayllar | Egasidan so'ra: `.gitignore` ga tushadimi yoki git'da qoladimi (`check.json` → `large_file_mb`, `track_ok`) |
-| `CLAUDE.md` yo'q | `structure.md` → "Root files" → `CLAUDE.md` |
-| `CLAUDE.md` bor, `AGENTS.md` yo'q | Mazmuni pan-harness'ga move qilinadi, asli `archive/` ga, `CLAUDE.md` da faqat `@AGENTS.md` qoladi |
-| `AGENTS.md` bor, lekin u ilovaning o'z agentlari uchun | Ildizda bo'lmasa, o'z holicha qoladi (5-qadam, 7-band). Ildizda bo'lsa, egasidan so'ra |
-| Kichik loyiha (git'da ~50 dan kam fayl) | Standart qism baribir to'liq, fayllar qisqa. Hajm limit'i 20 KB bo'lishi mumkin (S18) |
-| Hujjat loyihasi (kod yo'q) | Profile'da `code=no`: `runbook.md` ga hujjat formatlari va ularni o'qish vositalari yoziladi, kod qoidalari tushiriladi. To'liq check — lint, havolalar, yig'ish yoki eksport; `co_change` hujjat papkalarini reja yoki atamalar fayliga bog'laydi; `markers` qoralama belgilarini (`TODO`, `TK`, "[manba kerak]") qidiradi. `.gitignore` ga ofis qulf fayllari (`~$*`, `.~lock.*#`) va eksport natijalari qo'shiladi |
-| Monorepo | Bitta pan-harness ildizda turadi. Paketlarga xos bilim `project/` da, paket nomi bilan |
-| Sir fayli git'da | Ishni davom ettir va egasiga darhol ayt: sir tarixda qoladi, uni almashtirish kerak. Faylni `.gitignore` ga qo'sh va `git rm --cached` qil (fayl diskda qoladi). Tarix faqat egasining ruxsati bilan qayta yoziladi. Qiymatni hech qachon o'qima |
+| Git is not installed or there is no repo | Step 1, item 2 (Git) |
+| No identity (`user.name`, `user.email`: global and local both empty) | Step 1, item 2 (Identity) |
+| Files over 50 MB | Ask the owner: into `.gitignore` or kept in git (`check.json` → `large_file_mb`, `track_ok`) |
+| No `CLAUDE.md` | `structure.md` → "Root files" → `CLAUDE.md` |
+| `CLAUDE.md` is there, `AGENTS.md` is not | The content moves into the pan-harness, the original into `archive/`, `CLAUDE.md` keeps only `@AGENTS.md` |
+| An `AGENTS.md` is there, but for the application's own agents | When it is not in the root, it stays as it is (step 5, item 7). When it is in the root, ask the owner |
+| A small project (fewer than ~50 files in git) | The standard part is still full, the files are short. The size limit may be 20 KB (S24) |
+| A document project (no code) | `code=no` in the profile: `runbook.md` gets the document formats and the tools that read them, the code rules go. The full check — lint, links, assembly or export; `co_change` ties the document folders to the plan or the terms file; `markers` searches for draft marks (`TODO`, `TK`, "[source needed]"). `.gitignore` gets the office lock files (`~$*`, `.~lock.*#`) and the export results |
+| A monorepo | One pan-harness stands in the root. The packages' own knowledge is in `project/`, by package name |
+| A secret file in git | Go on with the work and tell the owner at once: the secret stays in the history and has to be replaced. Add the file to `.gitignore` and run `git rm --cached` (the file stays on disk). The history is rewritten only with the owner's permission. Never read the value |
+| A project in a folder a cloud service syncs | `structure.md` → "Git": tell the owner, offer to move the repo or keep `.git` out of syncing |

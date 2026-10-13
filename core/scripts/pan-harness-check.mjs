@@ -12,7 +12,7 @@ Usage:
 
 --since COMMIT: the terms check reads the lines changed since COMMIT, committed or
 not, instead of the uncommitted ones, and every such line is listed as REVIEW
-with flags for the audit items it may break (A20, A43, A59-A62: a negative verb,
+with flags for the audit items it may break (A20, A43, A44-A47: a negative verb,
 a step, a vague word, filler, an exception, a new section or file, a Map line).
 A flag is a hint for the reviewer, not a finding. ph-doctor passes the commit of
 the last ph-doctor or ph-update run.
@@ -37,15 +37,16 @@ Errors (exit 1):
     the state.md "Last updated" date is not older than the newest entry;
   - dated task rows ("| YYYY-MM-DD") appear only in plan.md;
   - backticked paths under the known prefixes exist (in handoff.md, lines
-    marked "(new)" name files still to be made and are skipped);
+    marked "(new)" name files still to be made and are skipped; the artifact-folder AGENTS.md
+    names may be missing: git keeps no empty folder, an agreed move may wait);
   - a "`file.md` -> "Section"" link in a current doc leads to a heading or bold
     label that file does not have.
 Warnings:
   - no Profile line;
   - the standard sections of AGENTS.md or PAN-HARNESS.md are out of order, or
-    a Boundaries line (Never, Ask first, Always) is missing, or (standard 1.2.0
-    and newer) the **Writing** rule group, or (standard 1.3.0 and newer) the
-    sub-item against internal labels in messages to the owner under the chat rule;
+    a Boundaries line (Never, Ask first, Always) is missing, or the **Writing**
+    rule group, or the sub-item against internal labels in messages to the owner
+    under the chat rule;
   - a journal entry without its required fields (D: Why, Where; F: Quote,
     Context, Result; L: Rule, Check; history: What and why, Checks, Files, and
     Downtime when live-system=yes); entries older than check.json "fields_from"
@@ -64,7 +65,7 @@ Warnings:
     steps without evidence;
   - co_change (check.json): a watched file changed but none of the docs that
     describe it did (changes come from git status);
-  - terms: a term glossed in brackets ("tekshiruv (check)") in a new or
+  - terms: a term glossed in brackets ("the inspection (check)") in a new or
     changed line of the harness (git diff against HEAD, or against --since
     COMMIT, and untracked files; archive/ skipped) - the Glossary keeps one
     term per concept;
@@ -94,7 +95,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const VERSION = '1.3.2';
+const VERSION = '2.4.2';
 
 // Sizes in bytes. 24 KB fits the start set of a complex project written
 // compactly; 40 KB keeps any doc readable in one go. An agent reads a doc over
@@ -109,7 +110,9 @@ const STANDARD_FILES = ['state.md', 'plan.md', 'handoff.md', 'system-map.md', 'r
   'decisions.md', 'feedback.md', 'lessons.md'];
 const STANDARD_DIRS = new Set(['history', 'archive', 'playbooks', 'scripts', 'project']);
 const SCRIPTS = ['pan-harness-check.mjs', 'secret-check.mjs'];
-const MAP_ENTRIES = [...STANDARD_FILES, 'history/', 'archive/', 'playbooks/pan-harness.md', 'scripts/'];
+// the standard playbooks: upkeep, a large task, the end of a task
+const PLAYBOOKS = ['pan-harness.md', 'large-task.md', 'end-of-task.md'];
+const MAP_ENTRIES = [...STANDARD_FILES, 'history/', 'archive/', ...PLAYBOOKS.map((f) => `playbooks/${f}`), 'scripts/'];
 // standard places inside project/ that a young harness may not have yet
 const OPTIONAL_DIRS = new Set(['project', 'project/playbooks', 'project/scripts', 'project/references']);
 const PATH_PREFIXES = ['pan-harness', 'project', 'playbooks', 'scripts', 'references',
@@ -142,7 +145,7 @@ const SENSITIVE_KINDS = new Set(['secrets', 'pii', 'confidential', 'none']);
 // required sections, in this order
 const AGENTS_SECTIONS = ['## Project', '## Boundaries', '## Session start', '## Workflow', '## Working style', '## Rules'];
 const BOUNDARY_LABELS = ['**Never:**', '**Ask first:**', '**Always:**'];
-const PAN_SECTIONS = ['## Profile', '## Map', '## Journals', '## End of task', '## Growth limits', '## Project checks'];
+const PAN_SECTIONS = ['## Profile', '## Map', '## Project checks'];
 
 // ---------------------------------------------------------------- helpers
 
@@ -374,15 +377,10 @@ if (args.since !== null && (!args.since || !hasGit
 
 const stdMatch = /Standard: pan-harness (\S+)/.exec(panText);
 const stdVersion = stdMatch ? stdMatch[1] : null;
-const atLeast = (v, w) => { // v >= w for x.y.z versions
-  const [a, b] = [v, w].map((x) => x.split('.').map(Number));
-  const i = [0, 1, 2].find((k) => (a[k] || 0) !== (b[k] || 0));
-  return i === undefined || (a[i] || 0) > (b[i] || 0);
-};
 
 // 2. mandatory standard files
 const mandatory = [path.join(ROOT, 'AGENTS.md'), path.join(ROOT, 'PAN-HARNESS.md'), ...STANDARD_FILES.map((f) => path.join(H, f)),
-  path.join(H, 'playbooks', 'pan-harness.md'), path.join(H, 'scripts', SCRIPTS[0])];
+  ...PLAYBOOKS.map((f) => path.join(H, 'playbooks', f)), path.join(H, 'scripts', SCRIPTS[0])];
 if (sensitive.has('secrets')) mandatory.push(path.join(H, 'scripts', SCRIPTS[1]));
 for (const p of mandatory) {
   if (!isFile(p)) {
@@ -407,8 +405,8 @@ if (isDir(H)) {
     }
   }
   for (const entry of glob(path.join(H, 'playbooks'), '*')) {
-    if (path.basename(entry) !== 'pan-harness.md') {
-      warnings.push(`${rel(entry)}: pan-harness/playbooks/ holds only pan-harness.md - project playbooks `
+    if (!PLAYBOOKS.includes(path.basename(entry))) {
+      warnings.push(`${rel(entry)}: pan-harness/playbooks/ holds only the standard playbooks - project playbooks `
         + 'are looked for elsewhere; move it to pan-harness/project/playbooks/');
     }
   }
@@ -494,13 +492,13 @@ for (const [p, sections] of [[path.join(ROOT, 'AGENTS.md'), AGENTS_SECTIONS], [p
           + 'not visible at a glance; add the line');
       }
     }
-    if (stdVersion && /^\d+\.\d+\.\d+$/.test(stdVersion) && atLeast(stdVersion, '1.2.0') && !/^\*\*Writing\*\*\s*$/m.test(text.get(p))) {
+    if (!/^\*\*Writing\*\*\s*$/m.test(text.get(p))) {
       warnings.push("AGENTS.md: no '**Writing**' rule group - the rule that keeps harness rules out of texts for "
-        + "people (standard 1.2.0) is missing; add it from the template (references/changelog.md -> 1.2.0, step 1)");
+        + 'people is missing; add it from the template (templates/AGENTS.md.tmpl -> "Writing")');
     }
-    if (stdVersion && /^\d+\.\d+\.\d+$/.test(stdVersion) && atLeast(stdVersion, '1.3.0') && !/A1, P1, S2, K4/.test(text.get(p))) {
+    if (!/A1, P1, S2, K4/.test(text.get(p))) {
       warnings.push('AGENTS.md: no rule against internal labels in the messages to the owner - the owner does not read the '
-        + 'harness files (standard 1.3.0); add the sub-item under the chat rule from the template (references/changelog.md -> 1.3.0, step 1)');
+        + 'harness files; add the sub-item under the chat rule from the template (templates/AGENTS.md.tmpl -> R12)');
     }
   }
 }
@@ -695,13 +693,16 @@ const prefixes = (config.path_prefixes && config.path_prefixes.length) ? config.
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&'); // '-' needs no escape outside a class (and the u flag forbids it)
 const PATH_RE = new RegExp(`\`((?:${prefixes.map(escapeRe).join('|')})/(?:${W}|[./-])*)\``, 'gu');
 const extraBases = (config.path_bases || []).flatMap((pattern) => glob(ROOT, pattern)).filter(isDir);
+// the artifact-folder AGENTS.md names may be missing: git keeps no empty folder, and an agreed move may wait
+const artifactLine = /^- \*\*Artifact-folder:\*\* `([^`]+)`/m.exec(read(path.join(ROOT, 'AGENTS.md')) || '');
+const ARTIFACT_DIR = artifactLine ? artifactLine[1].replace(/\/+$/, '') : null;
 for (const p of docs) {
   const bases = [path.dirname(p), H, P, ROOT, ...extraBases];
   const body = p !== HANDOFF ? text.get(p) : splitlines(text.get(p)).filter((line) => !line.includes('(new)')).join('\n');
   for (const found of [...new Set([...body.matchAll(PATH_RE)].map((m) => m[1]))].sort()) {
     if (['*', '<', 'YYYY', '…', '{{'].some((mark) => found.includes(mark)) || found.startsWith('archive/')) continue;
     const bare = found.replace(/\/+$/, '');
-    if (OPTIONAL_DIRS.has(bare.startsWith('pan-harness/') ? bare.slice('pan-harness/'.length) : bare)) continue;
+    if (OPTIONAL_DIRS.has(bare.startsWith('pan-harness/') ? bare.slice('pan-harness/'.length) : bare) || bare === ARTIFACT_DIR) continue;
     if (!bases.some((b) => exists(path.join(b, found)))) {
       errors.push(`${rel(p)}: path \`${found}\` does not exist - an agent will look for it in vain; fix the `
         + 'path (in handoff.md, mark a file still to be made with (new))');
@@ -795,7 +796,7 @@ const planText = read(path.join(H, 'plan.md'));
 const openItems = outsideCode(planText).filter((line) => /^\s*(?:[-*]|\d+\.|\|)\s/.test(line) && line.includes('⏳')).map((line) => line.trim()); // items, not the header text
 if (blocks.length) {
   const [name, block] = blocks[blocks.length - 1];
-  const cm = /^- \*\*(?:Checks|Tekshiruv):\*\*([\s\S]*?)(?=^- \*\*[^*\n]+:\*\*|$(?![\s\S]))/m.exec(block);
+  const cm = /^- \*\*Checks:\*\*([\s\S]*?)(?=^- \*\*[^*\n]+:\*\*|$(?![\s\S]))/m.exec(block);
   const checks = cm ? cm[1] : '';
   for (let part of checks.split(/[;\n]/)) {
     part = part.replace(new RegExp(`^\\s*(?:${W}|[' -]){0,30}:\\s*(?=K\\d)`, 'u'), ''); // a label before the list, e.g. "criteria:"
@@ -832,7 +833,7 @@ for (const line of (scheduled.length ? scheduled : section(planText, '## Schedul
 if (openItems.length) {
   const shown = openItems.slice(0, 5).map((item) => item.replace(/\*/g, '').replace(/^[- ]+/, '').slice(0, 50)).join('; ');
   notes.push(`open criteria in plan.md: ${openItems.length} (${shown}${openItems.length > 5 ? ' …' : ''}) - `
-    + 'close those this task can check (End of task)');
+    + 'close those this task can check (playbooks/end-of-task.md)');
 }
 
 // 17. handoff.md: the state of an active large task
@@ -895,7 +896,7 @@ if (Object.keys(coChange).length) {
   if (changed === null) {
     if (hasGit) {
       notes.push('co_change: not checked - git status failed; check by hand that the docs describing the '
-        + 'changed files are current (End of task)');
+        + 'changed files are current (playbooks/end-of-task.md)');
     }
   } else {
     for (const [watched, desc] of Object.entries(coChange)) {
@@ -911,7 +912,7 @@ if (Object.keys(coChange).length) {
   }
 }
 
-// 19. terms: a term glossed in brackets in a new or changed line ("tekshiruv (check)"); changed
+// 19. terms: a term glossed in brackets in a new or changed line ("the inspection (check)"); changed
 // since HEAD, or since --since COMMIT (ph-doctor). The Glossary keeps one term per concept
 // (P26); old text is adapted when someone touches it.
 const GLOSS_TERMS = ['structure', 'copy', 'copied', 'move', 'moved', 'migrate', 'migrated', 'migration', 'state', 'status', 'checks?',
@@ -919,7 +920,7 @@ const GLOSS_TERMS = ['structure', 'copy', 'copied', 'move', 'moved', 'migrate', 
   'acceptance criteria', 'task types?', 'append-only', 'invariant', 'checkpoints?', 'cron', 'PII', 'domain rules?',
   'workaround', 'rubric', 'playbooks?', 'executable', 'compaction'];
 const TERM = `(?:${GLOSS_TERMS.join('|')})`;
-const GLOSS = new RegExp(`[\\p{L}\\p{N}_'’ʻ]*${W}\\s+\\(${TERM}(?:(?:,|\\s+(?:yoki|va|or|and))\\s+${TERM})*\\)`, 'iu');
+const GLOSS = new RegExp(`[\\p{L}\\p{N}_'’ʻ]*${W}\\s+\\(${TERM}(?:(?:,|\\s+(?:or|and))\\s+${TERM})*\\)`, 'iu');
 if (hasGit) {
   const scope = ['AGENTS.md', 'PAN-HARNESS.md', 'CLAUDE.md', 'pan-harness'];
   const fresh = new Map(); // ROOT-relative path -> the numbers of its new lines, null when the whole file is new
@@ -967,7 +968,7 @@ if (hasGit) {
       const sample = GLOSS.exec(hits[0][1])[0];
       warnings.push(`terms: ${file}:${hits.slice(0, 5).map(([i]) => i).join(', ')}${hits.length > 5 ? ' …' : ''}: `
         + `a term glossed in brackets ("${sample}") in a new or changed line - one concept then has two names, `
-        + 'which blurs the term and costs tokens; write the term alone (Glossary, S27); old text is adapted '
+        + 'which blurs the term and costs tokens; write the term alone (Glossary); old text is adapted '
         + 'when it is touched');
     }
   }
@@ -976,20 +977,12 @@ if (hasGit) {
   // may break, so that ph-doctor judges each line instead of skimming whole files (audit.md ->
   // "Writing"). A flag is a hint, not a finding: the agent decides ok or fail.
   if (args.since) {
-    const NEG = /(?:ma|mang|mangiz|maydi|maymiz|masin|masdan|maslik)$/;
-    // words that only end like a negative verb: nouns and loanwords
-    const NOT_NEG = new Set(['hamma', "ko'rsatma", "qo'llanma", 'eslatma', 'chizma', 'yozma', "qo'shma", 'tema', 'sxema',
-      'sistema', 'problema', 'firma', 'norma', 'reklama', 'dilemma', 'schema', 'comma', 'prisma', 'figma', 'llama', 'gamma',
-      'sigma', 'karma', 'plasma', 'drama', 'panorama', 'magma', 'diploma', 'cinema', 'aroma', 'enigma', 'pragma', 'lemma',
-      'dogma', 'stigma', 'trauma', 'puma', 'mama']);
-    const isNeg = (w) => w.length > 3 && NEG.test(w) && !NOT_NEG.has(w) && !/(?:noma|gramma|forma)$/.test(w);
-    const NEG_EN = /\b(?:do not|don't|never|must not|should not|avoid)\b/i;
+    const NEG = /\b(?:do not|don't|never|must not|should not|avoid)\b/i;
     const word = (re) => new RegExp(`(?<![\\p{L}'])(?:${re})(?![\\p{L}'])`, 'iu');
-    const VAGUE = word("yetarli\\p{L}*|asosiy\\p{L}*|kerakli\\p{L}*|ba'zi\\p{L}*|imkon qadar|iloji boricha|odatda|taxminan|"
-      + 'enough|sufficient\\p{L}*|as needed|if needed|appropriate\\p{L}*|properly');
-    const FILLER = word("diqqat bilan|ehtiyot bo'l\\p{L}*|yaxshilab|e'tibor ber\\p{L}*|unutma\\p{L}*|esda tut\\p{L}*|"
-      + 'carefully|make sure|be careful|remember to|pay attention');
-    const EXCEPTION = word("istisno\\p{L}*|bundan tashqari|except\\p{L}*|unless");
+    const VAGUE = word('enough|sufficient\\p{L}*|as needed|if needed|appropriate\\p{L}*|properly|the main ones|the necessary ones|'
+      + 'some of|as far as possible|as much as possible|usually|approximately|roughly');
+    const FILLER = word("carefully|thoroughly|make sure|be careful|remember to|pay attention|don't forget|do not forget|keep in mind");
+    const EXCEPTION = word('except\\p{L}*|unless|apart from|besides');
     const prose = (line) => line.replace(/`[^`]*`/g, ' ').replace(/[’ʻ‘]/g, "'"); // code spans are commands and paths
     const LIMIT = 300;
     let shown = 0;
@@ -1005,17 +998,17 @@ if (hasGit) {
         if ((lines !== null && !lines.has(i)) || !line.trim() || /^\s*\|?[\s:|-]+\|?\s*$/.test(line)) continue;
         const flags = [];
         const text = prose(line);
-        const neg = (text.toLowerCase().match(/[\p{L}']+/gu) || []).find(isNeg) || (NEG_EN.exec(text) || [])[0];
-        if (neg) flags.push(`A59 negation "${neg}"`);
+        const neg = (NEG.exec(text) || [])[0];
+        if (neg) flags.push(`A44 negation "${neg}"`);
         if (GLOSS.test(line)) flags.push(`A43 gloss "${GLOSS.exec(line)[0]}"`);
         const step = /^\s*(?:\d+\.|[-*] \[[ x]\])\s/.test(line) || line.includes('⏳')
           || (file === 'pan-harness/handoff.md' && starts(heading, '## Steps')) || /\bCheck:/.test(line);
         const vague = (VAGUE.exec(text) || [])[0];
-        if (step || vague) flags.push(`A60 ${step ? 'step' : 'vague'}${vague ? ` "${vague}"` : ''}`);
+        if (step || vague) flags.push(`A45 ${step ? 'step' : 'vague'}${vague ? ` "${vague}"` : ''}`);
         const filler = (FILLER.exec(text) || [])[0];
-        if (filler) flags.push(`A62 "${filler}"`);
+        if (filler) flags.push(`A47 "${filler}"`);
         const exception = (EXCEPTION.exec(text) || [])[0];
-        if (exception) flags.push(`A61 "${exception}"`);
+        if (exception) flags.push(`A46 "${exception}"`);
         if (/^#{1,4} /.test(line)) flags.push('A20 new section: reachable?');
         if (file === 'PAN-HARNESS.md' && starts(heading, '## Map')) flags.push('A20 map: what, then when');
         picked.push([i, line, flags]);
@@ -1023,7 +1016,7 @@ if (hasGit) {
       if (!picked.length) continue;
       files += 1;
       total += picked.length;
-      if (added.has(file) && shown < LIMIT) review.push(`${file} (new file) [A20 pointer in the Map, A61 its format at the top]`);
+      if (added.has(file) && shown < LIMIT) review.push(`${file} (new file) [A20 pointer in the Map, A46 its format at the top]`);
       for (const [i, line, flags] of picked) {
         if (shown >= LIMIT) break;
         const t = line.trim();
@@ -1035,7 +1028,7 @@ if (hasGit) {
     if (total > shown) review.push(`... ${total - shown} more line(s): git diff ${args.since} -- AGENTS.md PAN-HARNESS.md pan-harness/`);
     if (total) {
       review.unshift(`${total} new or changed line(s) in ${files} file(s) since ${args.since}: give every flagged line ok or fail `
-        + 'with the reason in the conformance table, and read the rest for A61 to A63 (references/audit.md -> "Writing")');
+        + 'with the reason in the conformance table, and read the rest for A46 to A48 (references/audit.md -> "Writing")');
     }
   }
 }

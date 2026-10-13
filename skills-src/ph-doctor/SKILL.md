@@ -1,6 +1,6 @@
 ---
 name: ph-doctor
-description: Panoramic Harness bor loyihada harness'ni standart bo'yicha tekshiradi va tuzatadi: moslik jadvali, mechanical fix, structural taklif, migration. Harness, AGENTS.md yoki agent qoidalarini tekshirish so'ralganda va oylik parvarishda ishlatiladi.
+description: Checks and fixes the pan-harness (Panoramic Harness) of a project against the standard: a conformance table, mechanical fixes, structural proposals, migration. Use it when asked to check the harness, AGENTS.md or the agent rules, and for the monthly upkeep.
 license: MIT
 metadata:
   version: "{{version}}"
@@ -15,16 +15,16 @@ metadata:
 
 ## Steps
 
-Batafsil qadamlar: `references/doctor.md`. Maqsad — loyiha harness'ining standart va tamoyillarga mosligi. Har qadam "Tugadi" sharti bajarilgach keyingisiga o't:
+The detailed steps: `references/doctor.md`. The goal — the project harness matching the standard and the principles. Go to the next step once a step's "Done when" condition holds:
 
-1. **Preparation.** Loyihaning start set'ini o'qi (`AGENTS.md`, `PAN-HARNESS.md`, `state.md`, `plan.md`), `git status` ni ko'r, versiyalarni solishtir, `playbooks/pan-harness.md` dagi loyiha qadamlarini va `node --version` ni aniqla. Tugadi: start set o'qilgan, versiyalar solishtirilgan, playbook qadamlari va Node versiyasi ma'lum.
-2. **Scripts.** `node pan-harness/scripts/pan-harness-check.mjs --since <commit>` ni (yangi matnning boshlang'ich commit'i bilan: `references/audit.md` → "Writing"; loyiha skripti eski versiyada bo'lsa, `--since` ni skill'dagi skriptga ber: `references/doctor.md` → "2. Scripts"), profile'da `secrets` bo'lsa `node pan-harness/scripts/secret-check.mjs` ni va loyihaning status check'larini (`PAN-HARNESS.md` → `Project checks`) ishga tushir. Tugadi: har skript va status check natijasi raqam bilan yozilgan.
-3. **Migration.** Loyiha versiyasi skill'nikidan eski bo'lsa, `node <skill>/scripts/migrate.mjs --root .` ni ishga tushir va u `by hand` deb chiqargan har bandni `references/changelog.md` bo'yicha bajar; harness unknown standard'da bo'lsa, `references/doctor.md` → "3. Migration" dagi tartibni bajar. Tugadi: birinchi ishga tushirishdagi har `by hand` bandi bajarilgan yoki `plan.md` da, `Standard:` qatori skill versiyasiga teng.
-4. **Conformance audit.** `references/audit.md` ning har bandini tekshir, P26 bandlarini 2-qadamdagi `REVIEW` ro'yxati bo'yicha. Tugadi: har band moslik jadvalida `ok`, `fail`, `not checked` yoki `n/a` bilan, `REVIEW` dagi har belgilangan qator jadvalda sababi bilan `ok` yoki `fail`.
-5. **Facts.** `references/doctor.md` → "5. Facts" dagi faktlar va qarorlarni haqiqat bilan solishtir. Tugadi: `state.md`, `system-map.md` va `project/` dagi har fakt `verified` yoki `unverified`, tanlangan har D `ok`, `fail` yoki sababi bilan `not checked`, `plan.md`, `Remove when` va `handoff.md` bandlari ko'rilgan.
-6. **Fix.** Mechanical fix'ni darhol, structural fix'ni reja (maqsad, natija, kriteriyalar) va tasdiq bilan qil. Tugadi: har `fail` qatori tuzatilgan, `plan.md` → `Awaiting owner decision` da taklif sifatida turibdi yoki skill limitation sifatida hisobotda.
-7. **Re-check va test.** Check'larni qayta ishga tushir va fresh-agent test haqida egasidan so'ra (`references/testing.md`). Tugadi: 0 xato, `secrets` bo'lsa `RESULT: clean`, egasining test bo'yicha javobi yozilgan.
-8. **History entry va hisobot.** Joriy oy tarix fayliga yozuv qo'sh va hisobot ber, structural fix bo'lsa har kriteriya natijasi bilan. Tugadi: tarix yozuvi bor, structural fix uchun D va egasining yangi gapi uchun F yozilgan, hisobot egasida.
+1. **Preparation.** Read the project's start set (`AGENTS.md`, `PAN-HARNESS.md`, `state.md`, `plan.md`), look at `git status`, compare the versions, find the project steps in `playbooks/pan-harness.md` and `node --version`. Done when: the start set is read, the versions are compared, the playbook steps and the Node version are known.
+2. **Scripts.** Run `node pan-harness/scripts/pan-harness-check.mjs --since <commit>` (with the start commit of the new text: `references/audit.md` → "Writing"; when the project script is of an older version, give `--since` to the skill's script: `references/doctor.md` → "2. Scripts"), `node pan-harness/scripts/secret-check.mjs` when the profile lists `secrets`, and the project's status checks (`PAN-HARNESS.md` → `Project checks`). Done when: the result of each script and status check is written in numbers.
+3. **Migration.** When the project's version is older than the skill's, run `node <skill>/scripts/migrate.mjs --root .` and do each item it prints as `by hand` by `references/changelog.md`; when the harness is on an unknown standard, follow the procedure of `references/doctor.md` → "3. Migration". Done when: each `by hand` item of the first run is done or in `plan.md`, the `Standard:` line equals the skill version.
+4. **Conformance audit.** Check each item of `references/audit.md`, the P26 items by the `REVIEW` list of step 2. Done when: each item is in the conformance table with `ok`, `fail`, `not checked` or `n/a`, each flagged `REVIEW` line in the table with `ok` or `fail` and the reason.
+5. **Facts.** Compare the facts and decisions of `references/doctor.md` → "5. Facts" with reality. Done when: each fact in `state.md`, `system-map.md` and `project/` is `verified` or `unverified`, each chosen D is `ok`, `fail` or `not checked` with the reason, the items of `plan.md`, `Remove when` and `handoff.md` are looked at.
+6. **Fix.** A mechanical fix at once, a structural fix with a plan (goal, outcome, criteria) and approval. Done when: each `fail` row is fixed, stands as a proposal in `plan.md` → `Awaiting owner decision` or is in the report as a skill limitation.
+7. **Re-check and test.** Run the checks again and ask the owner about the fresh-agent test (`references/testing.md`). Done when: 0 errors, `RESULT: clean` with `secrets`, the owner's answer on the test written.
+8. **History entry and report.** Add an entry to the current month's history file and give the report, with each criterion's result when there is a structural fix. Done when: the history entry is there, a D for a structural fix and an F for the owner's new words are written, the report is with the owner.
 
 <!-- include: skill-parts/files.md -->
 

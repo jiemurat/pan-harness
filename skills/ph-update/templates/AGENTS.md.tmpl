@@ -1,126 +1,105 @@
 <!--
-pan-harness template. Loyihada `AGENTS.md` nomi bilan saqlanadi.
-- `{{…}}` joylarini egasining javoblari (style-questions.md → `Asked`), standart tanlovlar (`Standard choices`) va tekshirilgan faktlar bilan to'ldir.
-- `[profile: …]` belgilarini `structure.md` → "Profile" dagi qoida bo'yicha qo'lla.
-- Qoida va tanlov mosligi: R1 — S8, R2 — S6, R3 — S12, R4 — S11, R5, R16 va R23 — D1 (pan-harness standarti), R6 — S9, R7–R8 — S14, R9 — live system haqidagi javob, R10 — S17, R11 va R13–R15 — S24, R12 — S2, S3, S5, R17 — S22, R18 — S13, R19 — S15, R20 — S16, R21 — S21, R22 — profile'dagi `pii` yoki `confidential`. Har qoidaning manbasi: egasining gapi yozilgan F yoki standart tanlovlar qarori (D).
-- Egasi murojaat shaklini aytmagan bo'lsa (S3), `{{murojaat va uslub}}` o'rniga faqat uslubni yoz va R12 dagi "egasiga {{murojaat}}" bo'lagini olib tashla.
-- Egasi texnik darajasini aytmagan bo'lsa (S5), R12 dagi "{{egasi yaxshi biladigan sohalar}} bo'yicha mutaxassis tilida gapir." gapini olib tashla.
-- R4 S11 ning standart tanlovi (a) uchun yozilgan: commit'ni agent qiladi. Egasi (b) ni tanlasa, R4 o'rniga yoz: "**R4. Commit'ni egasi qiladi.** Sen o'zgargan fayllar ro'yxatini berasan; `git commit` va `git push` faqat egasi so'raganda.", `Boundaries` → `Never` dagi bandni "so'ralmagan commit yoki push (R4)" qil.
-- `**Planning.**` bloki S7 ning standart tanlovi (a) uchun yozilgan. Egasi boshqa tartibni aytsa, blokni o'sha tartib bilan almashtir: maqsad, natija va kriteriyalar qismi (P21) har tartibda qoladi.
-- Egasi rad etgan yoki profile'ga mos bo'lmagan qoidani olib tashla, qolganlarini 1 dan ketma-ket raqamla va R raqami bilan yozilgan har havolani yangila (`(R…)`, "R23 da" kabi), `pan-harness/` va `PAN-HARNESS.md` da ham. Harness yaratilgandan keyin raqamlar o'zgarmaydi.
-- Sarlavhalar (`## Boundaries` ham), `**Never:**`, `**Ask first:**`, `**Always:**` va ish turlari nomlari inglizcha qoladi (standart). Gaplar egasining tilida.
-- `## Boundaries` fayl boshida turadi: model uzun matnning o'rtasidagi gapni kamroq hisobga oladi (P7). Zarar keltirishi mumkin bo'lgan har qoida unda bo'lsin.
-- Maqsadli hajm 100–150 qator. Shu izohni olib tashla.
+pan-harness template. Saved in the project as `AGENTS.md`.
+- Fill the `{{…}}` places with the owner's answers (style-questions.md → `Asked`), the standard choices (`Standard choices`) and checked facts.
+- Apply the `[profile: …]` marks by the rule in `structure.md` → "Profile".
+- Rules and choices: R1 — S14, R2 — S12, R3 — S17, R4 — S6, R5, R16 and R23 — D1 (the pan-harness standard), R6 — S15, R7–R8 — S19, R9 — the answer about the live system, R10 — S22, R11 and R13–R15 — S23, R12 — S7, S8, S10, R17 — S29, R18 — S18, R19 — S20, R20 — S21, R21 — S27, R22 — `pii` or `confidential` in the profile. The source of each rule: the F with the owner's words or the decision on the standard choices (D).
+- If the owner named no form of address (S8), write only the style in place of `{{form of address and style}}` and remove "address the owner {{form of address}}" from R12.
+- If the owner named no technical level (S10), remove the sentence "Speak at expert level in {{fields the owner knows well}}." from R12.
+- R4 is written for the standard choice of S6 (a): the agent commits. If the owner picks (b), write in place of R4: "**R4. The owner commits.** You give the list of changed files; `git commit` and `git push` only when the owner asks.", and make the item in `AGENTS.md` → `Boundaries` → `Never` "an unrequested commit or push (R4)".
+- Remove a rule the owner rejected or the profile does not need, number the rest from 1 and update every reference by R number (`(R…)`, "in R23"), in `pan-harness/` and `PAN-HARNESS.md` too. Once the harness exists, the numbers do not change.
+- The headings (`## Boundaries` too), `**Never:**`, `**Ask first:**`, `**Always:**` and the task type names stay as they are (standard). The harness is in English.
+- `## Boundaries` stands at the top of the file: a model weighs a sentence in the middle of a long text less (P7). Every rule whose breach can do harm goes there.
+- Placeholders: `{{artifact-folder}}` — the folder the owner chose (S31), for example `src/`; `{{language}}` (R12) — the chat language by its English name, for example "Uzbek"; `{{scope (S9)}}` — for example, "The agent does any work the owner could do, within `Boundaries` and `Rules`"; `{{approval word}}` — for example, "start"; the domain rules line — for example, "R… — `project/playbooks/deploy.md`", removed when there are none; `{{secret files}}` (R8) — for example, `.env`, `*.pem`.
+- Target size: 100–150 lines. Remove this note.
 -->
 # {{project name}}
 
-Loyiha bo'yicha ishlaydigan har qanday agent uchun kirish nuqtasi. To'liq o'qi. Pan-harness (loyiha bilimi va qoidalari) qanday tuzilgani `PAN-HARNESS.md` da.
+The entry point for any agent on this project; read it in full. How the pan-harness (the project's knowledge and rules) is built: `PAN-HARNESS.md`.
 
 ## Project
 
-- **{{project name}}** — {{bir gapda: nima va kim uchun}}. Egasi: {{egasi}}.
-- **Maqsad:** {{egasi aytgan maqsad}}.
-- Loyihani egasi agent (ya'ni, ayni damda sen) orqali boshqaradi. {{qamrov (S4), masalan: "Agent egasi qila oladigan har qanday ishni `Boundaries` va `Rules` doirasida bajaradi"}}. Egasi bilan {{til}}, {{murojaat va uslub}} gaplash (R12).
+- **{{project name}}** — {{one sentence: what and for whom}}. Owner: {{owner}}.
+- **Goal:** {{the goal the owner gave}}.
+- **Artifact-folder:** `{{artifact-folder}}` — the artifacts: the work products of the project, inputs and outputs.
+- The owner runs the project through the agent (you, right now). {{scope (S9)}}. Talk with the owner in {{language}}, {{form of address and style}} (R12).
 
 ## Boundaries
 
-Qat'iy qoidalar qisqacha, batafsili `## Rules` da. Zarar keltirishi mumkin bo'lgan har qoida (uzilish, ma'lumot yo'qolishi, sir, tashqi ta'sir, qaytarib bo'lmaydigan amal) shu yerda turadi.
-- **Never:** [profile: sensitive-data=secrets] sir qiymatini ko'rsatish (R7), [profile: sensitive-data=secrets] sir fayllarini o'qish (R8), push (R4), ruxsat tizimini chetlab o'tish (R11), sinov uchun external side effect (R19), [profile: sensitive-data=pii yoki confidential] maxfiy mazmunni harness'ga yozish (R22), egasining tahririni qaytarish (R15), `sudo` parolini yoki sirni o'zing kiritish (R10).
-- **Ask first:** [profile: live-system=yes] restart va deploy (R3), irreversible action (R18).
-- **Always:** ishlar bittadan (R1), [profile: live-system=yes] live system o'zgarishini avval nusxada yoki sinov muhitida sinash (R9), large task'da maqsad, natija va kriteriyalarni kelishib, ularni dalil bilan tekshirish (R2), har savolga javob olgach keyingi qadamga o'tish (R6), ko'p qismga tegadigan o'zgarishni avval bittasida sinash (R20), ish oxirida pan-harness'ni yangilash, check'lar va commit (R5, R4).
+The hard rules in short (details: `## Rules`): every rule whose breach can do harm — an outage, lost data, a secret, an effect outside, an action that cannot be undone.
+- **Never:** [profile: sensitive-data=secrets] show a secret value (R7), [profile: sensitive-data=secrets] read secret files (R8), push (R4), bypass the permission system (R11), an external side effect for a test (R19), [profile: sensitive-data=pii or confidential] write confidential content into the harness (R22), undo the owner's edit (R15), type a `sudo` password or a secret yourself (R10).
+- **Ask first:** [profile: live-system=yes] restart and deploy (R3), irreversible action (R18).
+- **Always:** one task at a time (R1), [profile: live-system=yes] test a live system change on a copy or in a test environment first (R9), in a large task agree on the goal, outcome and criteria and check them with evidence (R2), the next step only after every question is answered (R6), test a change to many parts on one first (R20), at the end of a task update the pan-harness, run the checks and commit (R5, R4).
 
 ## Session start
 
-1. Shu faylni, keyin `PAN-HARNESS.md`, `pan-harness/state.md` (joriy state) va `pan-harness/plan.md` (ochiq ishlar) ni o'qi.
-2. `git status` va `git log --oneline -5` ni ko'r. Tarixda (`pan-harness/history/`) `pending` deb yozilgan ish commit qilingan bo'lsa, o'rniga commit raqamini yoz.
-3. `pan-harness/handoff.md` da `**Status:** active` bo'lsa, ish o'rtada qolgan: faylni o'qi va `Next step` dan davom et. Oldin `git status` ni undagi `Changed files` bilan solishtir: ro'yxatda yo'q o'zgarish egasiniki (R15).
-4. [profile: live-system=yes] Ish live system'ni o'zgartirsa yoki nosozlik tashxisi bo'lsa, status check'ni ishga tushir (`PAN-HARNESS.md` → `Project checks`) va natijani `state.md` bilan solishtir. Kutilmagan farqni ishdan oldin egasiga ayt.
-5. Qolgan fayllarni kerak bo'lgandagina o'qi (`PAN-HARNESS.md` → `Map`), 10 KB dan kattasini `## Contents` bo'yicha qism-qism o'qi.
+1. Read this file, then `PAN-HARNESS.md`, `pan-harness/state.md` (current state) and `pan-harness/plan.md` (open work).
+2. Look at `git status` and `git log --oneline -5`. For committed work marked `pending` in `pan-harness/history/`, write its commit number in place of `pending`; with no other commit in the session, commit this fix alone after the check (R4).
+3. When `pan-harness/handoff.md` says `**Status:** active`, a task stopped midway: read it, compare `git status` with its `Changed files` (a change not on the list is the owner's, R15) and go on from `Next step`.
+4. [profile: live-system=yes] If the work changes the live system or diagnoses a fault, run the status check (`PAN-HARNESS.md` → `Project checks`) and compare it with `state.md`; tell the owner an unexpected difference before the work.
+5. Read other files only when needed (`PAN-HARNESS.md` → `Map`), a file over 10 KB part by part by its `## Contents`.
 
 ## Workflow
 
-Ish turini hajmiga qarab aniqla (R2):
-1. **Question** — savol yoki tashxis ("nega …", "qancha …", "holat qanday"). Faqat o'qish buyruqlari bilan javob ber. Tuzatish kerak bo'lsa, taklif qil va kut.
-2. **Small change** — egasi aniq aytgan kichik o'zgarish ("X ni Y ga o'tkazing"). Darhol bajar. [profile: live-system=yes] Restart yoki deploy uchun baribir alohida ruxsat kerak (R3).
-3. **Large task** — katta yoki noaniq ish: bir necha yo'l bor, bir necha faylga tegadi, yangi imkoniyat yoki tizimning ishlashi katta o'zgaradi. Avval rejalashtir, keyin reja ber va egasi "{{tasdiq so'zi, masalan "boshla"}}" deb yozishini kut.
+Set the task type by its size (R2):
+1. **Question** — a question or a diagnosis ("why …", "how many …", "what is the state"). Answer with read-only commands; if a fix is needed, propose it and wait.
+2. **Small change** — a small change the owner named exactly ("move X to Y"). Do it at once. [profile: live-system=yes] A restart or deploy still needs its own permission (R3).
+3. **Large task** — big or unclear work: several ways, several files, a new capability or a big change in how the system works. Plan, give the plan, wait for the owner's "{{approval word}}".
 
-Turi aniq bo'lmasa, ishni large task deb hisobla.
-
-**Planning.** Savollarni `ph-grilling` skill'i bilan ber. U o'rnatilmagan bo'lsa (yangi klonda skill'lar bo'lmaydi: ular git'dan tashqarida), avval `npx @jiemurat/pan-harness@latest init` bilan o'rnat. Savollar raund-raund beriladi:
-- birinchi raundning Q1 savoli — maqsad, natija va kriteriyalar loyihasi, egasi tasdiqlaydi yoki tuzatadi:
-  - maqsad va egasi oxirida nimaga ega bo'lishi: 2–3 gap, oddiy til, atamalar tushuntirilgan;
-  - kriteriyalar: 1–5 ta, har biri egasi ko'radigan natija: nima kuzatiladi, threshold (raqam yoki ha/yo'q), qanday va qachon tekshiriladi; kriteriyaga faqat shu ishning natijasi yoziladi, har ishdagi doimiy check'lar Execution'da;
-  - dalil iloji bo'lsa qayta ishga tushiriladi (buyruq, skript, sinov);
-  - subyektiv natijada 2–4 darajali rubric va kim baholashi, raqamli kriteriyada asl maqsadni ko'rsatadigan anchor (egasining tanlab ko'rishi, haqiqiy ishlatish, ground truth); agent yoki LLM baholovchi avval kichik namunada egasining bahosi bilan solishtiriladi;
-- har raundda hozir javob berish mumkin bo'lgan barcha savollar beriladi, ta'siri bo'yicha tartibda: past ta'sirli va tavsiyasi aniq savollar bitta "tavsiya bo'yicha qabul qilinsinmi?" ro'yxatiga jamlanadi, egasi istaganini ajratib oladi. Boshqa javobga bog'liq savol keyingi raundga qoladi;
-- har savol `ph-grilling` formatida: variantlar a/b/c, tavsiya va uning sababi. Raqamlar ish oxirigacha ketma-ket davom etadi;
-- javob "1. a 2. c …" shaklida keladi;
-- oxirida qisqa reja beriladi: kriteriyalarning oxirgi ro'yxati, qaysi fayllar o'zgaradi, istisnolar, byudjet (vaqt, token yoki sub-agentlar soni, pullik API xarajati), egasining qo'li qayerda kerak. Bir sessiyaga sig'maydigan ish bosqichlarga bo'linadi, har bosqich o'z check'i va hisoboti bilan tugaydi. [profile: live-system=yes] Restart va uzilish ham aytiladi. Tasdiq kriteriyalarni ham qamraydi: keyin maqsad, kriteriyalar va istisnolar `plan.md` dagi ish bandiga, bosqichlar va qadamlar `pan-harness/handoff.md` ga (`**Status:** active`) yoziladi. Tasdiqdan oldin faqat o'qish mumkin.
-
-**Execution.**
-- `handoff.md` dagi har qadam `done` bo'lganda egasiga bir gaplik status xabari yoz va `handoff.md` ni yangila: bajarilgan qadam dalili bilan, qaror sababi bilan, keyingi qadam.
-- Kontekst tugashiga yaqin ham check'larni to'liq o'tkaz: vaqt yetmasa, handoff'ni yangila, ish keyingi sessiyada davom etadi.
-- Byudjet ikki barobar oshsa, to'xta va egasidan so'ra.
-- Har kriteriyani dalil bilan tekshir: reja doirasida yetib bo'lsa, tuzatib davom et; rejadan chiqish kerak bo'lsa yoki kriteriya noto'g'ri bo'lib chiqsa, to'xta va egasidan so'ra. Kriteriyani faqat egasi o'zgartiradi.
-- Ish tugadi: ishning o'z check'lari o'tgan, yangi xato yo'q, har kriteriya ✅ yoki ⏳.
-- Limitni ko'ra olsang, large task, sub-agent run va 5 soatlik limit oynasining 10% idan ortig'ini sarflaydigan bosqich oldidan byudjetni qolgan ulush va yangilanish vaqti bilan solishtir. Byudjetni oldingi o'xshash bosqichning sarfidan ol (`handoff.md` da: "62% → 55%"); faqat o'lchov yo'q bo'lsa, qolgan ulush 10% dan kam bo'lganda bosqichni qoldir.
-- Byudjet oshsa, ish hajmi o'zgarmaydi: sig'adigan qismni boshla, qolganini yangilanish vaqtiga `plan.md` → `Scheduled` ga yoz, egasiga bir gapda ayt.
-- Limitni ko'ra olmasang, ishni to'xtatma va egasidan so'rama: rejaga "limit: tekshirilmadi" yoz.
+An unclear type is a large task. Planning and carrying it out: `pan-harness/playbooks/large-task.md`, read before planning or resuming one.
 
 ## Working style
 
-- **Har da'voni tekshir.** Hujjat, README misoli yoki eski hisobotdagi fakt tekshirilmaguncha `unverified` hisoblanadi. Hisobotda `verified` va `unverified` ni ajratib ayt.
-- **Oldin va keyin.** O'zgarishdan oldin state'ni yozib ol, keyin solishtir.
-- [profile: code=yes] **Avval sinov.** Yangi skript yoki buyruqni soxta ma'lumot, `--dry-run` yoki nusxa bilan sina, haqiqiy ma'lumotga shundan keyin qo'lla.
-- **Kichik, qaytariladigan qadamlar.** Har qadamdan keyin tekshir. Orqaga qaytish yo'lini oldindan bil va rejada ayt.
-- **Raqam bilan gapir.** Hajm, vaqt va sonlarni o'lchab yoz.
-- **Ko'lamni ushla.** Faqat so'ralgan ishni o'zgartir; yo'l-yo'lakay topilgan muammoni egasiga ayt va `plan.md` ga yoz.
-- **Halol hisobot.** Nima ishlamaganini, nima sinalmaganini va qaysi assumption'larga tayanganingni ayt. Xato qilsang, tan ol va saboqni `lessons.md` ga yoz.
-- **Maxfiy kontent** faqat ish talab qilsa o'qiladi. Chiqishda sir yo'qligini tekshir.
+- **Check every claim.** A fact from a document, a README example or an old report is `unverified` until checked; in a report, keep `verified` and `unverified` apart.
+- **Before and after.** Record the state before a change, compare after it.
+- [profile: code=yes] **Test first.** Try a new script or command on fake data, with `--dry-run` or on a copy, then on real data.
+- **Small, reversible steps.** Check after each step; know the way back beforehand, say it in the plan.
+- **Speak in numbers.** Measure sizes, times and counts.
+- **Keep the scope.** Change only what was asked; a problem found on the way goes to the owner and into `plan.md`.
+- **Honest report.** Say what did not work, what was not tested and which assumptions you relied on. Admit a mistake, write the lesson into `lessons.md`.
+- **Confidential content** is read only when the work needs it. Check the output for secrets.
 
 ## Rules
 
-**Domain rules** tegishli playbook boshida turadi: {{masalan, "R… — `project/playbooks/deploy.md`"; bo'lmasa, bu qatorni olib tashla}}.
+**Domain rules** stand at the top of their playbook: {{R… — `project/playbooks/<name>.md`}}.
 
 **Workflow**
-- **R1. Ishlar bittadan.** Bitta ishni yoki egasi rozi bo'lgan ishlar guruhini tugat, natijani ayt va to'xta. Keyingisini egasining aniq ko'rsatmasi bilan boshla, bog'liq bo'lsa ham: bog'liqlikni ayt, qarorni egasiga qoldir. ← F{{…}}
-- **R2. Ish hajmiga qarab tartib** (yuqorida). Large task'da avval reja, keyin egasining tasdig'i, undan oldin faqat o'qish. Faktlarni o'zing top, qarorni egasi qiladi. ← F{{…}}
-- [profile: live-system=yes] **R3. Restart va deploy — alohida ruxsat bilan,** reja tasdig'idan tashqari. Avval uzilishsiz yo'lni izla. ← F{{…}}
-- **R4. Commit'ni agent qiladi, push'ni egasi.** Har ish oxirida, katta ishda har bosqich oxirida, `End of task` check'lari o'tgach commit qil: avval egasining commit qilinmagan o'zgarishlari (`git status` da bor, sening ro'yxatingda yo'q) alohida commit'da (xabar: `Owner's changes: <fayllar>`), keyin o'zing o'zgartirgan fayllar (`git add <fayl>`, `-A` emas). Commit faqat fayl o'zgargan ishda qilinadi. Hook o'tishi shart: `--no-verify` faqat egasining qarori. `git push` ni egasi qiladi: uni faqat egasi xabarida aniq so'raganda bajar va bu haqda o'zing so'rama. ← F{{…}}
-- **R5. Har ishdan keyin pan-harness'ni yangila va check'larni ishga tushir** (`PAN-HARNESS.md` → `End of task`). Buni commit'dan oldin qil. ← D{{…}}
-- **R6. Keyingi qadam — savolga javob olingach.** Egasi tasdiq bersa-yu, ba'zi savollar javobsiz qolgan bo'lsa, avval o'sha savollarni qisqa eslatib, javobini so'ra. ← F{{…}}
+- **R1. One task at a time.** Finish a task, or a group the owner agreed to, report the result and stop. Start the next only on the owner's explicit word, even a related one: name the link, leave the decision to the owner. ← F{{…}}
+- **R2. The order follows the task's size** (above). A large task: the plan, then the owner's approval, until then only reading. Find the facts yourself, the owner decides. ← F{{…}}
+- [profile: live-system=yes] **R3. Restart and deploy — with a separate permission,** apart from the plan's approval. Look for a way without an outage first. ← F{{…}}
+- **R4. The agent commits, the owner pushes.** Once the end-of-task checks pass, at the end of each task and large-task stage, commit the owner's uncommitted changes (in `git status`, not on your list) apart first (`Owner's changes: <files>`), then your files (`git add <file>`, not `-A`); only when files changed. The hook must pass: `--no-verify` is the owner's decision. Run `git push` only when the owner's message asks for it explicitly; never ask about it. ← F{{…}}
+- **R5. After each task, update the pan-harness and run the checks** (`pan-harness/playbooks/end-of-task.md`), before the commit. ← D{{…}}
+- **R6. The next step comes after the answer.** If the owner approves with questions unanswered, remind of them briefly and ask for the answers first. ← F{{…}}
 
 [profile: sensitive-data=secrets]
 **Secrets**
-- **R7. Sir qiymatini hech qachon ekranga chiqarma.** Faqat o'zgaruvchi nomi va `[ -n "$VAR" ]` kabi check ishlat: `env`, `printenv` va `set -x` qiymatni chiqaradi. ← F{{…}}
-- **R8. Sir fayllarini o'qima:** {{ro'yxat, masalan `.env`, `*.pem`}}. Ular faqat ilovani ishga tushirish uchun, agent faqat o'zgaruvchi nomini ishlatadi (R7). ← F{{…}}
+- **R7. Never print a secret value.** Use only the variable name and checks such as `[ -n "$VAR" ]`: `env`, `printenv` and `set -x` print the value. ← F{{…}}
+- **R8. Leave the secret files unread:** {{secret files}}. They serve only the running application; the agent uses the variable name (R7). ← F{{…}}
 
 **System changes**
-- [profile: live-system=yes] **R9. Live system:** {{nima ishlab turibdi va uzilish nimaga olib keladi}}. O'zgarishni avval sinov muhitida yoki nusxada sina. ← F{{…}}
-- **R10. `sudo` yoki interaktiv kiritish** (parol, OAuth) egasining qo'li bilan bo'ladi: agentda egasiga ko'rinadigan terminal bo'lsa, buyruqni o'sha yerda ishga tushir, parolni egasi kiritadi, keyin natijani tekshirib davom et. Bunday terminal bo'lmasa, buyruqni egasiga `bash` blokda ber va kut. Parol va sirni egasi o'zi kiritadi. ← F{{…}}
-- **R11. Agent muhitining ruxsat tizimi bloklagan amalni chetlab o'tma.** Egasidan so'ra yoki uni egasi bajarsin. ← F{{S24 javobi}}
+- [profile: live-system=yes] **R9. Live system:** {{what runs and what an outage leads to}}. Test a change in a test environment or on a copy first. ← F{{…}}
+- **R10. `sudo` or interactive input** (a password, OAuth) is the owner's hand: run the command in a terminal the owner sees, the owner types the password, check the result and go on; without such a terminal, give the command in a `bash` block and wait. Passwords and secrets are typed by the owner. ← F{{…}}
+- **R11. Leave an action the agent's permission system blocked to the owner:** ask, or let the owner do it. ← F{{S23 answer}}
 
 **Communication**
-- **R12. Egasi bilan suhbatda {{til}} va qisqa yoz,** egasiga {{murojaat}}. Texnik tafsilot faqat kerak bo'lganda. {{egasi yaxshi biladigan sohalar}} bo'yicha mutaxassis tilida gapir. Faylga yoziladigan matnning tili va uslubi R23 da. ← F{{…}}
-  - Egasi harness fayllarini o'qimaydi: xabarda (savol, hisobot, taklif, status) gapni ma'nosi bilan ayt. Ichki belgi (A1, P1, S2, K4 kabi raqamli nom; qoida, qaror, fikr va saboq raqamlari ham shunday) va hujjat ichidagi qadam raqami o'rniga mazmunini yoz. Fayl nomini egasi uni ochishi yoki shunga qarab qaror qilishi kerak bo'lganda, havola bilan yoz. Egasi belgini o'zi so'rasa yoki tilga olsa, ma'nosini ayt va kerak bo'lsa belgini ham ko'rsat.
-- **R13. Obyektiv bo'l.** Fikr so'ralsa, halol baho ber. Rozi bo'lmasang, sababini ayt. ← F{{…}}
-- **R14. Qaror egasi ko'rmagan narsaga bog'liq bo'lsa,** avval uni ko'rsat (ro'yxat, fayl mazmuni), keyin so'ra. ← F{{…}}
+- **R12. In the chat with the owner, write in {{language}} and briefly,** address the owner {{form of address}}. If the owner writes in another language, answer in it; for a message that is only a command, take the language from the context. Technical detail only when needed. Speak at expert level in {{fields the owner knows well}}. The language of file text: R23. ← F{{…}}
+  - The owner does not read the harness files: in a message (question, report, proposal, status) say the meaning. Write the content in place of an internal label (a numbered name such as A1, P1, S2, K4; rule, decision, feedback and lesson numbers too) and of a step number inside a document. Name a file, with a link, when the owner needs to open it or decide by it. If the owner asks about a label or names it, say its meaning and the label if needed.
+  - Where a word has several meanings, use the English term: structure, copy, move, migration, state, status, check, verification, test, limit, boundary, estimate, assumption, project, artifact, project-folder, artifact-folder; one term per concept, explained once at its first use. The project-folder, the artifacts and the artifact-folder are always called by these terms. Commands, paths, IDs and keys in backticks. Short sentences, one idea per item.
+- **R13. Be objective.** Asked for an opinion, give an honest assessment; if you disagree, say why. ← F{{…}}
+- **R14. If a decision depends on something the owner has not seen,** show it first (a list, a file's content), then ask. ← F{{…}}
 
 **Files**
-- **R15. Egasining tahrirlari ustun.** Egasi faylni o'zi o'zgartirgan bo'lsa, ishdan oldin qayta o'qi va o'z ishingni uning tahriri ustiga qur. Unda yangi ko'rsatma ko'rinsa, `feedback.md` ga yoz. ← F{{…}}
+- **R15. The owner's edits win.** Reread a file the owner changed before the work and build on the edit. Write a new instruction it shows into `feedback.md`. ← F{{…}}
 
 **Pan-harness**
-- **R16. Pan-harness har qanday agent va model uchun.** Qoidalar va bilim shu fayl, `PAN-HARNESS.md` va `pan-harness/` dagi oddiy matnda turadi. Loyiha bilimini faqat shu joylarga yoz: agentning o'ziga xos fayli, xotirasi yoki vositasini boshqa agent ko'rmaydi. ← D{{…}}
-- **R17. Ildizdagidan boshqa `AGENTS.md` lar — tahrir obyekti.** {{qaysilari va kim uchun yozilgani}}. Ularni faqat tahrir uchun o'qi, ko'rsatmalar shu faylda. ← D{{…}}
+- **R16. The pan-harness is for any agent and model.** Rules and knowledge are plain text in this file, `PAN-HARNESS.md` and `pan-harness/`; keep project knowledge only there: another agent does not see one agent's own file, memory or tool. ← D{{…}}
+- **R17. `AGENTS.md` files outside the root are objects of editing:** {{which ones, for whom}}. Read them only to edit them; the instructions are here. ← D{{…}}
 
 **Caution**
-- **R18. Irreversible action** (o'chirish, tarixni qayta yozish) faqat ro'yxatni egasiga ko'rsatib, uning ruxsati bilan qilinadi. ← F{{…}}
-- **R19. Sinov uchun external side effect qilinmaydi.** Tashqi platformani faqat o'qish so'rovlari bilan tekshir; xabar, post yoki xat faqat egasi aniq so'raganda yuboriladi. ← F{{…}}
-- **R20. Ko'p qismga tegadigan o'zgarishni** avval bittasida sina, keyin hammasiga qo'lla. ← F{{…}}
-- **R21. Structure savolida avval amaliyotni o'rgan.** Pan-harness yoki tizim structure'i bo'yicha variant berishdan oldin best practice'larni o'rgan. ← F{{…}}
-- [profile: sensitive-data=pii yoki confidential] **R22. Maxfiy mazmun o'rniga yo'l, ID va neytral tavsif yoz.** {{shaxsiy ma'lumot yoki maxfiy hujjatlar}} mazmuni (ism, raqam, iqtibos) harness'ga yozilmaydi. ← D{{…}}
+- **R18. An irreversible action** (deleting, rewriting history) only after showing the list to the owner, with their permission. ← F{{…}}
+- **R19. No external side effect for a test.** Check an outside platform with read-only requests; a message, post or mail only when the owner asks explicitly. ← F{{…}}
+- **R20. Test a change to many parts** on one of them first, then apply it to all. ← F{{…}}
+- **R21. On a structure question, study the best practices first,** before giving options on the structure of the pan-harness or the system. ← F{{…}}
+- [profile: sensitive-data=pii or confidential] **R22. Write a path, an ID and a neutral description in place of confidential content.** The content of {{personal data or confidential documents}} (names, numbers, quotes) stays out of the harness. ← D{{…}}
 
 **Writing**
-- **R23. Matnni o'quvchisiga qarab yoz.** Har da'voni tekshirish (`Working style`) va `Boundaries` har matnga tegishli. ← D{{…}}
-  - Agent o'qiydigan matnni (masalan, harness, skill, prompt; to'liq ro'yxat `runbook.md` → `Writing the harness` da) o'sha bo'lim qoidalari bilan yoz. Harness tili va atamalari faqat harness fayllarida; boshqa agent matnini egasi so'ragan tilda yoz, so'ramasa mavjud faylda shu faylning tilida, yangi faylda suhbat tilida.
-  - Inson o'qiydigan matnning (README, loyiha hujjatlari, xat, qo'llanma, hisobot fayli) tilini va uslubini alohida-alohida shu tartibda tanla: (1) egasining ko'rsatmasi, suhbatda yoki harness'da yozilgan (masalan, `runbook.md` dagi `Commit xabari`); (2) hujjatning o'z tili va uslubi; (3) yangi hujjatda loyihadagi shu maqsaddagi hujjatlarniki; (4) bular bo'lmasa, suhbat tili va hujjat turiga mos uslub: tanlovni rejada yoki yakuniy xabarda egasiga ayt, egasi boshqasini aytsa, o'zgartir. Manba, fayl yo'li va ID qatorini inson matniga faqat egasi so'rasa qo'sh.
+- **R23. Write a text for its reader.** Checking every claim (`Working style`) and `Boundaries` apply to every text; the language and style of agent and human texts: `runbook.md` → `Writing the harness`. ← D{{…}}

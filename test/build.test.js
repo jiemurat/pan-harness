@@ -77,9 +77,19 @@ test('the repository is a valid Claude Code plugin: version, default skills/ lay
   assert.equal(market.plugins[0].name, plugin.name);
 });
 
+test('the skill files of the harness skills stay within their size limits', () => {
+  // a SKILL.md is read every time its skill runs: the built file keeps to its limit, in bytes
+  const LIMITS = { 'ph-init': 18 * 1024, 'ph-doctor': 16 * 1024, 'ph-update': 16 * 1024 };
+  const built = buildAll();
+  for (const [name, limit] of Object.entries(LIMITS)) {
+    const size = built.get(name).get('SKILL.md').length;
+    assert.ok(size <= limit, `${name}: ${size} bytes, limit ${limit}`);
+  }
+});
+
 test('the P26 writing rules carry the same names in principles.md, structure.md and the runbook template', () => {
-  const names = ['Context pointer', 'Progressive disclosure va co-location', 'Completion criterion', 'Positive form',
-    'Leading word', 'Single source', 'Manba', 'No-op'];
+  const names = ['Context pointer', 'Progressive disclosure and co-location', 'Completion criterion', 'Positive form',
+    'Leading word', 'Single source', 'Source', 'No-op'];
   const read = (rel) => fs.readFileSync(path.join(ROOT, 'core', rel), 'utf8');
   const writing = read('references/structure.md').split('## Writing\n')[1].split('\n## ')[0];
   const runbook = read('templates/pan-harness/runbook.md.tmpl').split('## 4. Writing the harness\n')[1].split('\n## ')[0];

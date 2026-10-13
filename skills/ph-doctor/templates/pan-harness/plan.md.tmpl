@@ -1,23 +1,26 @@
+<!--
+pan-harness template. `{{active large task}}` — its goal, criteria (K1…) and exceptions in short, without status marks, with a link to `handoff.md`: written after the approval, deleted when the task ends; the stages, steps and state are in `handoff.md`. A dated ⏳ item is in `Scheduled` too. Remove this note.
+-->
 # Plan
 
-Barcha ochiq ishlar, turidan qat'i nazar. Bajarilgan ishni o'chir (yozuvi `history/` da qoladi). Sanali ishlarni faqat shu faylga yoz. Har ⏳ band qachon, qanday tekshirilishi va qaysi natijada yopilishi bilan yoziladi.
+All open work, of every kind. Delete done work (its entry stays in `history/`). Dated work goes only into this file. Each ⏳ item says when and how it is checked and which result closes it.
 
 ## 1. Queue
 
-- {{faol large task: maqsad, kriteriyalar (K1…) va istisnolar qisqa, status belgisisiz, `handoff.md` ga havola; tasdiqdan keyin yoziladi, ish tugagach o'chiriladi. Bosqichlar, qadamlar va state `handoff.md` da}}
-- {{ish: nima va nega, kerak bo'lsa havola}}
+- {{active large task}}
+- {{task: what and why, a link if needed}}
 
 ## 2. Scheduled
 
 | Date | Task | Reminder |
 |---|---|---|
-| {{YYYY-MM-DD}} | {{ish}} | {{eslatma usuli}} |
+| {{YYYY-MM-DD}} | {{task}} | {{how the reminder comes}} |
 
 ## 3. Awaiting owner decision
 
-- {{savol}}
+- {{question}}
 
 ## 4. Later and watch
 
-- {{kuzatiladigan narsa va qachon ko'rilishi}}
-- {{⏳ band: qaysi ish (D raqami bilan), qachon (sana yoki hodisa) va qanday tekshiriladi; sanalisi `Scheduled` da ham}}
+- {{what is watched and when it is looked at}}
+- {{⏳ item: which task (its D number), when (a date or an event), how it is checked}}

@@ -50,8 +50,8 @@ Entry point for any agent. The harness is described in \`PAN-HARNESS.md\`.
 - **R2. Write for the reader.** Texts for people follow the owner. ← F1
 
 **Communication**
-- **R3. Egasi bilan suhbatda write briefly.** ← F1
-  - Egasi harness fayllarini o'qimaydi: no labels like A1, P1, S2, K4 in the messages to the owner.
+- **R3. In the chat with the owner, write briefly.** ← F1
+  - The owner does not read the harness files: no labels like A1, P1, S2, K4 in the messages to the owner.
 `,
   'PAN-HARNESS.md': `# PAN-HARNESS
 
@@ -62,19 +62,8 @@ Profile: live-system=no, code=no, sensitive-data=secrets
 ## Map
 
 - \`state.md\`, \`plan.md\`, \`handoff.md\`, \`system-map.md\`, \`runbook.md\`.
-- \`decisions.md\`, \`feedback.md\`, \`lessons.md\`, \`history/\`, \`archive/\`, \`playbooks/pan-harness.md\`, \`scripts/\`.
-
-## Journals
-
-- Journals are append-only.
-
-## End of task
-
-- [ ] Run the checks.
-
-## Growth limits
-
-- Limits are in \`project/check.json\`.
+- \`decisions.md\`, \`feedback.md\`, \`lessons.md\`, \`history/\`, \`archive/\`, \`scripts/\`.
+- \`playbooks/pan-harness.md\`, \`playbooks/large-task.md\`, \`playbooks/end-of-task.md\`.
 
 ## Project checks
 
@@ -90,7 +79,9 @@ Standard: pan-harness ${VERSION}
   'pan-harness/decisions.md': `# Decisions\n\n- **D1** (${DAY}) [docs] The standard. Why: a test. Where: here.\n`,
   'pan-harness/feedback.md': `# Feedback\n\n### F1 — ${DAY} — One thing at a time [workflow]\n- **Quote:** "one at a time"\n- **Context:** a test.\n- **Result:** R1.\n`,
   'pan-harness/lessons.md': `# Lessons\n\n- **L1 (${DAY}) — A lesson.** [docs]\n  - Rule: do it.\n  - Check: see it.\n`,
-  'pan-harness/playbooks/pan-harness.md': '# Playbook: pan-harness\n\n- Run ph-doctor monthly.\n',
+  'pan-harness/playbooks/pan-harness.md': '# Playbook: pan-harness\n\n- Run ph-doctor monthly.\n\n## Growth limits\n\n- Limits are in `project/check.json`.\n',
+  'pan-harness/playbooks/large-task.md': '# Playbook: large task\n\n## Planning\n\n- The goal first.\n\n## Execution\n\n- Check each criterion.\n',
+  'pan-harness/playbooks/end-of-task.md': '# Playbook: end of task\n\n## Journals\n\n- Journals are append-only.\n\n## End of task\n\n- [ ] Run the checks.\n',
   [`pan-harness/history/${MONTH}.md`]: `# History ${MONTH}\n\n### ${DAY} — Harness created [docs]\n- **What and why:** created.\n- **Checks:** checks ran.\n- **Files:** all. (commit: abc1234)\n`,
   'pan-harness/project/check.json': '{}\n',
   'docs/chapter-1.md': '# Chapter 1\n',
@@ -102,7 +93,7 @@ function git(dir, ...args) {
   return r.stdout;
 }
 
-/** A clean 1.0.0 harness in a fresh git repository (everything committed). */
+/** A clean harness in a fresh git repository (everything committed). */
 function harness({ gitInit = true } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-check-'));
   for (const [rel, body] of Object.entries(FILES)) {
@@ -201,17 +192,30 @@ test('scripts: a missing copy is an error, any other file in scripts/ a warning'
   assert.match(out, /^WARN +pan-harness[\\/]scripts[\\/]helper\.sh: not one of the skill's scripts/m);
 });
 
-test('the Writing rule group: missing in a 1.2.0 harness is a warning, in an older one not', () => {
+test('the Writing rule group: missing is a warning', () => {
   const dir = harness();
   edit(dir, 'AGENTS.md', '**Writing**\n', '');
-  assert.match(check(dir).out, /^WARN +AGENTS\.md: no '\*\*Writing\*\*' rule group/m);
-  edit(dir, 'PAN-HARNESS.md', `Standard: pan-harness ${VERSION}`, 'Standard: pan-harness 1.1.0');
-  assert.doesNotMatch(check(dir).out, /'\*\*Writing\*\*' rule group/);
+  assert.match(check(dir).out, /^WARN +AGENTS\.md: no '\*\*Writing\*\*' rule group .*templates\/AGENTS\.md\.tmpl -> "Writing"/m);
+});
+
+test('playbooks: a missing standard playbook is an error, another file a warning', () => {
+  const dir = harness();
+  fs.rmSync(path.join(dir, 'pan-harness', 'playbooks', 'large-task.md'));
+  put(dir, 'pan-harness/playbooks/deploy.md', '# Deploy\n');
+  const out = check(dir).out;
+  assert.match(out, /^ERROR missing standard file: pan-harness[\\/]playbooks[\\/]large-task\.md/m);
+  assert.match(out, /^WARN +pan-harness[\\/]playbooks[\\/]deploy\.md: pan-harness\/playbooks\/ holds only the standard playbooks/m);
+});
+
+test('PAN-HARNESS.md: Profile, Map and Project checks are the required sections', () => {
+  const dir = harness();
+  edit(dir, 'PAN-HARNESS.md', '## Project checks\n', '## Checks of the project\n');
+  assert.match(check(dir).out, /^ERROR PAN-HARNESS\.md: required section '## Project checks' is missing/m);
 });
 
 test('open criteria: a ⏳ in the plan.md header text is not an item', () => {
   const dir = harness();
-  edit(dir, 'pan-harness/plan.md', '# Plan\n', '# Plan\n\nHar ⏳ band qachon tekshirilishi bilan yoziladi.\n');
+  edit(dir, 'pan-harness/plan.md', '# Plan\n', '# Plan\n\nEach ⏳ item is written with when it is checked.\n');
   assert.match(check(dir).out, /0 open ⏳/);
 });
 
@@ -311,23 +315,23 @@ test('the pre-commit hook passes a clean commit and stops a staged secret', { sk
 
 test('terms: a glossed term in a new or changed line is a warning, old text is not', () => {
   const dir = harness();
-  put(dir, 'pan-harness/system-map.md', '# System map\n\n- Chapters in `docs/`: tuzilma (structure) eski.\n', true);
+  put(dir, 'pan-harness/system-map.md', '# System map\n\n- Chapters in `docs/`: the layout (structure), old.\n', true);
   assert.doesNotMatch(check(dir).out, /terms:/);
   fs.appendFileSync(path.join(dir, 'pan-harness', 'lessons.md'),
-    `- **L2 (${DAY}) — Another lesson.** [docs]\n  - Rule: tekshiruvni (check) ishga tushir.\n  - Check: see it.\n`);
+    `- **L2 (${DAY}) — Another lesson.** [docs]\n  - Rule: run the inspection (check).\n  - Check: see it.\n`);
   const out = check(dir).out;
-  assert.match(out, /^WARN +terms: pan-harness\/lessons\.md:7: a term glossed in brackets \("tekshiruvni \(check\)"\)/m, out);
+  assert.match(out, /^WARN +terms: pan-harness\/lessons\.md:7: a term glossed in brackets \("inspection \(check\)"\)/m, out);
   assert.doesNotMatch(out, /system-map/);
-  edit(dir, 'pan-harness/system-map.md', 'eski', 'yangi'); // a touched line is new text
-  assert.match(check(dir).out, /^WARN +terms: pan-harness\/system-map\.md:3: .*\("tuzilma \(structure\)"\)/m);
+  edit(dir, 'pan-harness/system-map.md', 'old', 'new'); // a touched line is new text
+  assert.match(check(dir).out, /^WARN +terms: pan-harness\/system-map\.md:3: .*\("layout \(structure\)"\)/m);
 });
 
 test('terms: untracked files, code blocks, the archive and a harness in a subfolder', () => {
   const dir = harness();
-  put(dir, 'pan-harness/project/notes.md', "# Notes\n\n```\nko'chirish (move) in a code block\n```\n\nchegara (limit yoki boundary) here\n");
-  put(dir, 'pan-harness/archive/old-notes.md', "# Old notes\n\nko'chirish (move) moved here as it was\n");
+  put(dir, 'pan-harness/project/notes.md', '# Notes\n\n```\nrelocation (move) in a code block\n```\n\nthe edge (limit or boundary) here\n');
+  put(dir, 'pan-harness/archive/old-notes.md', '# Old notes\n\nrelocation (move) moved here as it was\n');
   const out = check(dir).out;
-  assert.match(out, /^WARN +terms: pan-harness\/project\/notes\.md:7: .*\("chegara \(limit yoki boundary\)"\)/m, out);
+  assert.match(out, /^WARN +terms: pan-harness\/project\/notes\.md:7: .*\("edge \(limit or boundary\)"\)/m, out);
   assert.doesNotMatch(out, /terms: pan-harness\/archive/);
 
   const top = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-mono-'));
@@ -337,14 +341,14 @@ test('terms: untracked files, code blocks, the archive and a harness in a subfol
   git(top, 'add', '-A');
   git(top, 'commit', '-q', '-m', 'move');
   const sub = path.join(top, 'apps', 'book');
-  edit(sub, 'pan-harness/plan.md', '## 1. Queue\n', '## 1. Queue\n\n- holat (state) bandi\n');
+  edit(sub, 'pan-harness/plan.md', '## 1. Queue\n', '## 1. Queue\n\n- the condition (state) item\n');
   assert.match(check(sub).out, /^WARN +terms: pan-harness\/plan\.md:5: /m);
 });
 
 test('terms: --since reads the lines changed since a commit, committed ones too', () => {
   const dir = harness();
   const base = git(dir, 'rev-parse', 'HEAD').trim();
-  put(dir, 'pan-harness/system-map.md', '# System map\n\n- Chapters in `docs/`: tuzilma (structure) yangi.\n', true);
+  put(dir, 'pan-harness/system-map.md', '# System map\n\n- Chapters in `docs/`: the layout (structure), new.\n', true);
   assert.doesNotMatch(check(dir).out, /terms:/); // committed, so HEAD shows no change
   assert.match(check(dir, '--since', base).out, /^WARN +terms: pan-harness\/system-map\.md:3: /m);
   const bad = check(dir, '--since', 'no-such-commit');
@@ -355,20 +359,20 @@ test('terms: --since reads the lines changed since a commit, committed ones too'
 test('review: --since lists every new line with the audit items it may break', () => {
   const dir = harness();
   const base = git(dir, 'rev-parse', 'HEAD').trim();
-  edit(dir, 'PAN-HARNESS.md', '## Map\n', "## Map\n\n- `project/release.md` — fayl.\n");
-  put(dir, 'pan-harness/project/release.md', '# Release\n\n1. Testlarni yetarlicha ishga tushir.\n\n```\nnpm publish # qilma\n```\n\n'
-    + "Istisno: hotfix istalgan kuni.\nKo'rsatma egasidan keladi.\n- Matnni diqqat bilan o'qi va xato qilma.\n- Eksport tekshiruvi (check) bor.\n", true);
+  edit(dir, 'PAN-HARNESS.md', '## Map\n', '## Map\n\n- `project/release.md` — a file.\n');
+  put(dir, 'pan-harness/project/release.md', '# Release\n\n1. Run the tests enough times.\n\n```\nnpm publish # never\n```\n\n'
+    + 'Except: a hotfix on any day.\nThe schema comes from the owner.\n- Read the text carefully and never guess.\n- The export has an inspection (check).\n', true);
   const out = check(dir, '--since', base).out;
   assert.match(out, /^REVIEW 7 new or changed line\(s\) in 2 file\(s\) since [0-9a-f]+: give every flagged line ok or fail/m, out);
-  assert.match(out, /^REVIEW PAN-HARNESS\.md:\d+ \[A20 map: what, then when\]: - `project\/release\.md` — fayl\.$/m);
-  assert.match(out, /^REVIEW pan-harness\/project\/release\.md \(new file\) \[A20 pointer in the Map, A61 its format at the top\]$/m);
+  assert.match(out, /^REVIEW PAN-HARNESS\.md:\d+ \[A20 map: what, then when\]: - `project\/release\.md` — a file\.$/m);
+  assert.match(out, /^REVIEW pan-harness\/project\/release\.md \(new file\) \[A20 pointer in the Map, A46 its format at the top\]$/m);
   assert.match(out, /^REVIEW pan-harness\/project\/release\.md:1 \[A20 new section: reachable\?\]: # Release$/m);
-  assert.match(out, /^REVIEW pan-harness\/project\/release\.md:3 \[A60 step "yetarlicha"\]: 1\. Testlarni/m);
-  assert.match(out, /^REVIEW pan-harness\/project\/release\.md:9 \[A61 "Istisno"\]: /m);
-  assert.match(out, /^REVIEW pan-harness\/project\/release\.md:10: Ko'rsatma egasidan keladi\.$/m); // a noun, not a negation
-  assert.match(out, /^REVIEW pan-harness\/project\/release\.md:11 \[A59 negation "qilma"; A62 "diqqat bilan"\]: /m);
-  assert.match(out, /^REVIEW pan-harness\/project\/release\.md:12 \[A43 gloss "tekshiruvi \(check\)"\]: /m);
-  assert.doesNotMatch(out, /# qilma/); // code blocks are left out
+  assert.match(out, /^REVIEW pan-harness\/project\/release\.md:3 \[A45 step "enough"\]: 1\. Run the tests/m);
+  assert.match(out, /^REVIEW pan-harness\/project\/release\.md:9 \[A46 "Except"\]: /m);
+  assert.match(out, /^REVIEW pan-harness\/project\/release\.md:10: The schema comes from the owner\.$/m); // a line without a flag
+  assert.match(out, /^REVIEW pan-harness\/project\/release\.md:11 \[A44 negation "never"; A47 "carefully"\]: /m);
+  assert.match(out, /^REVIEW pan-harness\/project\/release\.md:12 \[A43 gloss "inspection \(check\)"\]: /m);
+  assert.doesNotMatch(out, /# never/); // code blocks are left out
   assert.match(out, /; 7 line\(s\) to review$/m);
   assert.doesNotMatch(check(dir).out, /^REVIEW/m); // without --since: no list
 });
@@ -376,16 +380,23 @@ test('review: --since lists every new line with the audit items it may break', (
 test('terms: before the first commit every line of the harness is new', () => {
   const dir = harness({ gitInit: false });
   git(dir, 'init', '-q', '-b', 'main');
-  put(dir, 'pan-harness/state.md', `# State\n\n**Last updated:** ${DAY}\n\nholat (state) yozildi\n`);
+  put(dir, 'pan-harness/state.md', `# State\n\n**Last updated:** ${DAY}\n\nthe condition (state) is written\n`);
   assert.match(check(dir).out, /^WARN +terms: pan-harness\/state\.md:5: /m);
 });
 
-test('the rule against internal labels: missing in a 1.3.0 harness is a warning, in an older one not', () => {
+test('the rule against internal labels: missing is a warning', () => {
   const dir = harness();
-  edit(dir, 'PAN-HARNESS.md', `Standard: pan-harness ${VERSION}`, 'Standard: pan-harness 1.3.0');
   assert.doesNotMatch(check(dir).out, /internal labels/);
-  edit(dir, 'AGENTS.md', "  - Egasi harness fayllarini o'qimaydi: no labels like A1, P1, S2, K4 in the messages to the owner.\n", '');
-  assert.match(check(dir).out, /^WARN +AGENTS\.md: no rule against internal labels in the messages to the owner/m);
-  edit(dir, 'PAN-HARNESS.md', 'Standard: pan-harness 1.3.0', 'Standard: pan-harness 1.2.0');
-  assert.doesNotMatch(check(dir).out, /internal labels/);
+  edit(dir, 'AGENTS.md', '  - The owner does not read the harness files: no labels like A1, P1, S2, K4 in the messages to the owner.\n', '');
+  assert.match(check(dir).out, /^WARN +AGENTS\.md: no rule against internal labels in the messages to the owner .*templates\/AGENTS\.md\.tmpl -> R12/m);
+});
+
+test('the artifact-folder AGENTS.md names may be missing: git keeps no empty folder, an agreed move may wait', () => {
+  const dir = harness();
+  const agents = fs.readFileSync(path.join(dir, 'AGENTS.md'), 'utf8');
+  put(dir, 'AGENTS.md', agents.replace(/^## Project\n/m, '## Project\n\n- **Artifact-folder:** `src/` — the artifacts.\n'), true);
+  const r = check(dir);
+  assert.doesNotMatch(r.out, /path `src\/` does not exist/, r.out);
+  put(dir, 'AGENTS.md', agents.replace(/^## Project\n/m, '## Project\n\n- **Artifact-folder:** `src/` — the artifacts: `src/app.py`.\n'), true);
+  assert.match(check(dir).out, /path `src\/app\.py` does not exist/, 'a path inside the artifact-folder is still checked');
 });

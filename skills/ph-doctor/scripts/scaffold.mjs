@@ -53,7 +53,7 @@ const FILES = [
     .map((f) => [`pan-harness/${f}.md.tmpl`, `pan-harness/${f}.md`]),
   ['pan-harness/archive/decisions.md.tmpl', 'pan-harness/archive/decisions.md'],
   ['pan-harness/history/YYYY-MM.md.tmpl', `pan-harness/history/${month}.md`],
-  ['pan-harness/playbooks/pan-harness.md.tmpl', 'pan-harness/playbooks/pan-harness.md'],
+  ...['pan-harness', 'large-task', 'end-of-task'].map((f) => [`pan-harness/playbooks/${f}.md.tmpl`, `pan-harness/playbooks/${f}.md`]),
   ['pan-harness/project/check.json.tmpl', 'pan-harness/project/check.json'],
   ['githooks/pre-commit.tmpl', '.githooks/pre-commit'],
 ];

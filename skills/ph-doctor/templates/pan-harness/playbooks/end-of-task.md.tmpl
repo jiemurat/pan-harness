@@ -1,0 +1,30 @@
+<!--
+pan-harness template. Saved in the project as `pan-harness/playbooks/end-of-task.md`.
+Apply the `[profile: …]` marks by the rule in `structure.md` → "Profile". The commit item of `## End of task` is written for answer (a) of S6; for (b), write in its place: "- [ ] The owner commits (R4): put the list of changed files into the report." Remove this note.
+-->
+# Playbook: end of task
+
+What to do at the end of every task that changed a file or the system (R5), and how the journals are kept. Read it at the end of each task, before the commit and before writing a journal entry.
+
+## Journals
+
+- R — rules (`AGENTS.md`, the tops of playbooks); F, L, D — in the journals, one sequence with their archive; Q — planning questions (they stay in the chat, the result goes into a D or an F). `← F/L/D…` — the source of a rule. A standing instruction is first written into `feedback.md`, then becomes the next numbered rule: into `AGENTS.md` when it concerns every task, at the top of that domain's playbook when it concerns one domain. A short line of a rule whose breach can do harm also stands in `## Boundaries`, wherever the rule itself is. Where possible, a check enforces the rule too: a text can be skipped, a check cannot. The numbers do not change.
+- The journals are append-only: a new entry goes at the end, in an old entry only paths and links are fixed. A changed decision gets a new D, the old one moves to the archive with the mark `Archived (YYYY-MM-DD): superseded by D<n>.` The entry format is at the top of each journal. In a conflict the current D and `state.md` win: a journal entry tells the state of its time.
+- The history goes month by month: `history/YYYY-MM.md`, each entry stays in its month's file. The last tasks: `cat pan-harness/history/*.md | grep '^### 20' | tail -5`.
+- An entry is found in the journals and the archive by its ID, tag or a word (`grep -rnE 'D1|\[docs\]' pan-harness/`). If a journal lacks it, the archive is searched too.
+
+## End of task
+
+When a file or the system changed (R5):
+- [ ] Add an entry to the current month's history file; in a large task, `Checks:` starts with the results of the criteria. When a large task ends, move the decisions from `handoff.md` into `decisions.md` and the rest into this entry, and leave `**Status:** none`. [profile: live-system=yes] If you changed the live system, update `state.md` from a new status check result.
+- [ ] Remove the done work from `plan.md` and add the new. Write a ⏳ criterion into `Later and watch` with when (a date or an event) and how it is checked, a dated one into `Scheduled` too. Close with evidence the old ⏳ items this task can check. Write a new decision into `decisions.md`.
+- [ ] If the owner said something new about the way of working, write it into `feedback.md` and update the rules. Write a lesson into `lessons.md` (what happened, `Rule:`, `Check:`). Turn a repeated mistake into a rule.
+- [ ] Compare the files you changed (the `Changed files` list of `handoff.md`) with the list in the plan: explain in the report what was not in the plan, and if it is not needed, ask the owner and revert it; name what was left out. A change in `git status` that is not on the list is the owner's: leave it as it is (R15), it gets its own commit (R4). Clean up the temporary files and background processes made for the task, or write where they stay (deleting by R18).
+- [ ] Look at the new files in `git status --porcelain=v1 -uall`: add to `.gitignore` what git should not track (a secret, a cache, a log, a build output, a file over 50 MB). If such a file is tracked, run `git rm --cached <file>` (the file stays on disk). Let a pattern cover only what is needed: check with `git status --short --ignored` that the project's files are tracked. If a secret got into the git history, tell the owner at once: the secret is replaced, and the history is rewritten only with the owner's permission.
+- [ ] Write a fact you did not find in the harness, found with more than 3 searches or filled in with an assumption into the matching file, or add a keyword to the map.
+- [ ] If the structure changed, update `system-map.md` and the matching file in `project/`. Write a new method into `runbook.md` and a kind of task done for the second time into `project/playbooks/`.
+- [ ] Check every text written in this task for its reader (R23): a text an agent reads follows `runbook.md` → `Writing the harness`; a text people read has its language and style chosen by the order in that section and holds no harness term, ID or source line. Fix what does not fit.
+- [ ] Run `node pan-harness/scripts/pan-harness-check.mjs`: 0 errors and no `never_track` warning; name the other warnings in the report. Without Node, write "the script did not run" in the report.
+- [ ] [profile: sensitive-data=secrets] Run `node pan-harness/scripts/secret-check.mjs` with the files changed outside `pan-harness/` added by their paths. Commit only with `RESULT: clean`.
+- [ ] Commit by R4, with the message written by `runbook.md` → `Writing the harness`; if the hook fails, fix the cause. The `(commit: pending)` of the history entry is replaced with the number in the next task.
+- [ ] Give a short report: each criterion (in a large task: ✅ with evidence, ❌ or ⏳ with when), what was done, what was found, [profile: live-system=yes] the outage, the changed files and the commit number, the next step. In a large task, one line per changed component: what changed, whom it affects, the expected cost and quality, how it is turned off or reverted. Then stop.

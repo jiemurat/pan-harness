@@ -1,12 +1,12 @@
 # Decisions
 
-Bu faylda tizim va harness haqidagi amaldagi qarorlar turadi: nima tanlangani, nega, qaysi variantlar rad etilgani va qarorning qayerda amalga oshgani. Egasining ish uslubi haqidagi ko'rsatmalari `feedback.md` da turadi.
-- **Shakl.** Har qaror bitta paragraf: `- **D<n>** (YYYY-MM-DD) [tag] Qaror. Why: … Rejected: … Where: …`. `Qaror` nima tanlanganini aytadi, qiymat va tafsilot `Where:` dagi fayl yoki sozlamada turadi (single source). Qarorga tayanishdan oldin o'sha joyni tekshir.
-- **Raqamlar** yagona va o'sib boradi. Boshqa fayllar qarorga shu raqam bilan havola beradi.
-- **Qaror o'zgarsa, yangi D yoziladi.** Eskisi `archive/decisions.md` ga `Archived (YYYY-MM-DD): superseded by D<n>.` belgisi bilan move qilinadi; amaldagi D matni o'z holicha qoladi. Bajarilgan bir martalik qaror `Archived (YYYY-MM-DD): done (one-off).` belgisi bilan arxivlanadi.
-- **Provisional qaror** (egasi javob bermagan savolda tavsiya bo'yicha olingan tanlov) oxirida `(provisional: owner to confirm)` belgisi bilan yoziladi.
-- **Qidirish:** `grep -n '\[docs\]' pan-harness/decisions.md` butun qarorni bitta qatorda qaytaradi.
+This file holds the current decisions about the system and the harness: what was chosen, why, which options were rejected and where the decision is carried out. The owner's instructions on the way of working are in `feedback.md`.
+- **Format.** Each decision is one paragraph: `- **D<n>** (YYYY-MM-DD) [tag] Decision. Why: … Rejected: … Where: …`. `Decision` says what was chosen; the value and the details stand in the file or setting of `Where:` (single source). Check that place before relying on the decision.
+- **Numbers** are unique and grow. Other files refer to a decision by this number.
+- **A changed decision gets a new D.** The old one moves to `archive/decisions.md` with the mark `Archived (YYYY-MM-DD): superseded by D<n>.`; the text of a current D stays as it is. A one-off decision that is done is archived with `Archived (YYYY-MM-DD): done (one-off).`
+- **A provisional decision** (an option taken by the recommendation on a question the owner did not answer) ends with the mark `(provisional: owner to confirm)`.
+- **Search:** `grep -n '\[docs\]' pan-harness/decisions.md` returns a whole decision on one line.
 
 ---
 
-- **D1** ({{YYYY-MM-DD}}) [docs] Loyihada pan-harness standarti ({{version}}) ishlatiladi: `AGENTS.md`, `PAN-HARNESS.md` va `pan-harness/`, loyihaga xos fayllar `pan-harness/project/` da. Profile: {{profile qatori}}. Why: {{egasining maqsadi; profile qanday aniqlangani}}. Rejected: {{masalan, faqat bitta AGENTS.md}}. Where: `PAN-HARNESS.md`.
+- **D1** ({{YYYY-MM-DD}}) [docs] The project uses the pan-harness standard ({{version}}): `AGENTS.md`, `PAN-HARNESS.md` and `pan-harness/`, the project's own files in `pan-harness/project/`. Profile: {{profile line}}. Why: {{the owner's goal; how the profile was found}}. Rejected: {{for example, a single AGENTS.md}}. Where: `PAN-HARNESS.md`.

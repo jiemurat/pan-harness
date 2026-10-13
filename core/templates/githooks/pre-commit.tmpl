@@ -9,14 +9,14 @@ root=$(git rev-parse --show-toplevel) || exit 1
 cd "$root" || exit 1
 
 if ! command -v node >/dev/null 2>&1; then
-    echo "pre-commit: node not found - the checks did not run; run them by hand (PAN-HARNESS.md -> End of task)" >&2
+    echo "pre-commit: node not found - the checks did not run; run them by hand (pan-harness/playbooks/end-of-task.md -> End of task)" >&2
     exit 0
 fi
 
 out=$(node pan-harness/scripts/pan-harness-check.mjs 2>&1)
 if [ $? -ne 0 ]; then
     printf '%s\n' "$out" | grep -E '^ERROR' >&2
-    echo "pre-commit: pan-harness-check found errors - fix them (PAN-HARNESS.md -> End of task) and commit again" >&2
+    echo "pre-commit: pan-harness-check found errors - fix them (pan-harness/playbooks/end-of-task.md -> End of task) and commit again" >&2
     exit 1
 fi
 

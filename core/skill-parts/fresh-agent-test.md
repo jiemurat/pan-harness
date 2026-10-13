@@ -1,3 +1,3 @@
 ## Fresh-agent test
 
-Sinovni har safar egasidan so'ra: qaysi sinov, qaysi model va token estimate'i. Qaysi sinovni qachon taklif qilish: `references/testing.md` → "When to test"; egasining doimiy javobi loyihaning `playbooks/pan-harness.md` → `Fresh-agent test` da.
+Ask the owner about a test every time: which test, which model and the token estimate. Which test to offer when: `references/testing.md` → "When to test"; the owner's standing answer is in the project's `playbooks/pan-harness.md` → `Fresh-agent test`.

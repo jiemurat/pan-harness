@@ -1,8 +1,8 @@
 // P26 in the package's own agent texts (skills, references, skill parts, templates): one term per
 // concept with no glossed term in brackets, and skill descriptions that stay short (they sit in
 // every session's context). ph-grilling and ph-writing-for-agents are upstream text and keep their own wording. The text
-// boundary (1.2.0): the writing rules for every text an agent reads, the harness language for the
-// harness, the owner's instruction for texts for people, the chat rule for the chat.
+// boundary: the writing rules for every text an agent reads, English for the harness, the owner's
+// instruction for texts for people, the chat rules for the chat.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -30,7 +30,7 @@ const agentTexts = [
 const src = fs.readFileSync(path.join(CORE, 'scripts', 'pan-harness-check.mjs'), 'utf8');
 const terms = [.../const GLOSS_TERMS = \[([\s\S]*?)\];/.exec(src)[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
 const TERM = `(?:${terms.join('|')})`;
-const GLOSS = new RegExp(`[\\p{L}\\p{N}_'’ʻ]*[\\p{L}\\p{N}_]\\s+\\(${TERM}(?:(?:,|\\s+(?:yoki|va|or|and))\\s+${TERM})*\\)`, 'giu');
+const GLOSS = new RegExp(`[\\p{L}\\p{N}_'’ʻ]*[\\p{L}\\p{N}_]\\s+\\(${TERM}(?:(?:,|\\s+(?:or|and))\\s+${TERM})*\\)`, 'giu');
 
 test('no glossed term in brackets in the agent texts', () => {
   const hits = [];
@@ -51,58 +51,70 @@ test('skill descriptions stay within 1000 bytes together', () => {
   assert.ok(total <= 1000, `${total} bytes: ${sizes.map(([s, b]) => `${s} ${b}`).join(', ')}`);
 });
 
+test('a skill description says what the skill does and when to use it, its first sentence within 160 characters', () => {
+  for (const s of ['ph-init', 'ph-doctor', 'ph-update']) {
+    const description = /^description: (.*)$/m.exec(fs.readFileSync(path.join(ROOT, 'skills-src', s, 'SKILL.md'), 'utf8'))[1];
+    const first = description.split(/(?<=\.)\s/)[0];
+    assert.ok(first.length <= 160, `${s}: ${first.length} characters`);
+    assert.match(description, /\. Use it (in|when)/, `${s}: when to use it`);
+  }
+});
+
 test('the text boundary is in the AGENTS.md template, the runbook, structure.md, the style questions and the audit', () => {
   const read = (rel) => fs.readFileSync(path.join(CORE, rel), 'utf8');
   const agents = read('templates/AGENTS.md.tmpl');
-  const r23 = /^- \*\*R23\. Matnni o'quvchisiga qarab yoz\.\*\* (.*) ← D\{\{…\}\}\n  - (Agent o'qiydigan .*)\n  - (Inson o'qiydigan .*)\n/m.exec(agents);
-  assert.ok(r23, 'R23 in the AGENTS.md template: a head line and two sub-items, one idea each');
-  assert.match(r23[1], /Har da'voni tekshirish \(`Working style`\) va `Boundaries` har matnga tegishli\./);
-  for (const part of ['`runbook.md` → `Writing the harness`', 'Harness tili va atamalari faqat harness fayllarida',
-    "egasi so'ragan tilda yoz, so'ramasa mavjud faylda shu faylning tilida, yangi faylda suhbat tilida"]) {
-    assert.ok(r23[2].includes(part), `R23 agent text: ${part}`);
+  const r23 = /^- \*\*R23\. Write a text for its reader\.\*\* (.*) ← D\{\{…\}\}$/m.exec(agents);
+  assert.ok(r23, 'R23 in the AGENTS.md template');
+  for (const part of ['Checking every claim (`Working style`) and `Boundaries` apply to every text', '`runbook.md` → `Writing the harness`']) {
+    assert.ok(r23[1].includes(part), `R23: ${part}`);
   }
-  for (const part of ['hisobot fayli', 'tilini va uslubini alohida-alohida', "(1) egasining ko'rsatmasi, suhbatda yoki harness'da yozilgan",
-    "(2) hujjatning o'z tili va uslubi", "(3) yangi hujjatda loyihadagi shu maqsaddagi hujjatlarniki", '(4) bular bo\'lmasa, suhbat tili va hujjat turiga mos uslub',
-    'yakuniy xabarda egasiga ayt', "Manba, fayl yo'li va ID qatorini inson matniga faqat egasi so'rasa qo'sh"]) {
-    assert.ok(r23[3].includes(part), `R23 human text: ${part}`);
-  }
-  assert.match(agents, /^- \*\*R12\. Egasi bilan suhbatda \{\{til\}\} va qisqa yoz,\*\* .* Faylga yoziladigan matnning tili va uslubi R23 da\. ← F\{\{…\}\}$/m);
-  assert.match(read('templates/PAN-HARNESS.md.tmpl'), /^- \[ \] Shu ishda yozgan har matnni o'quvchisiga qarab tekshir \(R23\): /m);
+  assert.match(agents, /^- \*\*R12\. In the chat with the owner, write in \{\{language\}\} and briefly,\*\* .* The language of file text: R23\. ← F\{\{…\}\}$/m);
+  assert.match(read('templates/pan-harness/playbooks/end-of-task.md.tmpl'), /^- \[ \] Check every text written in this task for its reader \(R23\): /m);
 
-  const intro = /^Harness matnini \(`AGENTS\.md`, `PAN-HARNESS\.md`, `CLAUDE\.md`, `pan-harness\/`\) shu bo'limning hamma qoidalari bilan yoz; (.*)$/m.exec(read('templates/pan-harness/runbook.md.tmpl'));
+  const runbook = read('templates/pan-harness/runbook.md.tmpl');
+  const intro = /^Write the harness text \(`AGENTS\.md`, `PAN-HARNESS\.md`, `CLAUDE\.md`, `pan-harness\/`\) with all the rules of this section; (.*)$/m.exec(runbook);
   assert.ok(intro, 'the runbook intro says what to do');
   for (const part of ['`CLAUDE.local.md`', '`GEMINI.md`', '`.github/copilot-instructions.md`', '`.cursor/rules/`', '`CONTEXT.md`',
-    "ichki papkalardagi `AGENTS.md`", 'skill, buyruq va subagent fayllari', "mahsulotdagi prompt'lar", "boshqa tizim agentlarining fayllari", 'R23 da']) {
+    '`AGENTS.md` in subfolders', 'skill, command and subagent files', 'the prompts in the product', "the files of other systems' agents", '`Language of other texts`']) {
     assert.ok(intro[1].includes(part), `runbook intro: ${part}`);
   }
+  const other = /^- \*\*Language of other texts\*\* \(R23\):\n {2}- (Write another text an agent reads .*)\n {2}- (For a text people read .*)\n/m.exec(runbook);
+  assert.ok(other, 'the language of other texts in the runbook: two sub-items, one idea each');
+  assert.match(other[1], /in the language the owner asked for, else in the existing file's language; a new file in English\./);
+  for (const part of ['a report file', 'choose the language and the style separately', "(1) the owner's instruction, given in the chat or written in the harness",
+    "(2) the document's own language and style", "(3) in a new document, those of the project's documents with the same purpose",
+    '(4) otherwise, the chat language and a style that fits the document type', 'the final message',
+    'Add a source, file path or ID line to a text for people only when the owner asks']) {
+    assert.ok(other[2].includes(part), `the text for people: ${part}`);
+  }
   const writing = /^## Writing\n\n(.*)$/m.exec(read('references/structure.md'));
-  for (const part of ['quyidagi hamma qoidalar bilan yoz', "birinchi to'qqizta qoida bilan yoz, `Buyruq shakli` dan `No-op` gacha",
-    "so'ramasa mavjud faylda shu faylning tili, yangi faylda suhbat tili", 'hisobot fayli', "Manba, fayl yo'li va ID qatori inson matniga faqat egasi so'rasa",
-    'suhbat qoidalari (til, uslub, murojaat; shablonda R12) faqat egasi bilan suhbatga']) {
+  for (const part of ['with all the rules below', 'with the first nine rules, from `Command form` to `No-op`',
+    "else the existing file's language, a new file in English", 'a report file', 'A source, file path or ID line goes into a text for people only when the owner asks',
+    'the chat rules (language, style, form of address; template R12) only the chat with the owner']) {
     assert.ok(writing[1].includes(part), `structure.md Writing: ${part}`);
   }
 
   const style = read('references/style-questions.md');
   const row = (id) => new RegExp(`^\\| ${id} \\|(.*)$`, 'm').exec(style)[1];
-  assert.match(row('S2'), /suhbatda .* harness .* loyiha hujjatlarining tili bu yerda so'ralmaydi: agent ularni .* matn chegarasi qoidasi bo'yicha yozadi/);
-  assert.match(row('S26'), /^ Harness'dagi sana va vaqt/);
-  const s3 = row('S3').split(' | ');
-  assert.match(s3[0], /egasiga qanday murojaat qiladi/);
-  assert.match(s3[2], /murojaat tavsiyasiz/);
-  assert.doesNotMatch(row('S3'), /\b(siz|sen)\b/i, 'S3 suggests no form of address');
+  assert.match(row('S7'), /The language of the chat .* The harness and the code comments are in English\. The language of the README and other project documents is not asked here: the agent writes them by `runbook\.md` → `Writing the harness` → `Language of other texts`/);
+  assert.match(row('S11'), /^ The time zone of the dates and times in the harness/);
+  const s8 = row('S8').split(' | ');
+  assert.match(s8[0], /how it addresses the owner/);
+  assert.match(s8[2], /address without a recommendation/);
+  assert.doesNotMatch(row('S8'), /"(siz|sen|Sie|du|tu|vous)"/i, 'S8 suggests no form of address');
   for (const p of agentTexts) { // no form of address is put in the owner's mouth
     assert.doesNotMatch(fs.readFileSync(p, 'utf8'), /"(siz|sen)"/, path.relative(ROOT, p));
   }
   const audit = read('references/audit.md');
-  assert.match(audit, /^- Writing: A39–A43, A59–A65$/m);
-  assert.match(audit, /^\| A64 \| .*`\*\*Writing\*\*` guruhida.* \| Rule leak \| script .* \| mechanical .* \|$/m);
-  assert.match(audit, /^\| A65 \| .* \| Rule leak \| manual: .* \| structural: .* \|$/m);
+  assert.match(audit, /^- Writing: A39–A50$/m);
+  assert.match(audit, /^\| A49 \| .*`\*\*Writing\*\*` group.* \| Rule leak \| script .* \| mechanical .* \|$/m);
+  assert.match(audit, /^\| A50 \| .* \| Rule leak \| manual: .* \| structural: .* \|$/m);
 });
 
 test('the rules for agent text outside the harness are the same nine in the runbook intro, its bullets and structure.md', () => {
   const read = (rel) => fs.readFileSync(path.join(CORE, rel), 'utf8');
   const runbook = read('templates/pan-harness/runbook.md.tmpl');
-  const named = /`Buyruq shakli`.*`No-op`/.exec(runbook)[0].match(/`([^`]+)`/g).map((n) => n.slice(1, -1));
+  const named = /`Command form`.*`No-op`/.exec(runbook)[0].match(/`([^`]+)`/g).map((n) => n.slice(1, -1));
   assert.equal(named.length, 9, named.join(', '));
   const section = runbook.slice(runbook.indexOf('## 4. Writing the harness'));
   const bullets = [...section.matchAll(/^- \*\*([^*:]+):\*\*/gm)].map((m) => m[1]);
@@ -124,8 +136,8 @@ test('an upstream skill names one commit, the same in its source and in THIRD_PA
   }
 });
 
-// The owner does not read the harness files (1.3.0): what an agent writes to the owner carries no
-// internal label (A1, P1, S2, K4: a letter and a number; rule, decision, feedback and lesson numbers too), only the meaning.
+// The owner does not read the harness files: what an agent writes to the owner carries no internal
+// label (A1, P1, S2, K4: a letter and a number; rule, decision, feedback and lesson numbers too), only the meaning.
 const LABEL = /\b[ADFKLPRS][0-9]{1,3}\b/;
 
 test('the texts meant for the owner hold no internal label', () => {
@@ -145,59 +157,68 @@ test('the texts meant for the owner hold no internal label', () => {
   assert.deepEqual(hits, []);
 });
 
-test('the rule against internal labels is in the AGENTS.md template, the core rules, the report and the audit', () => {
+test('the rule against internal labels and the chat rules are in the AGENTS.md template, the core rules, the report and the audit', () => {
   const read = (rel) => fs.readFileSync(path.join(CORE, rel), 'utf8');
-  const sub = /^- \*\*R12\. Egasi bilan suhbatda .*\n  - (Egasi harness fayllarini o'qimaydi: .*)\n/m.exec(read('templates/AGENTS.md.tmpl'));
-  assert.ok(sub, 'R12 of the AGENTS.md template has a sub-item for the messages to the owner');
-  for (const part of ['xabarda (savol, hisobot, taklif, status) gapni ma\'nosi bilan ayt', 'Ichki belgi (A1, P1, S2, K4 kabi raqamli nom; qoida, qaror, fikr va saboq raqamlari ham shunday)',
-    'hujjat ichidagi qadam raqami o\'rniga mazmunini yoz', 'havola bilan yoz', 'Egasi belgini o\'zi so\'rasa yoki tilga olsa, ma\'nosini ayt']) {
-    assert.ok(sub[1].includes(part), `R12 sub-item: ${part}`);
+  const r12 = /^- \*\*R12\. In the chat with the owner, .*\n {2}- (The owner does not read the harness files: .*)\n {2}- (Where a word has several meanings, .*)\n/m.exec(read('templates/AGENTS.md.tmpl'));
+  assert.ok(r12, 'R12 of the AGENTS.md template has the sub-items for the messages to the owner');
+  for (const part of ['in a message (question, report, proposal, status) say the meaning',
+    'an internal label (a numbered name such as A1, P1, S2, K4; rule, decision, feedback and lesson numbers too)',
+    'and of a step number inside a document', 'with a link', 'If the owner asks about a label or names it, say its meaning']) {
+    assert.ok(r12[1].includes(part), `R12 sub-item: ${part}`);
   }
-  const rule = /^14\. \*\*Egasiga tushunarli yoz\.\*\* (.*)$/m.exec(read('skill-parts/core-rules.md'));
+  for (const part of ['use the English term: structure, copy, move, migration, state, status, check, verification, test, limit, boundary, estimate, assumption',
+    'one term per concept, explained once at its first use', 'Commands, paths, IDs and keys in backticks', 'Short sentences, one idea per item']) {
+    assert.ok(r12[2].includes(part), `R12 terms sub-item: ${part}`);
+  }
+  assert.match(read('templates/AGENTS.md.tmpl'), /^- \*\*R12\. .* If the owner writes in another language, answer in it; for a message that is only a command, take the language from the context\./m);
+  const rule = /^14\. \*\*Write so that the owner understands\.\*\* (.*)$/m.exec(read('skill-parts/core-rules.md'));
   assert.ok(rule, 'core rule 14');
-  for (const part of ["Egasi harness fayllarini o'qimaydi", 'Ichki belgi (A1, P1, S2, K4 kabi raqamli nom; qoida, qaror, fikr va saboq raqamlari ham shunday)', "oddiy so'z bilan yoz",
-    'Belgilar harness fayllarida', "`#` ustunidagi raqam agent uchun"]) {
+  for (const part of ['The owner does not read the harness files', 'an internal label (a numbered name such as A1, P1, S2, K4; rule, decision, feedback and lesson numbers too)',
+    'write its content in plain words', 'The labels stay in the harness files', 'the number in the `#` column is for the agent',
+    'when the owner writes in another language, answer in that one', 'use the English term', 'commands, paths, IDs and keys in backticks', 'short sentences, one idea per item']) {
     assert.ok(rule[1].includes(part), `core rule 14: ${part}`);
   }
   const report = read('skill-parts/report.md');
-  for (const part of ["ma'nosi bilan nomlanadi", "to'liq jadval (raqamlari bilan) tarix yozuvida qoladi", 'Yuborishdan oldin hisobot qoralamasini', "grep -nE '[A-Za-z0-9_./-]+\\.(md|mjs|json)' <fayl>", "grep -nE '(^|[^[:alnum:]_])[ADFKLPRS][0-9]{1,3}([^[:alnum:]_]|$)' <fayl>"]) assert.ok(report.includes(part), `report: ${part}`);
-  assert.match(read('references/audit.md'), /^\| A64 \| .*A1, P1, S2, K4.* \| Rule leak \|/m);
+  for (const part of ['the items are named by their meaning', 'the full table (with numbers) stays in the history entry', 'Before sending, write the report draft',
+    "grep -nE '[A-Za-z0-9_./-]+\\.(md|mjs|json)' <file>", "grep -nE '(^|[^[:alnum:]_])[ADFKLPRS][0-9]{1,3}([^[:alnum:]_]|$)' <file>",
+    "grep -nE 'Awaiting owner decision|Later and watch|"]) assert.ok(report.includes(part), `report: ${part}`);
+  assert.match(read('references/audit.md'), /^\| A49 \| .*A1, P1, S2, K4.* \| Rule leak \|/m);
 });
 
 test('a test run before the change is not required: the last recorded result is the comparison', () => {
   const read = (p) => fs.readFileSync(p, 'utf8');
   for (const rel of ['references/testing.md', 'references/doctor.md', 'templates/pan-harness/playbooks/pan-harness.md.tmpl']) {
     const text = read(path.join(CORE, rel));
-    assert.match(text, /oldin run shart emas/, rel);
-    assert.match(text, /oxirgi yozilgan natija/, rel);
+    assert.match(text, /a run before is not needed/, rel);
+    assert.match(text, /the last recorded result/, rel);
   }
-  assert.match(read(path.join(ROOT, 'evals', 'scenarios.md')), /faqat o'zgartirishdan keyin/);
 });
 
 test('the package is called ph-paket in the agent texts, and the glossary says what it is', () => {
-  const ok = /npm paketi|paket menejeri|Paketlarga xos|paket nomi/; // the npm package of the glossary row, a package manager, packages of a monorepo
+  const ok = /npm package|package manager|packages' own|by package name|package\.json|^\s*package:/; // the npm package of the glossary row, a package manager, packages of a monorepo, the manifest
   const hits = [];
   for (const p of agentTexts) {
     fs.readFileSync(p, 'utf8').split('\n').forEach((line, i) => {
-      for (const m of line.matchAll(/(?<![\w-])[Pp]aket\w*/g)) {
-        if (!ok.test(line.slice(Math.max(0, m.index - 12), m.index + m[0].length + 12))) hits.push(`${path.relative(ROOT, p)}:${i + 1}: ${m[0]}`);
+      for (const m of line.matchAll(/(?<![\w-])[Pp]ackages?\b/g)) {
+        if (!ok.test(line.slice(Math.max(0, m.index - 12), m.index + m[0].length + 12)) && !ok.test(line)) hits.push(`${path.relative(ROOT, p)}:${i + 1}: ${m[0]}`);
       }
     });
   }
   assert.deepEqual(hits, []);
-  assert.match(fs.readFileSync(path.join(CORE, 'references', 'structure.md'), 'utf8'), /^\| ph-paket \| `@jiemurat\/pan-harness` npm paketi: /m);
+  assert.match(fs.readFileSync(path.join(CORE, 'references', 'structure.md'), 'utf8'), /^\| ph-paket \| The `@jiemurat\/pan-harness` npm package: /m);
 });
 
-test('the usage limit rule (1.3.2) is in the AGENTS.md template, the structure description, the audit and the changelog', () => {
+test('the usage limit rule is in the large-task playbook template, the structure description, the audit and the changelog', () => {
   const read = (rel) => fs.readFileSync(path.join(CORE, rel), 'utf8');
-  const execution = read('templates/AGENTS.md.tmpl').split('**Execution.**\n')[1].split(/\n\n/)[0];
-  for (const part of ["Limitni ko'ra olsang, large task, sub-agent run va 5 soatlik limit oynasining", "10% idan ortig'ini", 'qolgan ulush va yangilanish vaqti', "faqat o'lchov yo'q bo'lsa, qolgan ulush 10% dan kam bo'lganda",
-    "Byudjet oshsa, ish hajmi o'zgarmaydi", '`plan.md` → `Scheduled` ga yoz', "Limitni ko'ra olmasang, ishni to'xtatma va egasidan so'rama", 'limit: tekshirilmadi']) {
+  const execution = read('templates/pan-harness/playbooks/large-task.md.tmpl').split('## Execution\n')[1].split(/\n## /)[0];
+  for (const part of ['If you can see the usage limit, before a large task, a sub-agent run or a stage over 10% of the 5-hour window',
+    'the share left and its renewal time', 'with no measurement, put the stage off when under 10% is left', 'If the budget is over, the scope stays',
+    '`plan.md` → `Scheduled`', 'If you cannot see the limit, go on without asking', 'limit: not checked']) {
     assert.ok(execution.includes(part), `Execution: ${part}`);
   }
-  assert.match(read('references/structure.md'), /`\*\*Execution\.\*\*` \(.*limit.*\)\./);
+  assert.match(read('references/structure.md'), /`## Execution`: .*the limit rule/);
   const audit = read('references/audit.md');
-  assert.match(audit, /^- Continuity and checks: A51–A58, A66$/m);
-  assert.match(audit, /^\| A66 \| .*Execution.*limit.* \| Interrupted work \| manual.* \| mechanical.*1\.3\.2.* \|$/m);
-  assert.match(read('references/changelog.md'), /^## 1\.3\.2$/m);
+  assert.match(audit, /^- Continuity and checks: A58–A67$/m);
+  assert.match(audit, /^\| A66 \| .*Execution.*limit.* \| Interrupted work \| manual.* \| mechanical.* \|$/m);
+  assert.match(read('references/changelog.md'), /^## 2\.4\.2$/m);
 });

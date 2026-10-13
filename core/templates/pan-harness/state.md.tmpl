@@ -1,19 +1,19 @@
 <!--
-pan-harness template. `[profile: …]` belgilarini `structure.md` → "Profile" dagi qoida bo'yicha qo'lla. Shu izohni olib tashla.
+pan-harness template. Apply the `[profile: …]` marks by the rule in `structure.md` → "Profile". Remove this note.
 -->
 # State
 
-**Last updated:** {{YYYY-MM-DD HH:MM, vaqt zonasi}} ({{qanday tekshirilgani: status script yoki qo'lda}}).
+**Last updated:** {{YYYY-MM-DD HH:MM, time zone}} ({{how it was checked: status script or by hand}}).
 
-Faqat hozirgi state. Tizimni o'zgartirgan ishdan keyin faylni yangi check natijasidan qayta yoz: har qiymat shu check'dan olinadi. Rejalar `plan.md` da, structure `system-map.md` da.
+Only the current state. After a task that changed the system, rewrite the file from a new check result: each value from that check. Plans: `plan.md`, structure: `system-map.md`.
 
 [profile: live-system=yes]
-- **Version:** {{ilova yoki asosiy komponent versiyasi}}.
-- **Running:** {{nima ishlayapti, qayerda}}.
-- **Checks:** {{oxirgi check natijalari}}.
-- **Known issues:** {{qisqa, batafsili `lessons.md` yoki `plan.md` da}}.
+- **Version:** {{version of the application or main component}}.
+- **Running:** {{what runs, where}}.
+- **Checks:** {{last check results}}.
+- **Known issues:** {{short; details in `lessons.md` or `plan.md`}}.
 
 [profile: live-system=no]
-- **Contents:** {{loyihada hozir nima bor: masalan, hujjatlar soni, asosiy papkalar state'i}}.
-- **In progress:** {{ochiq qoralamalar yoki boshlangan ishlar}}.
-- **Known issues:** {{qisqa}}.
+- **Contents:** {{what the project holds now: the number of documents, the main folders}}.
+- **In progress:** {{open drafts or started work}}.
+- **Known issues:** {{short}}.

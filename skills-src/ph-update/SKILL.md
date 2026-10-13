@@ -1,6 +1,6 @@
 ---
 name: ph-update
-description: ph-paketni (Panoramic Harness, @jiemurat/pan-harness) yangilaydi, harness'ni yangi standart versiyasiga migration qiladi va oxirida to'liq ph-doctor o'tkazadi. Pan-harness'ni yangilash so'ralganda ishlatiladi.
+description: Updates ph-paket (Panoramic Harness, @jiemurat/pan-harness), migrates the harness to the new standard version and ends with a full ph-doctor run. Use it when asked to update the pan-harness.
 license: MIT
 metadata:
   version: "{{version}}"
@@ -15,21 +15,21 @@ metadata:
 
 ## Steps
 
-ph-paketni yangilash va harness migration'i bitta ish: oxirida har safar to'liq `ph-doctor` o'tkaziladi. Migration qoidalari `references/doctor.md` → "3. Migration" va "6. Fix" da, versiyalar qadamlari yangi o'rnatilgan `references/changelog.md` da. Har qadam "Tugadi" sharti bajarilgach keyingisiga o't:
+Updating ph-paket and migrating the harness are one task: at the end a full `ph-doctor` runs every time. The migration rules are in `references/doctor.md` → "3. Migration" and "6. Fix", the steps of the versions in the newly installed `references/changelog.md`. Go to the next step once a step's "Done when" condition holds:
 
-1. **Versiyalar.** Uchta versiyani solishtir:
-   - o'rnatilgan skill'lar: `.agents/skills/.pan-harness.json` yoki `.claude/skills/.pan-harness.json` → `version` (CLI'siz o'rnatilgan bo'lsa, shu skill'ning `SKILL.md` → `metadata.version`);
-   - npm'dagi oxirgisi: `npm view @jiemurat/pan-harness version` (internet yo'q bo'lsa, egasiga ayt va 3-qadamdan davom et);
-   - harness standarti: `PAN-HARNESS.md` → `Standard:`; unknown standard (`references/structure.md` → "Glossary") ham shu yerda aniqlanadi.
+1. **Versions.** Compare three versions:
+   - the installed skills: `.agents/skills/.pan-harness.json` or `.claude/skills/.pan-harness.json` → `version` (when installed without the CLI, that skill's `SKILL.md` → `metadata.version`);
+   - the newest on npm: `npm view @jiemurat/pan-harness version` (without internet, tell the owner and go on from step 3);
+   - the harness standard: `PAN-HARNESS.md` → `Standard:`; an unknown standard (`references/structure.md` → "Glossary") is found here too.
 
-   Uchalasi bir xil bo'lsa, 5-qadamga o't. Tugadi: uchala versiya ma'lum.
-2. **ph-paketni yangilash.** `npx @jiemurat/pan-harness@latest update` ni ishga tushir. CLI 3 kodi bilan to'xtasa, skill fayllari qo'lda o'zgartirilgan: ro'yxatni egasiga ko'rsat, u rozi bo'lsa, `--yes` bilan qayta ishga tushir. CLI chiqargan o'zgarishlar ro'yxatini (`CHANGELOG.md`) hisobotga ol. Skill'lar CLI'siz o'rnatilgan bo'lsa (plugin yoki `npx skills`), ularni o'sha yo'l bilan yangila. Tugadi: skill'lar yangi versiyada (`.pan-harness.json` → `version`).
-3. **Migration.** Yangi o'rnatilgan skill papkasidan `node <skill>/scripts/migrate.mjs --root .` ni ishga tushir: u `references/changelog.md` dagi `mechanical` qadamlarni bajaradi, skriptlarni almashtiradi va `Standard:` qatorini yangilaydi. U `by hand` deb chiqargan har bandni o'sha changelog qadami bo'yicha qo'lda bajar; `structural` qadamlarni egasining tasdig'i bilan (reja va kriteriyalar bilan). Skript unknown standard deb to'xtasa (3 kodi), `references/doctor.md` → "3. Migration" dagi tartibni bajar. Tugadi: `migrate.mjs` ning birinchi ishga tushirishidagi har `by hand` bandi bajarilgan yoki hisobotda, qolgan structural qadamlar egasining tasdig'ini kutmoqda.
-4. **Check.** `node pan-harness/scripts/pan-harness-check.mjs` ni (loyihada `--live` yozilgan bo'lsa, u bilan) va profile'da `secrets` bo'lsa `node pan-harness/scripts/secret-check.mjs` ni ishga tushir. Tugadi: 0 xato, `secrets` bo'lsa `RESULT: clean`.
-5. **To'liq `ph-doctor`.** `references/doctor.md` bo'yicha to'liq `ph-doctor` o'tkaz: moslik jadvali, mechanical fix'lar darhol, structural takliflar reja bilan. Tugadi: moslik jadvali tayyor.
-6. **Commit va hisobot.** Loyihaning R4 qoidasi bo'yicha commit qil va hisobot ber: versiyalar (eski → yangi), bajarilgan qadamlar, egasining tasdig'ini kutayotgan structural qadamlar, `ph-doctor` moslik hisobi. Tugadi: hisobot egasida, R4 bo'yicha commit qilingan.
+   When the three are the same, go to step 5. Done when: the three versions are known.
+2. **Updating ph-paket.** Run `npx @jiemurat/pan-harness@latest update`. When the CLI stops with code 3, skill files were changed by hand: show the list to the owner and, when the owner agrees, run it again with `--yes`. Take the list of changes the CLI prints (`CHANGELOG.md`) into the report. When the skills were installed without the CLI (a plugin or `npx skills`), update them by that route. Done when: the skills are on the new version (`.pan-harness.json` → `version`).
+3. **Migration.** From the newly installed skill folder, run `node <skill>/scripts/migrate.mjs --root .`: it carries out the `mechanical` steps of `references/changelog.md`, replaces the scripts and updates the `Standard:` line. Do each item it prints as `by hand` by hand, by that changelog step; the `structural` steps with the owner's approval (with a plan and criteria). When the script stops on an unknown standard (code 3), follow the procedure of `references/doctor.md` → "3. Migration". Done when: each `by hand` item of the first run of `migrate.mjs` is done or in the report, the remaining structural steps are waiting for the owner's approval.
+4. **Check.** Run `node pan-harness/scripts/pan-harness-check.mjs` (with `--live` when the project names it) and `node pan-harness/scripts/secret-check.mjs` when the profile lists `secrets`. Done when: 0 errors, `RESULT: clean` with `secrets`.
+5. **Full `ph-doctor`.** Run a full `ph-doctor` by `references/doctor.md`: the conformance table, the mechanical fixes at once, the structural proposals with a plan. Done when: the conformance table is ready.
+6. **Commit and report.** Commit by the project's commit rule (`AGENTS.md` → `Rules`) and give the report: the versions (old → new), the steps done, the structural steps waiting for the owner's approval, the `ph-doctor` conformance count. Done when: the report is with the owner, the commit is made by that rule.
 
-Yangilangan skill'larni agent sessiya boshida o'qiydi: keyingi ishni yangi sessiyada boshla.
+The agent reads the updated skills at session start: start the next work in a new session.
 
 <!-- include: skill-parts/files.md -->
 

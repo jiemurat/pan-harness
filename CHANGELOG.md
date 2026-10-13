@@ -2,65 +2,17 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
-## 1.3.2
+## 2.4.2
 
-Agents take the usage limit into account, so a big stage is not left half done when the limit runs out:
+The skills and the harness are in English, and `ph-init` asks which language to talk in. This version starts the standard afresh: the earlier versions stay in the git history and on npm.
 
-- the `AGENTS.md` template has three bullets at the end of `Execution`. When the agent can see the usage limit (the share left and the time it renews), it compares the budget of a large task, a sub-agent run and any stage that takes more than 10% of the 5-hour limit window with what is left; the budget comes from the limit the last similar stage used (written in `handoff.md`), and only with no measurement a stage waits when less than 10% is left. When the budget does not fit, the amount of work stays the same: the part that fits starts and the rest goes to `plan.md` under `Scheduled` for the time the limit renews, with one sentence to the owner. When the agent cannot see the limit, it neither stops nor asks the owner, and writes "limit: tekshirilmadi" in the plan;
-- `ph-update` adds the three bullets to the end of `Execution` of a 1.3.1 harness; a limit rule the project wrote in its own words is left for the agent to show the owner, and an `AGENTS.md` without an `Execution` section is left by hand;
-- `ph-doctor` checks the rule (A66).
-
-## 1.3.1
-
-`ph-init` asks the owner only what nobody else can know, and its plan holds only what the owner decides on:
-
-- the interview is three things: the goal (with near plans and known problems the repo does not show), what "done" means (how the result is made and checked) and the limits (private data, the most dangerous action, outside services); the git name is asked only when git has none. An empty folder is asked in two short rounds, an existing project in one. For a project without code, a server or secrets that is 3 to 5 questions instead of up to 22;
-- the style, workflow and safety choices (language, terms, tone, authority, time zone, kinds of work, report, irreversible actions, upkeep) are standard choices: the plan shows them in four lines, nobody waits on them, and they are written as one decision that the approval of the plan confirms. A fact the agent can find (the language of the conversation, the time zone of the computer) is stated in the plan, not asked; the form of address and the owner's technical level are not written into the rules unless the owner says them;
-- an open question comes with the agent's own suggestion and a short reason on a line of its own; "I do not know" is an answer, listed in the plan as an open issue;
-- the plan is short (15 lines, 3,000 characters): goal and result, criteria the owner can see, what changes outside the harness, the standard choices, open issues, the owner's part, risk and the way back. No file list, no internal label or harness term (three `grep` checks); the migration table only when old content moves;
-- the harness standard is unchanged, so there are no migration steps: for a 1.3.0 harness `ph-update` only sets the `Standard:` line and the standard scripts.
-
-## 1.3.0
-
-Messages to the owner carry meaning, not internal labels:
-
-- the owner does not read the harness files, so an agent writes questions, reports, proposals and status messages in plain words: no internal label (A1, P1, S2, K4: a letter and a number; rule, decision, feedback and lesson numbers too) and no step or section number of a document, the meaning instead; labels stay in the harness files. The rule is a sub-item of the chat rule in the `AGENTS.md` template, rule 14 of the skills' core rules and part of the report shape;
-- the question texts of `ph-init` no longer carry rule labels; the `ph-doctor` report gives counts per section and the findings in plain words, the full table (with item numbers) goes to the history entry;
-- `ph-doctor` checks the sub-item with the chat rule (A64); `pan-harness-check` warns when a 1.3.0 harness lacks it; `ph-update` adds it to the chat rule of a 1.2.0 harness (a chat rule the project reworded is left for the agent);
-- a test run before a change is no longer required: the fixed question set and the behaviour scenarios are run after the change and compared with the last recorded result (a run before is still possible when no result is recorded or the owner asks);
-- `ph-paket`, the name of this package in the texts for agents and owners, is in the glossary; `ph-update` and the skills' intro name it that way.
-
-## 1.2.0
-
-Agent text and human text are kept apart:
-
-- the harness is written by all the writing rules of `runbook.md` → `Writing the harness`; every other text an agent reads (other agents' context files such as `CLAUDE.local.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursor/rules/` and nested `AGENTS.md`, skills, commands, subagents, prompts in the product) by its nine P26 rules, in the language the owner asks for, else in the file's own language, and a new file in the language of the conversation; the harness language and its English terms stay in the harness;
-- texts for people (README, project docs, letters, guides, report files) get their language and style from the owner's instruction, else from the document itself or similar documents, else the language of the conversation and a style that fits the kind of document, which the agent tells the owner; no source, file path or ID line unless the owner asks; the chat rule (language, brevity, form of address) covers only the conversation: new rule R23 in the `AGENTS.md` template, R12 limited to the chat;
-- `ph-init` asks the form of address as an open question instead of suggesting one, writes the README of an empty folder in the language of the conversation and says so in its plan; the time zone question is about the harness only;
-- `ph-doctor` checks the boundary (A64, A65); `pan-harness-check` warns when a 1.2.0 harness has no `**Writing**` rule group;
-- `ph-update` adds R23 to a 1.1.0 harness, limits its chat rule to the conversation and updates the `Writing the harness` intro, the runbook map line and the End of task writing item; a chat rule that also sets file text is left for the agent;
-- a fifth skill, `ph-writing-for-agents`: Matt Pocock's writing-for-agents skill (MIT, renamed only), the method behind these writing rules; the runbook's writing section points to it, and the project's rules come first; `ph-grilling` takes the newest upstream line, "Word each question so "yes" accepts your recommended answer";
-- fixes: the `pan-harness.md` playbook names the skill's `testing.md` without a project path (the check reported it as a missing file), and a ⏳ in the header text of `plan.md` no longer counts as an open item;
-- known limitation: in our tests (Claude Haiku 4.5 and Sonnet, a letter, a guide and a prompt each) no harness rule reached a text for people, but the small model's prompt did not follow the writing rules and its letter and guide carried invented facts; review such texts or write them with a strong model.
-
-## 1.1.0
-
-Writing rules for the harness itself (principle P26, after Matt Pocock's [writing-for-agents](https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-for-agents)):
-
-- harness text (`AGENTS.md`, `PAN-HARNESS.md`, `pan-harness/`) is written with context pointers, progressive disclosure and co-location, completion criteria, positive form, leading words, a single source, a source for every fact and no no-ops; the rules apply to new and changed text, older text is adapted when it is touched;
-- `handoff.md` keeps the format of an active task at its top, also when no task is active;
-- one English term per concept (`structure`, `migration`, `check`, `limit` ...) instead of a word with a glossed term in brackets;
-- `pan-harness-check` warns about a glossed term in a new or changed line (`terms`); with `--since COMMIT` it reads the lines changed since that commit and lists each as `REVIEW` with flags for the audit items it may break, and `ph-doctor` gives every flagged line ok or fail (A20, A43, A59–A62);
-- the skills, their references and the templates follow the same rules: shorter skill descriptions (1 480 → 832 bytes together), rules that say what to do, a checkable end for every skill step;
-- `runbook.md` → `Writing docs` is now `Writing the harness`; `ph-update` migrates a 1.0.0 harness with mechanical steps;
-- two skill scripts take the template work off the model: `scaffold.mjs` copies the standard files for `ph-init` (the agent fills the placeholders), `migrate.mjs` applies the mechanical changelog steps for `ph-update` and `ph-doctor` without touching journal entries;
-- `pan-harness-check` reports an unapplied `[profile: …]` marker or a template note left at the top of a file;
-- known limitation: a small model writes harness text that follows the rules better than with 1.0.0, but it can still add an invented fact (tested with Claude Haiku 4.5); write important entries with a strong model or review them.
-
-## 1.0.0
-
-First release:
-
-- four agent skills: `ph-init` (an empty folder, an existing project or an existing harness), `ph-doctor`, `ph-update` (updates the package, migrates the harness, then runs a full `ph-doctor`) and `ph-grilling`;
-- the CLI: `init`, `update`, `remove`, `status`; skills for Claude Code and for the agents that read `.agents/skills/`, `/ph-*` command files for Gemini CLI and OpenCode, a `.gitignore` block for the tool files;
-- the harness checks in Node (`pan-harness-check.mjs`, `secret-check.mjs`) and the pre-commit hook that runs them.
+- `ph-init` first asks "Which language should we talk in?" in English, Uzbek and Russian, with a fourth option for any other language. From the answer on, its questions, plan and report are in that language; the harness is written in English, so any agent and model reads it the same way.
+- In the chat the agent writes in the chosen language, answers in the owner's language when the owner writes in another one and, for a message that is only a command, takes the language from the context. Where a word has several meanings, it uses one English term (structure, state, check, test, limit and others), explained once.
+- The skill instructions, references, templates and scripts are in English (they were in Uzbek), edited by the writing rules for agent readers; their meaning is the same.
+- The harness template has two new playbooks: `playbooks/large-task.md` (planning and carrying out a large task, the usage limit) and `playbooks/end-of-task.md` (the end-of-task checklist and the journal rules). `AGENTS.md` keeps the task types with a link to the first; the growth limits moved to `playbooks/pan-harness.md` and the language of other texts to `runbook.md`.
+- The audit items, standard choices, principles and test scenarios are numbered from 1.
+- A harness of a 1.x version has no migration steps: `ph-update` and `ph-doctor` treat it as an unknown standard and compare it with the current templates item by item.
+- The skill descriptions say what each skill does and when to use it; the package has five skills, `ph-writing-for-agents` included.
+- The guide in Uzbek (`docs/uz.md`) is removed.
+- The texts use five terms, the chat the first four with the owner: the project (the work itself), the artifacts (its work products, inputs and outputs: code, documents, data), the project-folder (where ph-paket is installed), the artifact-folder (the one folder for the artifacts, apart from the harness) and the owner (the project owner).
+- `ph-init` agrees the artifact-folder with the owner: options by the type of the artifacts (`src/` for code, `documents/` for documents, `data/` for data, `artifacts/` for a mix; never `docs/`) and the owner's own name as the last option. In an existing project it proposes moving the artifacts into it, with the goal and the benefit; the move becomes the first large task, `ph-init` moves no artifact. `ph-doctor` checks the artifact-folder.

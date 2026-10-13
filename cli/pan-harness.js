@@ -15,14 +15,14 @@ const HELP = `Panoramic Harness (pan-harness) ${PKG.version} - agent skills for 
 Usage: npx ${PKG.name}@latest <command> [options]
 
 Commands:
-  init      install the ph-* skills into this project (then run /ph-init in your agent)
+  init      install the ph-* skills into this project-folder (then run /ph-init in your agent)
   update    replace the installed skills with this version (ph-update runs it);
             with --agents, install them for another set of agents
   remove    delete the installed skills, command files and .gitignore lines
   status    installed version, newest version on npm, files changed by hand
 
 Options:
-  --dir <path>       project folder (default: the current folder)
+  --dir <path>       project-folder (default: the current folder)
   --agents <list>    where to install, comma separated (default: agents,claude):
                      ${Object.keys(TARGETS).join(', ')}, all; agent names work too (codex, cursor, ...)
   --no-commands      do not write /ph-* command files for Gemini CLI and OpenCode
@@ -53,7 +53,7 @@ function parse(argv) {
     else throw new UsageError(`unknown argument '${a}'`);
   }
   if (!fs.existsSync(opts.dir) || !fs.statSync(opts.dir).isDirectory()) {
-    throw new UsageError(`no such folder: ${opts.dir} - give an existing project folder with --dir`);
+    throw new UsageError(`no such folder: ${opts.dir} - give an existing project-folder with --dir`);
   }
   return opts;
 }
@@ -126,7 +126,7 @@ async function main() {
     case 'init': {
       if (sameDir(opts.dir, os.homedir()) && !opts.yes) {
         throw new UsageError('this is your home folder: skills installed here act as global skills for some agents, '
-          + 'and the .gitignore lands in your home - run it in a project folder, or add --yes if you mean it');
+          + 'and the .gitignore lands in your home - run it in a project-folder, or add --yes if you mean it');
       }
       const useTargets = targets || parseAgents(null);
       const r = await guarded((o) => install(opts.dir, { targets: useTargets, commands, dryRun: o.dryRun, yes: o.yes }), opts, 'Overwrite');

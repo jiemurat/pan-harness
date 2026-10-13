@@ -1,15 +1,16 @@
 ## Report
 
-Egasining tilida, qisqa va tushunarli: bandlar raqami emas, ma'nosi bilan nomlanadi (`Core rules` dagi egasiga tushunarli yozish qoidasi):
-- reja bilan qilingan ishda har kriteriya: ✅ (dalil bilan), ❌ yoki ⏳ (qachon tekshiriladi);
-- reja bilan qilingan ishda o'zgargan komponentlar xaritasi: har biri uchun nima o'zgardi, kimga ta'sir qiladi, kutilgan xarajat va sifat, qanday o'chiriladi yoki qaytariladi;
-- nima qilindi va nima topildi (raqamlar bilan);
-- `ph-doctor` da: bo'lim bo'yicha `ok`, `fail`, `not checked` hisobi va topilgan nuqsonlar oddiy tilda; to'liq jadval (raqamlari bilan) tarix yozuvida qoladi;
-- `verified` va `unverified` alohida;
-- skill limitation'lar (bo'lsa);
-- egasining qarori kerak bo'lgan savollar (raqamlangan, variant va tavsiya bilan; savolning o'zi tushunarli, ichki belgisiz);
-- o'zgargan fayllar ro'yxati, keyingi qadam.
+In the owner's language, short and clear: the items are named by their meaning, not by number (the rule in `Core rules` on writing clearly for the owner):
+- in work done with a plan, each criterion: ✅ (with evidence), ❌ or ⏳ (when it is checked);
+- in work done with a plan, the map of changed components: for each, what changed, whom it affects, the expected cost and quality, how it is turned off or reverted;
+- what was done and what was found (with numbers);
+- in `ph-doctor`: the count of `ok`, `fail`, `not checked` per section and the defects found in plain language; the full table (with numbers) stays in the history entry;
+- `verified` and `unverified` apart;
+- the skill limitations (when there are some);
+- the questions that need the owner's decision (numbered, with options and a recommendation; the question itself clear, without internal labels);
+- the list of changed files, the next step.
 
-Yuborishdan oldin hisobot qoralamasini vaqtinchalik faylga yoz va ikki buyruqni ishga tushir:
-- `grep -nE '(^|[^[:alnum:]_])[ADFKLPRS][0-9]{1,3}([^[:alnum:]_]|$)' <fayl>`: topilgan har belgini ma'nosi bilan almashtir. Tugadi: buyruq hech narsa topmaydi.
-- `grep -nE '[A-Za-z0-9_./-]+\.(md|mjs|json)' <fayl>`: fayl nomini egasi ochishi yoki shunga qarab qaror qilishi kerak bo'lmasa, nom o'rniga mazmunini yoz (masalan, "ish rejasi", "sessiya holati"). Tugadi: tanada faqat egasi ochishi yoki qarori bog'liq bo'lgan fayl nomlari qoladi; boshqa nomlar "o'zgargan fayllar" ro'yxatida.
+Before sending, write the report draft into a temporary file and run three commands:
+- `grep -nE '(^|[^[:alnum:]_])[ADFKLPRS][0-9]{1,3}([^[:alnum:]_]|$)' <file>`: replace each label found with its meaning. Done when: the command finds nothing.
+- `grep -nE '[A-Za-z0-9_./-]+\.(md|mjs|json)' <file>`: when the owner does not need to open the file or decide by it, write its content in place of the name (for example, "the work plan", "the session state"). Done when: the body keeps only the file names the owner opens or decides by; the other names are in the "changed files" list.
+- `grep -nE 'Awaiting owner decision|Later and watch|Working style|Session start|End of task|Changed files|Next step|Accepted warnings' <file>`: replace each harness section name with its content. Done when: the command finds nothing.

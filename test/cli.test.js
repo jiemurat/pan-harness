@@ -1,4 +1,4 @@
-// CLI tests: init, update, remove and status in throwaway project folders.
+// CLI tests: init, update, remove and status in throwaway project-folders.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -29,7 +29,7 @@ const exists = (dir, rel) => fs.existsSync(path.join(dir, rel));
 const read = (dir, rel) => fs.readFileSync(path.join(dir, rel), 'utf8');
 const manifest = (dir, base = '.agents/skills') => JSON.parse(read(dir, `${base}/.pan-harness.json`));
 
-test('the package ships the four ph-* skills', () => {
+test('the package ships the five ph-* skills', () => {
   assert.deepEqual(SKILLS, ['ph-doctor', 'ph-grilling', 'ph-init', 'ph-update', 'ph-writing-for-agents']);
 });
 

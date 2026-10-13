@@ -1,31 +1,35 @@
 # Playbook: pan-harness
 
-Pan-harness (`AGENTS.md`, `PAN-HARNESS.md` va `pan-harness/`) vaqt o'tishi bilan eskiradi va kattalashadi. `ph-doctor` uni standartga mos, to'g'ri va ixcham saqlaydi. {{kim va qachon eslatadi, masalan: "Har oyning birinchi dushanbasida kalendar eslatadi, egasi agentga `/ph-doctor` deb yozadi."}}
+The pan-harness (`AGENTS.md`, `PAN-HARNESS.md` and `pan-harness/`) grows old and big over time. `ph-doctor` keeps it in line with the standard, correct and compact. {{who reminds and when, for example: "On the first Monday of each month a calendar reminds, and the owner writes `/ph-doctor` to the agent."}}
 
 ## How
 
-1. Agentda `ph-doctor` ni ishga tushir: Claude Code, Antigravity, Cursor, GitHub Copilot, Gemini CLI va OpenCode'da `/ph-doctor`, Codex'da `$ph-doctor`. Skill'lar o'rnatilmagan bo'lsa (ular git'da turmaydi): `npx @jiemurat/pan-harness@latest init`. ph-paketning yangi versiyasi chiqqan bo'lsa: `/ph-update`.
-2. Pastdagi loyiha qadamlarini ham bajar.
-3. Structural o'zgarishni large task kabi qil: avval ro'yxat va reja, keyin egasining tasdig'i (`AGENTS.md` → `Workflow`). Qoidada belgilangan mechanical fix darhol qilinadi.
+1. Run `ph-doctor` in the agent: `/ph-doctor` in Claude Code, Antigravity, Cursor, GitHub Copilot, Gemini CLI and OpenCode, `$ph-doctor` in Codex. If the skills are not installed (they are not kept in git): `npx @jiemurat/pan-harness@latest init`. If a new version of ph-paket is out: `/ph-update`.
+2. Do the project steps below too.
+3. Do a structural change as a large task: first the list and the plan, then the owner's approval (`AGENTS.md` → `Workflow`, `playbooks/large-task.md`). A mechanical fix the rules define is done at once.
 
-Tugadi: `ph-doctor` moslik jadvali va hisoboti egasida, loyiha qadamlari bajarilgan, structural takliflar `plan.md` da.
+Done when: the `ph-doctor` conformance table and report are with the owner, the project steps are done, the structural proposals are in `plan.md`.
+
+## Growth limits
+
+The size limits are in `project/check.json` (`start_limit_bytes` — the start set, that is the four files together; `doc_limit_bytes` — any other doc), or else the standard's; history and archive files are exempt. The numbers stand in `check.json`, the script prints them on every run. A doc over 10 KB that is read on demand starts with a `## Contents` list. `decisions.md` holds only current decisions. When `feedback.md` or `lessons.md` goes over the limit, the old entries that became rules move to the archive; lessons are kept in full. On a size warning, tidy up in the same task or tell the owner; the upkeep steps are in `## How`.
 
 ## Project steps
 
-{{masalan: status check va uni `state.md` bilan solishtirish. Bo'lmasa: "Yo'q."}}
+{{for example: the status check and its comparison with `state.md`. If there are none: "None."}}
 
 ## Test questions
 
-Doimiy savollar to'plami (`ph-doctor` skill'idagi testing.md, "Fixed question set" bo'limi): structure o'zgarishidan keyin beriladi, natijalar oxirgi yozilgan natija bilan solishtiriladi (oldin run shart emas).
-1. Bu loyiha nima va kim uchun?
-2. U qanday tuzilgan: asosiy qismlari qayerda?
-3. Natija qanday yaratiladi yoki ishga tushiriladi (build, eksport, deploy)?
-4. U qanday tekshiriladi (test, lint, korrektura, faktlar)?
-5. Hozirgi state qanday, qaysi ish ochiq?
-{{6–10. loyihaga xos savollar: ishni qayerdan boshlaydi, o'tgan ishni qanday topadi, ish oxirida nima qiladi, eng xavfli amalda nima qiladi}}
+The fixed question set (`ph-doctor` skill, testing.md, "Fixed question set" section): asked after a structure change, the results compared with the last recorded result (a run before is not needed).
+1. What is this project and for whom?
+2. How is it built: where are its main parts?
+3. How is the result made or run (build, export, deploy)?
+4. How is it checked (tests, lint, proofreading, facts)?
+5. What is the current state, which work is open?
+{{6–10. project questions: where the agent starts the work, how it finds past work, what it does at the end of a task, what it does in the most dangerous action}}
 
-Oxirgi natijalar: {{sana, model, to'g'ri / qisman / noto'g'ri soni, o'qilgan KB; bo'lmasa: "hali o'tkazilmagan"}}.
+Last results: {{date, model, number of correct / partial / wrong, KB read; if none: "not run yet"}}.
 
 ## Fresh-agent test
 
-{{egasining doimiy javobi, masalan: "faqat kichik model bilan, structural o'zgarishdan keyin". Bo'lmasa: "Doimiy javob yo'q, har safar so'raladi."}}
+{{the owner's standing answer, for example: "only with a small model, after a structural change". If there is none: "No standing answer; asked every time."}}

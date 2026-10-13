@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/@jiemurat/pan-harness)](https://www.npmjs.com/package/@jiemurat/pan-harness) [![ci](https://github.com/jiemurat/pan-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/jiemurat/pan-harness/actions/workflows/ci.yml)
 
-Panoramic Harness (pan-harness for short) is a set of plain-text rules and knowledge that let any AI coding agent run a project like its owner. The harness is three things in your repository: `AGENTS.md`, `PAN-HARNESS.md` and a `pan-harness/` folder. Any agent and any model can read them; nothing depends on one tool's memory or settings. This package installs four [agent skills](https://agentskills.io) that build and maintain the harness.
+Panoramic Harness (pan-harness for short) is a set of plain-text rules and knowledge that let any AI coding agent run a project like its owner. The harness is three things in your repository: `AGENTS.md`, `PAN-HARNESS.md` and a `pan-harness/` folder. Any agent and any model can read them; nothing depends on one tool's memory or settings. This package installs five [agent skills](https://agentskills.io) that build and maintain the harness.
 
 | Skill | What it does |
 |---|---|
@@ -14,7 +14,7 @@ Panoramic Harness (pan-harness for short) is a set of plain-text rules and knowl
 
 ## Install
 
-In the project folder:
+In the project-folder (your project's folder):
 
 ```bash
 npx @jiemurat/pan-harness@latest init
@@ -33,18 +33,18 @@ The same skills install with `npx skills add jiemurat/pan-harness`, or as a Clau
 
 ## What you get
 
-`/ph-init` studies the project, asks only what you alone can answer (the goal, what "done" means, the limits), shows a short plan and builds the harness once you approve it:
+`/ph-init` first asks which language to talk in, then studies the project, asks only what you alone can answer (the goal, what "done" means, the limits, the artifact-folder: the one folder for your work), shows a short plan and builds the harness once you approve it:
 
 ```
 your-project/
 ├── AGENTS.md              entry point: the project, boundaries, workflow, rules
-├── PAN-HARNESS.md         profile, map of the harness, end-of-task checklist
+├── PAN-HARNESS.md         profile, map of the harness, project checks
 ├── .githooks/pre-commit   runs the harness checks before every commit
 └── pan-harness/
     ├── state.md, plan.md, handoff.md         current state, open work, the active task
     ├── decisions.md, feedback.md, lessons.md append-only journals
     ├── history/, archive/                    past work by month, archived entries
-    ├── playbooks/pan-harness.md              upkeep steps
+    ├── playbooks/                            a large task, the end of a task, upkeep
     ├── scripts/                              the checks (Node)
     └── project/                              knowledge specific to this project
 ```
@@ -59,20 +59,20 @@ The harness is committed with the project, so every session and every agent star
 
 ## Teams and new clones
 
-The skills stay out of git. After cloning, or on another computer, run `npx @jiemurat/pan-harness@latest init` once: the harness itself comes with the repository, and its `AGENTS.md` tells agents to install the skills when they are missing.
+The skills stay out of git. After cloning, or on another computer, run `npx @jiemurat/pan-harness@latest init` once: the harness itself comes with the repository and tells agents to install the skills when they are missing.
 
 ## Commands
 
 ```
 npx @jiemurat/pan-harness@latest <command> [options]
 
-init      install the ph-* skills into this project
+init      install the ph-* skills into this project-folder
 update    replace the installed skills with this version (ph-update runs it);
           with --agents, install them for another set of agents
 remove    delete the installed skills, command files and .gitignore lines
 status    installed version, newest version on npm, files changed by hand
 
---dir <path>     project folder (default: the current folder)
+--dir <path>     project-folder (default: the current folder)
 --agents <list>  agents,claude (default), windsurf, kiro, qwen, goose, all
 --no-commands    no /ph-* command files for Gemini CLI and OpenCode
 --yes            overwrite or delete files changed by hand without asking
@@ -92,7 +92,7 @@ The CLI writes only inside the skill and command folders it manages (and its blo
 
 ## Language
 
-The skills' instructions are in Uzbek; `ph-grilling` and `ph-writing-for-agents` keep their English upstream text. The harness itself is written in the language the owner picks during `ph-init`. A full guide in Uzbek: [docs/uz.md](docs/uz.md).
+The skills and the harness are in English, so any agent and model reads them the same way. `/ph-init` first asks which language to talk in (English, Uzbek, Russian or another): from then on the questions, plans and reports are in that language, in this and every later session. `ph-grilling` and `ph-writing-for-agents` keep their upstream text.
 
 ## Requirements
 

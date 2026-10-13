@@ -1,21 +1,21 @@
 # History: {{YYYY-MM}}
 
-Har ish uchun bitta yozuv, yangisi oxiriga qo'shiladi. Har oy o'z faylida: oy boshida yangi fayl ochiladi va bu sarlavha unga copy qilinadi. Qoidalar: `PAN-HARNESS.md` → `Journals`.
+One entry per task, the new one at the end. Each month has its own file: at the start of a month a new file is opened and this heading is copied into it. Rules: `playbooks/end-of-task.md` → `Journals`.
 
-Yangi yozuv shakli (`Downtime:` faqat `live-system=yes` bo'lsa):
+New entry format (`Downtime:` only with `live-system=yes`):
 
 ```
-### YYYY-MM-DD — <ish nomi> [tag]
+### YYYY-MM-DD — <task name> [tag]
 - **What and why:** …
-- **Checks:** large task'da avval kriteriyalar (K1 ✅ …, K2 ⏳ …), keyin check'lar
-- **Downtime:** yo'q / N daqiqa (sababi)
-- **Files:** … (commit: <hash> yoki pending)
+- **Checks:** in a large task the criteria first (K1 ✅ …, K2 ⏳ …), then the checks
+- **Downtime:** none / N minutes (reason)
+- **Files:** … (commit: <hash> or pending)
 ```
 
 ---
 
-### {{YYYY-MM-DD}} — Pan-harness yaratildi [docs]
-- **What and why:** {{egasining maqsadi}}. Yaratildi: `AGENTS.md`, `PAN-HARNESS.md`, `pan-harness/` ({{fayllar soni}} ta fayl). {{Migration qilingan mavjud fayllar va migration table: eski bo'lim → yangi joyi}}.
-- **Checks:** kriteriyalar: {{K1 ✅ dalil bilan / ❌ / ⏳ qachon}}; `pan-harness-check.mjs` {{natija}}, `secret-check.mjs` {{natija yoki "o'rnatilmagan"}}, fresh-agent test: {{natija yoki "o'tkazilmadi (egasining qarori)"}}.
-- **Downtime:** {{yo'q. Faqat live-system=yes bo'lsa, aks holda qatorni olib tashla}}
-- **Files:** {{ro'yxat}} (commit: pending)
+### {{YYYY-MM-DD}} — Pan-harness created [docs]
+- **What and why:** {{the owner's goal}}. Created: `AGENTS.md`, `PAN-HARNESS.md`, `pan-harness/` ({{number of files}} files). {{Migrated existing files and the migration table: old section → new place}}.
+- **Checks:** criteria: {{K1 ✅ with evidence / ❌ / ⏳ when}}; `pan-harness-check.mjs` {{result}}, `secret-check.mjs` {{result or "not installed"}}, fresh-agent test: {{result or "not run (the owner's decision)"}}.
+- **Downtime:** {{none. Only with live-system=yes, else remove the line}}
+- **Files:** {{list}} (commit: pending)

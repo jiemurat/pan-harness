@@ -1,6 +1,6 @@
 # Testing the harness
 
-Harness'ni faqat repo'ni ko'rgan yangi agent sinaydi: u yozgan agent ko'rmagan bo'shliqlarni topadi (P18, P25). Har sinov token sarflaydi, shuning uchun uni o'tkazish va qaysi model bilan o'tkazishni har safar egasi hal qiladi.
+The harness is tested by a new agent that has seen only the repo: it finds the gaps the agent that wrote it did not see (P18, P25). Each test costs tokens, so whether to run it and with which model is the owner's decision every time.
 
 ## Contents
 - When to test
@@ -9,71 +9,71 @@ Harness'ni faqat repo'ni ko'rgan yangi agent sinaydi: u yozgan agent ko'rmagan b
 - Resume test
 - Independent checker
 - Simplification experiment
-- Start set check without tokens (A51)
+- Start set check without tokens (A58)
 - Recording results
 
 ## When to test
 
-Egasiga variant va tavsiya ber, tavsiyani vaziyatga qarab tuz:
-- **o'zgarish turi:** yangi harness yoki structural o'zgarishdan keyin — doimiy to'plam, o'zgarishdan keyin; oldin run shart emas: taqqoslash uchun oxirgi yozilgan natija ishlatiladi (`playbooks/pan-harness.md` → `Test questions`), yozilgan natija yo'q bo'lsa yoki egasi so'rasa, oldin ham o'tkaziladi; faqat mechanical fix'dan keyin odatda shart emas;
-- **uzun large task** (bir sessiyadan oshadigan) — "o'rtasidan davom ettirish" sinovi;
-- **subyektiv natija** (matn, hujjat, harness'ning o'zi, dizayn) — mustaqil tekshiruvchi;
-- **`ph-doctor`** — har uchinchi `ph-doctor` da (tarixdagi `ph-doctor` yozuvlarini sana) soddalashtirish tajribasi;
-- **oxirgi sinov qachon bo'lgani** (tarixdan) va **egasining doimiy javobi** (`playbooks/pan-harness.md` → `Fresh-agent test`);
-- **token estimate'i:** start set va o'qiladigan fayllar hajmidan. Mo'ljal: kichik model bilan 5 savol ~90 ming token, kuchli model bilan 7 savol ~200 ming token, mustaqil tekshiruvchi ~100 ming token.
+Give the owner options and a recommendation; shape the recommendation by the situation:
+- **the kind of change:** after a new harness or a structural change — the fixed set, after the change; a run before is not needed: the last recorded result is used for the comparison (`playbooks/pan-harness.md` → `Test questions`); when there is no recorded result or the owner asks, it is run before too; after a mechanical fix only, it is usually not needed;
+- **a long large task** (longer than one session) — the resume test;
+- **a subjective outcome** (text, a document, the harness itself, a design) — the independent checker;
+- **`ph-doctor`** — the simplification experiment at every third `ph-doctor` (count the `ph-doctor` entries in the history);
+- **when the last test was** (from the history) and **the owner's standing answer** (`playbooks/pan-harness.md` → `Fresh-agent test`);
+- **the token estimate:** from the size of the start set and of the files read. A guide: a small model with 5 questions ~90 thousand tokens, a strong model with 7 questions ~200 thousand tokens, an independent checker ~100 thousand tokens.
 
-Egasi doimiy javob bersa (masalan, "faqat kichik model bilan"), uni `playbooks/pan-harness.md` → `Fresh-agent test` ga yoz. Keyingi safar u tavsiyaga ta'sir qiladi, lekin baribir so'raladi.
+When the owner gives a standing answer (for example, "only with a small model"), write it into `playbooks/pan-harness.md` → `Fresh-agent test`. Next time it shapes the recommendation, but the question is still asked.
 
 ## How to run a test agent
 
-- Claude Code'da — sub-agent, modeli tanlanadi (strong model yoki small model). Boshqa vositada savollar faylini tayyorla, sinovni egasi yangi sessiyada o'zi ishga tushiradi.
-- Sinov agentiga yoz: faylni o'zgartirma, live system buyruqlarini ishlatma, external side effect qilma, sir fayllarini ochma, fayllarni diskdan o'qi (sessiya davomida `AGENTS.md` o'zgargan bo'lsa, vosita avtomatik yuklagan matn eski bo'lishi mumkin).
-- Sinovlarni bittadan yoki ikkitadan ishga tushir: ko'p parallel agent sessiya limitiga urilishi mumkin.
+- In Claude Code — a sub-agent, with the model chosen (strong model or small model). In another tool, prepare a file of questions; the owner starts the test in a new session.
+- Tell the test agent: do not change files, do not use live system commands, make no external side effect, do not open secret files, read the files from disk (when `AGENTS.md` changed during the session, the text the tool loaded by itself may be old).
+- Run the tests one or two at a time: many parallel agents may hit the session limit.
 
 ## Fixed question set
 
-Savollar loyihaning `playbooks/pan-harness.md` → `## Test questions` da saqlanadi va har safar bir xil beriladi, aks holda natijalarni solishtirib bo'lmaydi. 5 ta universal savol (har qanday loyihada):
-1. Bu loyiha nima va kim uchun?
-2. U qanday tuzilgan: asosiy qismlari qayerda?
-3. Natija qanday yaratiladi yoki ishga tushiriladi (build, eksport, deploy)?
-4. U qanday tekshiriladi (test, lint, korrektura, faktlar)?
-5. Hozirgi state qanday, qaysi ish ochiq?
+The questions are kept in the project's `playbooks/pan-harness.md` → `## Test questions` and are asked the same way every time, otherwise the results cannot be compared. 5 universal questions (for any project):
+1. What is this project and for whom?
+2. How is it built: where are its main parts?
+3. How is the result made or run (build, export, deploy)?
+4. How is it checked (tests, lint, proofreading, facts)?
+5. What is the current state, which work is open?
 
-Keyin 4–6 ta loyihaga xos savol: ishni qaysi fayllardan boshlaydi, o'tgan ishni qanday topadi, ish oxirida nima qiladi, loyihaning eng xavfli amalida nima qiladi. Oxirida: "Harness'da siz aniq tushunmagan yoki sizni assumption qilishga majbur qilgan gap bormi? Har biri uchun fayl:qator va nimasi noaniq."
+Then 4–6 project questions: which files the work starts from, how past work is found, what happens at the end of a task, what happens in the project's most dangerous action. At the end: "Is there anything in the harness you did not understand clearly or that made you make an assumption? For each: file:line and what is unclear."
 
-Har javobni `to'g'ri`, `qisman` yoki `noto'g'ri` deb bahola. Kontekst sarfini vosita beradigan raqam bilan o'lcha: token va tool chaqiruvlari soni. Agentning o'zi aytgan o'qilgan KB ishonchsiz, uni faqat qaysi fayllar o'qilganini bilish uchun ishlat. Structure o'zgarishidan keyin to'plam oxirgi yozilgan natijadagi model bilan beriladi (oldin run shart emas; yozilgan natija yo'q bo'lsa yoki egasi so'rasa, oldin ham): `to'g'ri` javoblar soni oxirgi yozilgan natijadan kam bo'lmasligi kerak.
+Grade each answer `correct`, `partial` or `wrong`. Measure the context use with the number the tool gives: tokens and the number of tool calls. The KB read that the agent reports itself is unreliable; use it only to know which files were read. After a structure change, the set is asked with the model of the last recorded result (a run before is not needed; when there is no recorded result or the owner asks, before too): the number of `correct` answers must not be lower than in the last recorded result.
 
 ## Resume test
 
-Large task o'rtasida (yoki ataylab to'xtatilgan nusxasida) yangi agentga faqat repo beriladi, `handoff.md` da `**Status:** active`. Savollar:
-- Ish qayerda to'xtagan va keyingi qadam nima, nega?
-- Qaysi o'zgargan fayllar agentning chala ishi, qaysilari egasiniki?
-- Qaysi kriteriya bajarilgan, qaysisi yo'q, dalili nima?
+In the middle of a large task (or in a copy stopped on purpose), a new agent gets only the repo, with `**Status:** active` in `handoff.md`. The questions:
+- Where did the work stop and what is the next step, why?
+- Which changed files are the agent's unfinished work, which are the owner's?
+- Which criterion is met, which is not, what is the evidence?
 
-Javob `Next step` va `Changed files` ga mos bo'lsa, sinov o'tgan. Noaniqlik chiqsa, `handoff.md` yozuvini yoki shablonni tuzat (P24).
+The test passes when the answer matches `Next step` and `Changed files`. When an ambiguity shows, fix the `handoff.md` entry or the template (P24).
 
 ## Independent checker
 
-Large task oxirida, egasining roziligi bilan. Ishni qilgan agent o'z ishini yuqori baholaydi, shuning uchun tekshiruvchi alohida va yangi kontekstda ishlaydi (P25):
-- unga repo, o'zgarishlar (`git diff` va `handoff.md` → `Changed files`) va rejadagi kriteriyalar beriladi, subyektiv kriteriya bo'lsa — rejadagi rubric ham;
-- ko'rsatma: "Kriteriyalarga mos kelmaydigan joyni qidiring, injiq bo'ling. Har topilma dalil bilan (fayl:qator), dalilsiz fikr yozmang.";
-- **skeptik rejimi** (topilmalar ro'yxati uchun, masalan `ph-doctor` yoki audit natijasi): har topilma boshqa mustaqil agentga beriladi, u topilmani rad etishga urinadi; egasiga faqat tasdiqlangan topilma beriladi;
-- tekshiruvchi va ishni qilgan agent kelishmasa, agent ikkala fikrni dalil bilan ko'rsatadi, qarorni egasi qiladi.
+At the end of a large task, with the owner's consent. The agent that did the work grades its own work high, so the checker is separate and works in a new context (P25):
+- it gets the repo, the changes (`git diff` and `handoff.md` → `Changed files`) and the criteria of the plan, and for a subjective criterion the rubric of the plan too;
+- the instruction: "Look for places that do not match the criteria, be picky. Each finding with evidence (file:line); write no opinion without evidence.";
+- **skeptic mode** (for a list of findings, for example of `ph-doctor` or an audit): each finding goes to another independent agent, which tries to refute it; the owner gets only the confirmed findings;
+- when the checker and the agent that did the work disagree, the agent shows both views with evidence, and the owner decides.
 
-Hujjat loyihasida tekshiruvchi matnni kriteriyalar, uslub qo'llanmasi va faktlar bo'yicha ko'radi; kod loyihasida diff, testlar va invariant'lar bo'yicha.
+In a document project the checker looks at the text by the criteria, the style guide and the facts; in a code project by the diff, the tests and the invariants.
 
 ## Simplification experiment
 
-`ph-doctor` da, ixtiyoriy, egasining roziligi bilan. Har harness qoidasi model biror narsani ishonchli qila olmagani uchun qo'shilgan; model kuchaygan sari ba'zisi ortiqcha bo'ladi (`principles.md` → Sources, [28]):
-1. Modelning zaifligini to'ldiradigan bitta qoida yoki komponentni tanla (vaqtinchalik qoidaning `Remove when:` sharti shunga yordam beradi).
-2. Uni loyiha nusxasida vaqtincha olib tashla.
-3. Doimiy to'plamni eng kichik qo'llab-quvvatlanadigan model bilan ishga tushir: harness kichik model bilan ham ishlashi kerak (P18).
-4. `to'g'ri` javoblar soni kamaymasa va "nima noaniq?" savolida yangi bo'shliq chiqmasa, olib tashlashni structural taklif qil; aks holda qoldir yoki yengilrog'iga almashtir.
+In `ph-doctor`, optional, with the owner's consent. Each harness rule was added because a model could not do something reliably; as models grow stronger, some become unneeded (`principles.md` → Sources, [28]):
+1. Pick one rule or component that makes up for a weakness of the model (the `Remove when:` condition of a temporary rule helps here).
+2. Remove it for a while in a copy of the project.
+3. Run the fixed set with the smallest supported model: the harness has to work with a small model too (P18).
+4. When the number of `correct` answers does not drop and no new gap shows on the "what was unclear?" question, propose the removal as a structural fix; otherwise keep it or replace it with a lighter one.
 
-## Start set check without tokens (A51)
+## Start set check without tokens (A58)
 
-5 ta universal savolning har biri uchun start set qayerda javob berishini yoki qaysi faylga olib borishini top (fayl → bo'lim). Javobsiz savol — xaritadagi bo'shliq: tegishli faylga yoki xaritaga yoz (P22). Bu check sinov agentisiz, `ph-init` va `ph-doctor` da bajariladi.
+For each of the 5 universal questions, find where the start set answers it or which file it leads to (file → section). A question without an answer is a gap in the map: write it into the matching file or the map (P22). This check runs without a test agent, in `ph-init` and `ph-doctor`.
 
 ## Recording results
 
-Tarix yozuvining `Checks:` maydoniga yoz: qaysi sinov, model, token va tool chaqiruvlari, har savol bahosi, noaniq joylar, nima tuzatildi. Byudjetni oldindan ayt: mustaqil tekshiruvchi katta diff'da kutilganidan ko'p sarflaydi (yuz minglab token), shuning uchun unga ko'rib chiqiladigan fayllar ro'yxatini ber va topilmalar sonini 10 tagacha chekla. Doimiy to'plamning oxirgi natijasini `playbooks/pan-harness.md` → `## Test questions` dagi "Oxirgi natijalar" qatoriga ham yoz: keyingi sinov u bilan solishtiriladi.
+Write into the `Checks:` field of the history entry: which test, the model, tokens and tool calls, the grade of each question, the unclear places, what was fixed. Tell the budget beforehand: an independent checker spends more than expected on a big diff (hundreds of thousands of tokens), so give it the list of files to review and limit the findings to 10. Write the last result of the fixed set into the "Last results" line of `playbooks/pan-harness.md` → `## Test questions` too: the next test is compared with it.

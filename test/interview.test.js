@@ -1,7 +1,8 @@
-// The ph-init interview and plan: the owner is asked only what nobody else can know (the goal, what
-// "done" means, the limits, the git identity when it is missing); every other style, workflow and
-// safety choice is a standard choice that the short plan shows in plain words and nobody waits on.
-// The plan holds what the owner decides on: no file list, no internal label.
+// The ph-init interview and plan: the first message asks the chat language in three languages; then
+// the owner is asked only what nobody else can know (the goal, what "done" means, the limits, the git
+// identity when it is missing); every other style, workflow and safety choice is a standard choice
+// that the short plan shows in plain words and nobody waits on. The plan holds what the owner decides
+// on: no file list, no internal label.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -23,112 +24,156 @@ function section(text, prefix) {
 }
 const ids = (text) => [...text.matchAll(/^\| (S\d+) \|/gm)].map((m) => m[1]);
 
-test('style-questions.md asks four things and keeps every other choice as a standard choice', () => {
+test('style-questions.md asks five things and keeps every other choice as a standard choice', () => {
   const text = read(CORE, 'references', 'style-questions.md');
-  assert.deepEqual(ids(section(text, 'Asked')), ['S1', 'S29', 'S30', 'S31'], 'the asked rows');
+  assert.deepEqual(ids(section(text, 'Asked')), ['S1', 'S2', 'S3', 'S4', 'S31'], 'the asked rows');
   const standard = text.split('\n').filter((l) => l.startsWith('## Standard choices'));
   assert.equal(standard.length, 4, standard.join(' | '));
   const rest = standard.flatMap((h) => ids(section(text, h.slice(3))));
-  const expected = Array.from({ length: 27 }, (_, i) => `S${i + 2}`); // S2..S28
-  assert.deepEqual([...rest].sort(), [...expected].sort(), 'S2..S28 each once, in the standard choices');
+  const expected = Array.from({ length: 26 }, (_, i) => `S${i + 5}`); // S5..S30
+  assert.deepEqual([...rest].sort(), [...expected].sort(), 'S5..S30 each once, in the standard choices');
   assert.doesNotMatch(text, /^## Round \d/m, 'no rounds of questions any more');
   assert.doesNotMatch(text, /^## Project knowledge/m, 'the project knowledge moved into the asked rows');
-  assert.match(text, /javob kutilmaydi/, 'a standard choice is not waited on');
-  assert.match(text, /rejada ro'yxatlanadi/, 'an open issue is listed in the plan: plan.md does not exist before the files are created');
-  assert.match(text, /Mavjud loyihada \(repo bor\)/, 'an existing project is asked in one round');
-  assert.doesNotMatch(text, /Bitta xizmat va git/, 'the size choice does not depend on a service in a document project');
+  assert.match(text, /no answer is waited for/, 'a standard choice is not waited on');
+  assert.match(text, /the plan's list of open issues/, 'an open issue is listed in the plan: plan.md does not exist before the files are created');
+  assert.match(text, /In an existing project \(a repo is there\)/, 'an existing project is asked in one round');
+  assert.doesNotMatch(text, /one service and git/i, 'the size choice does not depend on a service in a document project');
+});
+
+test('the language question: the first message, in three languages, four options, outside the count', () => {
+  const lines = ['Which language should we talk in? / Qaysi tilda gaplashamiz? / На каком языке будем общаться?',
+    'a. English', "b. O'zbek", 'c. Русский', 'd. Other'].join('\n');
+  const style = read(CORE, 'references', 'style-questions.md');
+  const question = section(style, 'Language question');
+  assert.ok(question.includes(lines), 'the question as it is, in style-questions.md');
+  for (const part of ['no Q number and no recommendation line', 'does not count toward the question limit',
+    'ask again in the three languages', 'the harness is in English', 'When a harness is there, the question is not asked']) {
+    assert.ok(question.includes(part), `language question: ${part}`);
+  }
+  const situation = section(read(CORE, 'references', 'init.md'), '0. Finding the situation');
+  assert.ok(situation.includes(lines), 'the question as it is, in init.md');
+  assert.match(situation, /the first message to the owner is always this question/);
+  assert.match(situation, /in an existing project 2 \(the language question, then the interview\), in an empty folder 3/, 'the rounds');
+  const skill = read(ROOT, 'skills-src', 'ph-init', 'SKILL.md');
+  assert.match(skill, /^0\. \*\*Situation\.\*\* .*the first message is the language question in three languages/m);
 });
 
 test('the asked rows carry the open questions and the topics of the old project-knowledge list', () => {
   const asked = section(read(CORE, 'references', 'style-questions.md'), 'Asked');
   const row = (id) => new RegExp(`^\\| ${id} \\|(.*)$`, 'm').exec(asked)[1];
-  assert.match(row('S1'), /yaqin rejalar/);
-  assert.match(row('S1'), /ma'lum muammolar/);
-  assert.match(row('S1'), /alohida tasdiq savoli yo'q/, 'the goal is restated in the plan, not confirmed in a question of its own');
-  assert.match(row('S1'), /README va manifestdan topilgan maqsad/, 'in an existing project the agent proposes the goal it found');
-  assert.match(row('S1'), /egasining ismi so'ralmaydi/, "the owner's name is not a question: it costs a line of the plan and nothing depends on it");
-  assert.match(read(CORE, 'references', 'init.md'), /`\{\{egasi\}\}` ga egasi o'zi aytgan ism, aytmagan bo'lsa/, 'the placeholder of the owner is filled without a question');
-  assert.match(row('S29'), /Git'da identity yo'q bo'lsa/);
-  for (const part of ['natija qanday yaratiladi', 'qanday tekshiriladi', 'atamalar, tuzilma, iqtibos shakli']) assert.match(row('S30'), new RegExp(part), `S30: ${part}`);
-  for (const part of ['shaxsiy yoki maxfiy ma', 'qaytarib bo\'lmaydigan amal', 'tashqi xizmat', 'doimiy ishlaydigan xizmat']) assert.match(row('S31'), new RegExp(part), `S31: ${part}`);
-  assert.match(row('S31'), /`live-system=yes`/, 'the service part only for a live system');
+  assert.match(row('S1'), /near plans/);
+  assert.match(row('S1'), /known problems/);
+  assert.match(row('S1'), /no separate confirmation question/, 'the goal is restated in the plan, not confirmed in a question of its own');
+  assert.match(row('S1'), /the goal found in the README and the manifest/, 'in an existing project the agent proposes the goal it found');
+  assert.match(row('S1'), /the owner's name is not asked/, "the owner's name is not a question: it costs a line of the plan and nothing depends on it");
+  assert.match(read(CORE, 'references', 'init.md'), /`\{\{owner\}\}` gets the name the owner gave, otherwise/, 'the placeholder of the owner is filled without a question');
+  assert.match(row('S2'), /Git has no identity/);
+  for (const part of ['how the result is made', 'how it is checked', 'terms, structure, quotation form']) assert.match(row('S3'), new RegExp(part), `S3: ${part}`);
+  for (const part of ['personal or confidential data', 'irreversible action', 'outside services', 'a service that runs all the time']) assert.match(row('S4'), new RegExp(part), `S4: ${part}`);
+  assert.match(row('S4'), /`live-system=yes`/, 'the service part only for a live system');
 });
 
 test('init.md interview: two rounds, an own suggestion in every open question, "I do not know" is an answer, at most 5 questions', () => {
   const interview = section(read(CORE, 'references', 'init.md'), '3. Interview');
-  for (const part of ['`style-questions.md` → `Asked`', 'standart tanlov', 'ko\'pi bilan 5', 'ikki raundda', 'o\'z taklifingni yoz', 'Bilmayman', 'Awaiting owner decision', 'javob kutilmaydi', 'axborot sifatida',
-    'rejada ro\'yxatlanadi', 'kriteriyalarni egasidan so\'rama', 'taklif yozilmaydi', 'javob hisoblanadi (savol javobsiz qolgan emas)', 'README dan topib',
-    '1–2 gap sababi bilan', 'yozishdan oldin `templates/AGENTS.md.tmpl` → `Planning` ni o\'qi', 'Mavjud loyihada (repo bor)', 'reja tasdig\'i bu songa kirmaydi',
-    'o\'sha qism ochiq masala bo\'ladi']) {
+  for (const part of ['`style-questions.md` → `Asked`', 'standard choice', 'at most 5', 'in two rounds', 'write your proposal', "I don't know", 'Awaiting owner decision',
+    'no answer is waited for', 'as information', "the plan's list of open issues", 'do not ask the owner for the criteria', 'no proposal is written',
+    'counts as an answer (the question is not left open)', 'find the goal in the README', 'with a reason of 1–2 sentences',
+    'Before writing Q1, read `templates/pan-harness/playbooks/large-task.md.tmpl` → `Planning`', 'In an existing project (a repo is there)',
+    "neither the language question nor the plan's approval counts", 'that part becomes an open issue']) {
     assert.ok(interview.includes(part), `interview: ${part}`);
   }
-  assert.doesNotMatch(interview, /tavsiya bo'yicha qabul qilinsinmi/, 'ph-init has no accept-the-recommendation list');
+  assert.doesNotMatch(interview, /accept as recommended/, 'ph-init has no accept-the-recommendation list');
+});
+
+test('the artifact-folder question: options by the type of the artifacts, the owner\'s own name last, no docs/, a move proposed', () => {
+  const row = read(CORE, 'references', 'style-questions.md').split('\n').find((l) => l.startsWith('| S31 |'));
+  assert.ok(row, 'the S31 row');
+  for (const part of ['artifact-folder', '`src/`', '`app/`', '`documents/`', '`files/`', '`data/`', '`datasets/`', '`artifacts/`', '`work/`', "the owner's own folder name"]) {
+    assert.ok(row.includes(part), `S31: ${part}`);
+  }
+  assert.match(row, /never `docs\/`/, 'docs/ is not offered');
+  const init = read(CORE, 'references', 'init.md');
+  assert.match(section(init, '3. Interview'), /S31/, 'the interview asks the artifact-folder');
+  for (const part of ['the goal and the expected benefit', 'what moves', 'stays in the root', '`ph-init` moves no artifact', 'the first large task', 'when the owner declines']) {
+    assert.ok(init.includes(part), `the move proposal: ${part}`);
+  }
+  assert.match(section(init, '5. Create'), /artifact-folder.*empty/, 'an empty project gets the artifact-folder empty');
+});
+
+test('init.md plan check: as many grep commands as the report part holds, plus the harness terms grep', () => {
+  const words = ['no', 'one', 'two', 'three', 'four', 'five'];
+  const n = (read(CORE, 'skill-parts', 'report.md').match(/^- `grep -nE /gm) || []).length;
+  const plan = section(read(CORE, 'references', 'init.md'), '4. Plan');
+  assert.ok(plan.includes(`the ${words[n]} \`grep\` commands of \`Report\``), `plan: the ${words[n]} grep commands of Report`);
+  assert.ok(plan.includes(`the ${words[n + 1]} \`grep\` results are clean`), `plan: the ${words[n + 1]} grep results`);
 });
 
 test('init.md plan: short, for the owner, no file list, the migration table only when old content moves', () => {
   const init = read(CORE, 'references', 'init.md');
   const plan = section(init, '4. Plan');
-  for (const part of ['15 qatordan oshmasin', 'egasi qaror qiladigan narsadan iborat', 'standart tanlovlar', 'Fayllar ro\'yxati rejada emas', 'faqat eski mazmun ko\'chirilganda', 'ikki `grep`',
-    'vaqt zonasi', 'Murojaat shaklini va texnik darajani yozma', '`mktemp`', '`wc -lm`', 'qator hisobiga kirmaydi', 'ochiq masalalar',
-    "to'rt qatorda, har qatorda shu so'zlar bo'lsin", "ish turlari, bittadan va hisobot", "Harness ichida qoida yoki ro'yxat borligi kriteriya emas",
-    "Harness atamasini", "grep -niE 'start set|profile|playbook|handoff|migration'", 'belgi hisobiga ham', "masalan, ko'chiriladigan eski fayllar"]) {
+  for (const part of ['up to 15 lines', 'It holds what the owner decides', 'the standard choices', 'The file list is not in the plan', 'only when old content moves',
+    'the three `grep` commands', 'time zone', 'Leave out the form of address and the technical level', '`mktemp`', '`LC_ALL=C.UTF-8 wc -lm`', 'counts neither in the lines',
+    'the open issues', 'The plan calls the folders the project-folder and the artifact-folder', 'in four lines, each with these words', 'task types, one at a time and the report', 'A rule or a list inside the harness is not a criterion',
+    'Leave the harness terms', "grep -niE 'start set|profile|playbook|handoff|migration'", 'nor in the characters', 'for example the old files to move']) {
     assert.ok(plan.includes(part), `plan: ${part}`);
   }
   assert.match(section(init, '2. Facts'), /`date '\+%Z %z'`/, 'the time zone is a fact the agent finds with a command, quoted so that the shell passes one argument');
-  assert.doesNotMatch(plan, /yaratiladigan fayllar/, 'the plan does not list the files to create');
+  assert.doesNotMatch(plan, /files to create/, 'the plan does not list the files to create');
   const prep = section(init, '1. Preparation');
-  assert.match(prep, /`Pre-init state`[^\n]*reja tasdig'idan keyin|reja tasdig'idan keyin[^\n]*`Pre-init state`/i,'the commit of the owner\'s own changes waits for the approval');
-  assert.doesNotMatch(prep, /S11 birinchi raundda/, 'the commit order is not asked in a round');
-  assert.match(prep, /o'zing kiritgan `\.gitignore` o'zgarishi egasining commit qilinmagan o'zgarishi emas/i, "the agent's own .gitignore change is not the owner's work");
+  assert.match(prep, /After the plan's approval[^\n]*`Pre-init state`/, "the commit of the owner's own changes waits for the approval");
+  assert.doesNotMatch(prep, /S6 in the first round/, 'the commit order is not asked in a round');
+  assert.match(prep, /The `\.gitignore` change you made is not the owner's uncommitted change/, "the agent's own .gitignore change is not the owner's work");
 });
 
 test('the core rules ask only what the owner alone can know, and ph-init says the same in its steps', () => {
   const rules = read(CORE, 'skill-parts', 'core-rules.md');
-  const nine = /^9\. \*\*Faqat egasi bila oladigan narsani so'ra\.\*\* (.*)$/m.exec(rules);
+  const nine = /^9\. \*\*Ask only what only the owner can know\.\*\* (.*)$/m.exec(rules);
   assert.ok(nine, 'core rule 9');
-  for (const part of ['`references/style-questions.md` → `Asked`', 'standart tanlov', 'javob kutilmaydi', 'rejada']) assert.ok(nine[1].includes(part), `core rule 9: ${part}`);
-  assert.doesNotMatch(rules, /Egasining uslubini so'ra/);
-  assert.match(rules, /^1\. \*\*Faktni o'zing top, qarorni egasi qiladi\.\*\* .*savolsiz/m, 'core rule 1: a clear, safe standard choice is taken without a question');
+  for (const part of ['`references/style-questions.md` → `Asked`', 'standard choices', 'no answer is waited for', 'the plan shows them']) assert.ok(nine[1].includes(part), `core rule 9: ${part}`);
+  assert.doesNotMatch(rules, /Ask the owner about the style/);
+  assert.match(rules, /^1\. \*\*Find the facts yourself, the owner makes the decisions\.\*\* .*without a question/m, 'core rule 1: a clear, safe standard choice is taken without a question');
   const skill = read(ROOT, 'skills-src', 'ph-init', 'SKILL.md');
   const steps = Object.fromEntries([...skill.matchAll(/^(\d)\. \*\*([^*]+)\*\* (.*)$/gm)].map((m) => [m[1], m[3]]));
   assert.match(steps['3'], /`Asked`/);
-  assert.match(steps['3'], /standart tanlov/);
-  assert.match(steps['3'], /templates\/AGENTS\.md\.tmpl` → `Planning`/, 'the shape of the first question is read before it is written');
-  assert.match(steps['4'], /15 qatordan oshmaydi/);
-  assert.doesNotMatch(steps['3'], /\(S11\)/, 'the commit order is not asked in the first round');
+  assert.match(steps['3'], /standard choices/);
+  assert.match(steps['3'], /templates\/pan-harness\/playbooks\/large-task\.md\.tmpl` → `Planning`/, 'the shape of the first question is read before it is written');
+  assert.match(steps['4'], /within 15 lines/);
+  assert.doesNotMatch(steps['3'], /\(S6\)/, 'the commit order is not asked in the first round');
 });
 
 test('the AGENTS.md template fills the rules from standard choices and drops a missing answer', () => {
   const head = read(CORE, 'templates', 'AGENTS.md.tmpl').split('-->')[0];
-  for (const part of ['standart tanlov', 'Har qoidaning manbasi: egasining gapi yozilgan F yoki standart tanlovlar qarori (D)', 'texnik darajasini aytmagan bo\'lsa', 'murojaat shaklini aytmagan bo\'lsa']) {
+  for (const part of ['the standard choices', "The source of each rule: the F with the owner's words or the decision on the standard choices (D)",
+    'If the owner named no technical level', 'If the owner named no form of address']) {
     assert.ok(head.includes(part), `template header: ${part}`);
   }
 });
 
-test('README and the Uzbek guide describe the new interview', () => {
+test('README describes the new interview', () => {
   const en = read(ROOT, 'README.md');
-  const uz = read(ROOT, 'docs', 'uz.md');
   assert.match(en, /asks only what you alone can answer/);
   assert.doesNotMatch(en, /each with options and a recommendation/);
-  assert.match(uz, /faqat siz bila oladigan narsani so'raydi/);
-  assert.doesNotMatch(uz, /har biri variant va tavsiya bilan\), reja tuzadi/);
 });
 
 test('the principle: a clear, safe standard choice is taken without a question, the owner changes it', () => {
   const principles = read(CORE, 'references', 'principles.md');
   const p20 = /^- \*\*P20\. .*$/m.exec(principles);
   assert.ok(p20, 'P20');
-  for (const part of ['savolsiz olinadi', 'rejada ko\'rsatiladi', 'egasi o\'zgartiradi', '[31]']) assert.ok(p20[0].includes(part), `P20: ${part}`);
+  for (const part of ['is taken without a question', 'shown in the plan', 'the owner changes it', '[31]']) assert.ok(p20[0].includes(part), `P20: ${part}`);
   assert.match(principles, /^31\. GitHub Spec Kit.*clarify/m, 'source 31');
 });
 
-test('the scenarios expect the short interview, the plan without labels and no waiting on standard choices', () => {
+test('the scenarios expect the language question, the short interview, the plan without labels and no waiting on standard choices', () => {
   const sc = read(ROOT, 'evals', 'scenarios.md');
-  assert.doesNotMatch(sc, /S11 birinchi raundda/);
-  assert.doesNotMatch(sc, /tasdiqlatilgan/);
+  assert.doesNotMatch(sc, /S6 in the first round/);
+  assert.match(sc, /A test runs only after the change: a run before is not needed\./);
   const e10 = section(sc, 'E10.');
-  for (const part of ['ko\'pi bilan 5 ta savol', '15 qatordan oshmaydi', 'javob kutilmagan']) assert.ok(e10.includes(part), `E10: ${part}`);
+  for (const part of ['at most 5 questions (the language question does not count)', 'within 15 lines', 'no answer to them is waited for',
+    'the first message is the language question in three languages with four options', 'no `ph-init` and no language question']) {
+    assert.ok(e10.includes(part), `E10: ${part}`);
+  }
+  assert.match(section(sc, 'E1.'), /The first message is the language question in three languages with four options/);
   const e2 = section(sc, 'E2.');
-  assert.match(e2, /rejada ko'chirish jadvali bor/);
-  assert.match(e2, /jadvaldan tashqari 15 qatordan oshmaydi/, 'the migration table is not counted in the 15 lines');
+  assert.match(e2, /holds the table of moves/);
+  assert.match(e2, /within 15 lines apart from the table/, 'the migration table is not counted in the 15 lines');
 });
