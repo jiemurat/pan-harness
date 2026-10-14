@@ -2,6 +2,17 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 2.5.2
+
+Three new skills turn documents into Markdown and check the result against the original file.
+
+- `ph-pdf-to-md` converts PDFs and scans: the text layer is copied, scanned or garbled pages are read from the page image, and a second reading checks the words and numbers.
+- `ph-word-to-md` converts Word documents (`.docx`, `.doc`) with list numbers as Word shows them, tables, footnotes and links, and checks every word and number.
+- `ph-excel-to-md` converts Excel workbooks (`.xlsx`, `.xlsm`, `.xls`, `.xlsb`): each sheet becomes a heading and a table with every cell as Excel shows it, and the check compares every cell, number and date.
+- The converters run Python 3.8 or newer; when a file needs poppler, tesseract or LibreOffice, the skills install them (README → Requirements).
+- Each skill description has its own limit of 300 bytes, in place of 1000 bytes for all skills together: an agent reads the description of every installed skill in each session.
+- There are no migration steps for the harness.
+
 ## 2.4.2
 
 The skills and the harness are in English, and `ph-init` asks which language to talk in. This version starts the standard afresh: the earlier versions stay in the git history and on npm.

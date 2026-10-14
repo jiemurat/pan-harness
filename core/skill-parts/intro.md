@@ -1,6 +1,6 @@
 Panoramic Harness (pan-harness for short) is a project's system of knowledge and rules for agents. Any agent and model can read it: everything is plain Markdown, nothing relies on a file or memory of one tool. The agent of each session is new and does not remember the chat before, so everything needed to go on with the project is written in the repo.
 
-The pan-harness works with the five skills of ph-paket (`@jiemurat/pan-harness`):
+The pan-harness works with these five skills of ph-paket (`@jiemurat/pan-harness`):
 
 | Skill | When | Result |
 |---|---|---|

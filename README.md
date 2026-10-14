@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/@jiemurat/pan-harness)](https://www.npmjs.com/package/@jiemurat/pan-harness) [![ci](https://github.com/jiemurat/pan-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/jiemurat/pan-harness/actions/workflows/ci.yml)
 
-Panoramic Harness (pan-harness for short) is a set of plain-text rules and knowledge that let any AI coding agent run a project like its owner. The harness is three things in your repository: `AGENTS.md`, `PAN-HARNESS.md` and a `pan-harness/` folder. Any agent and any model can read them; nothing depends on one tool's memory or settings. This package installs five [agent skills](https://agentskills.io) that build and maintain the harness.
+Panoramic Harness (pan-harness for short) is a set of plain-text rules and knowledge that let any AI coding agent run a project like its owner. The harness is three things in your repository: `AGENTS.md`, `PAN-HARNESS.md` and a `pan-harness/` folder. Any agent and any model can read them; nothing depends on one tool's memory or settings. This package installs eight [agent skills](https://agentskills.io): five build and maintain the harness, three turn documents into Markdown.
 
 | Skill | What it does |
 |---|---|
@@ -11,6 +11,9 @@ Panoramic Harness (pan-harness for short) is a set of plain-text rules and knowl
 | `ph-update` | Updates the skills to the newest version, migrates the harness to it and runs a full `ph-doctor` |
 | `ph-grilling` | A planning interview in rounds (adapted from [mattpocock/skills](https://github.com/mattpocock/skills), MIT) |
 | `ph-writing-for-agents` | How to write any text an agent reads: skills, `AGENTS.md`, prompts (the writing-for-agents skill of [mattpocock/skills](https://github.com/mattpocock/skills), MIT, renamed only) |
+| `ph-pdf-to-md` | Converts PDFs and scans into Markdown: the text layer is copied, scanned or garbled pages are read from the page image, and a second reading checks the words and numbers |
+| `ph-word-to-md` | Converts Word documents (`.docx`, `.doc`) into Markdown with list numbers as Word shows them, tables, footnotes and links, and checks every word and number |
+| `ph-excel-to-md` | Converts Excel workbooks (`.xlsx`, `.xlsm`, `.xls`, `.xlsb`) into Markdown, every cell as Excel shows it, and checks every cell, number and date |
 
 ## Install
 
@@ -97,6 +100,8 @@ The skills and the harness are in English, so any agent and model reads them the
 ## Requirements
 
 Node.js 18 or newer, and git (`ph-init` installs git when it is missing).
+
+The converters run Python 3.8 or newer. `ph-pdf-to-md` also uses poppler and, for scanned pages, tesseract; `ph-word-to-md` uses LibreOffice for `.doc` files and `ph-excel-to-md` for `.xls` and `.xlsb` files. The skills install these tools when they are missing.
 
 ## Development
 

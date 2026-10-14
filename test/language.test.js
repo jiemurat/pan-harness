@@ -4,8 +4,9 @@
 // the line is checked. A line is flagged when it holds a Cyrillic letter, an apostrophe between two
 // letters that is not an English contraction (Uzbek writes o and g with one, and joins suffixes to
 // English terms with one), an Uzbek word, a word that starts with an Uzbek stem, or a word that
-// ends in an Uzbek verb or case ending. The words below carry a "_" after their first letter and
-// are joined at run time, so this file holds none of them.
+// ends in an Uzbek verb or case ending. In a Python file the string prefixes (f'', r'', b'', u'',
+// rb'') are taken out first: they are not an apostrophe between two letters. The words below carry
+// a "_" after their first letter and are joined at run time, so this file holds none of them.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -48,6 +49,7 @@ const ENDINGS = joined([
 ]);
 
 const W = '[\\p{L}\\p{N}_]';
+const PY_PREFIX = new RegExp(`(?<!${W})(?:[rbuf]|rb|br|rf|fr)(?=['"])`, 'giu');
 const APOSTROPHES = "'\\u2019\\u02BB\\u02BC\\u2018"; // regex escapes of the right, turned, modifier and left single quotes
 const RULES = [
   ['Cyrillic letter', /\p{Script=Cyrillic}/u],
@@ -81,7 +83,7 @@ test('the package texts hold no Uzbek or Russian beyond the language question', 
   for (const dir of DIRS) {
     for (const p of files(path.join(ROOT, dir))) {
       fs.readFileSync(p, 'utf8').split('\n').forEach((line, i) => {
-        const why = foreign(line);
+        const why = foreign(p.endsWith('.py') ? line.replace(PY_PREFIX, '') : line);
         if (why) found.push(`${path.relative(ROOT, p).split(path.sep).join('/')}:${i + 1}: ${why}: ${line.trim().slice(0, 80)}`);
       });
     }
@@ -97,4 +99,5 @@ test('the detector flags Uzbek and Russian and passes English', () => {
   for (const line of ["It's the owner's call; don't push.", 'Run `git status` and read the plan.', QUESTION.join(' / ')]) {
     assert.equal(foreign(line), null, line);
   }
+  assert.equal(foreign(joined(["print(f_'cell {x}', rb_'raw', u_'text')"])[0].replace(PY_PREFIX, '')), null);
 });

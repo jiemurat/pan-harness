@@ -3,7 +3,7 @@ name: ph-doctor
 description: Checks and fixes the pan-harness (Panoramic Harness) of a project against the standard: a conformance table, mechanical fixes, structural proposals, migration. Use it when asked to check the harness, AGENTS.md or the agent rules, and for the monthly upkeep.
 license: MIT
 metadata:
-  version: "2.4.2"
+  version: "2.5.2"
   package: "@jiemurat/pan-harness"
 ---
 
@@ -11,7 +11,7 @@ metadata:
 
 Panoramic Harness (pan-harness for short) is a project's system of knowledge and rules for agents. Any agent and model can read it: everything is plain Markdown, nothing relies on a file or memory of one tool. The agent of each session is new and does not remember the chat before, so everything needed to go on with the project is written in the repo.
 
-The pan-harness works with the five skills of ph-paket (`@jiemurat/pan-harness`):
+The pan-harness works with these five skills of ph-paket (`@jiemurat/pan-harness`):
 
 | Skill | When | Result |
 |---|---|---|

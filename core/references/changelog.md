@@ -4,6 +4,10 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 2.5.2
+
+Three skills that convert documents into Markdown join ph-paket: `ph-pdf-to-md`, `ph-word-to-md` and `ph-excel-to-md`. The harness standard is the same. There are no migration steps.
+
 ## 2.4.2
 
 The first version. There are no migration steps: `ph-init` makes the harness in this standard.

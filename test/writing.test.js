@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseFrontmatter } from '../lib/frontmatter.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CORE = path.join(ROOT, 'core');
@@ -42,17 +43,18 @@ test('no glossed term in brackets in the agent texts', () => {
   assert.deepEqual(hits, []);
 });
 
-test('skill descriptions stay within 1000 bytes together', () => {
-  const sizes = fs.readdirSync(path.join(ROOT, 'skills-src')).map((s) => {
-    const body = fs.readFileSync(path.join(ROOT, 'skills-src', s, 'SKILL.md'), 'utf8');
-    return [s, Buffer.byteLength(/^description: (.*)$/m.exec(body)[1], 'utf8')];
-  });
-  const total = sizes.reduce((n, [, b]) => n + b, 0);
-  assert.ok(total <= 1000, `${total} bytes: ${sizes.map(([s, b]) => `${s} ${b}`).join(', ')}`);
+test('each skill description stays within 300 bytes', () => {
+  const over = [];
+  for (const s of fs.readdirSync(path.join(ROOT, 'skills-src'))) {
+    const { data } = parseFrontmatter(fs.readFileSync(path.join(ROOT, 'skills-src', s, 'SKILL.md'), 'utf8'));
+    const bytes = Buffer.byteLength(data.description, 'utf8');
+    if (bytes > 300) over.push(`${s} ${bytes}`);
+  }
+  assert.deepEqual(over, []);
 });
 
 test('a skill description says what the skill does and when to use it, its first sentence within 160 characters', () => {
-  for (const s of ['ph-init', 'ph-doctor', 'ph-update']) {
+  for (const s of ['ph-init', 'ph-doctor', 'ph-update', 'ph-pdf-to-md', 'ph-word-to-md', 'ph-excel-to-md']) {
     const description = /^description: (.*)$/m.exec(fs.readFileSync(path.join(ROOT, 'skills-src', s, 'SKILL.md'), 'utf8'))[1];
     const first = description.split(/(?<=\.)\s/)[0];
     assert.ok(first.length <= 160, `${s}: ${first.length} characters`);
