@@ -1,6 +1,7 @@
 // The ph-init interview and plan: the first message asks the chat language in three languages; then
-// the owner is asked only what nobody else can know (the goal, what "done" means, the limits, the git
-// identity when it is missing); every other style, workflow and safety choice is a standard choice
+// the owner is asked only what nobody else can know (the goal, the limits, the artifact-folder, the git
+// identity when it is missing); what "done" means is agreed in each task's plan, the checks the agent
+// finds go into the plan as information; every other style, workflow and safety choice is a standard choice
 // that the short plan shows in plain words and nobody waits on. The plan holds what the owner decides
 // on: no file list, no internal label.
 import { test } from 'node:test';
@@ -24,9 +25,11 @@ function section(text, prefix) {
 }
 const ids = (text) => [...text.matchAll(/^\| (S\d+) \|/gm)].map((m) => m[1]);
 
-test('style-questions.md asks five things and keeps every other choice as a standard choice', () => {
+test('style-questions.md asks four things and keeps every other choice as a standard choice', () => {
   const text = read(CORE, 'references', 'style-questions.md');
-  assert.deepEqual(ids(section(text, 'Asked')), ['S1', 'S2', 'S3', 'S4', 'S31'], 'the asked rows');
+  assert.deepEqual(ids(section(text, 'Asked')), ['S1', 'S2', 'S4', 'S31'], 'the asked rows');
+  assert.doesNotMatch(text, /^\| S3 \|/m, 'what "done" means is not a question: each task\'s plan agrees it');
+  assert.match(text, /usually 3/, 'the usual number of questions');
   const standard = text.split('\n').filter((l) => l.startsWith('## Standard choices'));
   assert.equal(standard.length, 4, standard.join(' | '));
   const rest = standard.flatMap((h) => ids(section(text, h.slice(3))));
@@ -68,7 +71,7 @@ test('the asked rows carry the open questions and the topics of the old project-
   assert.match(row('S1'), /the owner's name is not asked/, "the owner's name is not a question: it costs a line of the plan and nothing depends on it");
   assert.match(read(CORE, 'references', 'init.md'), /`\{\{owner\}\}` gets the name the owner gave, otherwise/, 'the placeholder of the owner is filled without a question');
   assert.match(row('S2'), /Git has no identity/);
-  for (const part of ['how the result is made', 'how it is checked', 'terms, structure, quotation form']) assert.match(row('S3'), new RegExp(part), `S3: ${part}`);
+  for (const part of ['an invariant', 'a step the repo does not show']) assert.match(row('S4'), new RegExp(part), `S4: ${part}`);
   for (const part of ['personal or confidential data', 'irreversible action', 'outside services', 'a service that runs all the time']) assert.match(row('S4'), new RegExp(part), `S4: ${part}`);
   assert.match(row('S4'), /`live-system=yes`/, 'the service part only for a live system');
 });
@@ -79,7 +82,7 @@ test('init.md interview: two rounds, an own suggestion in every open question, "
     'no answer is waited for', 'as information', "the plan's list of open issues", 'do not ask the owner for the criteria', 'no proposal is written',
     'counts as an answer (the question is not left open)', 'find the goal in the README', 'with a reason of 1–2 sentences',
     'Before writing Q1, read `templates/pan-harness/playbooks/large-task.md.tmpl` → `Planning`', 'In an existing project (a repo is there)',
-    "neither the language question nor the plan's approval counts", 'that part becomes an open issue']) {
+    "neither the language question nor the plan's approval counts", 'that part becomes an open issue', 'usually 3', "agreed in each task's plan"]) {
     assert.ok(interview.includes(part), `interview: ${part}`);
   }
   assert.doesNotMatch(interview, /accept as recommended/, 'ph-init has no accept-the-recommendation list');
@@ -114,7 +117,8 @@ test('init.md plan: short, for the owner, no file list, the migration table only
   for (const part of ['up to 15 lines', 'It holds what the owner decides', 'the standard choices', 'The file list is not in the plan', 'only when old content moves',
     'the three `grep` commands', 'time zone', 'Leave out the form of address and the technical level', '`mktemp`', '`LC_ALL=C.UTF-8 wc -lm`', 'counts neither in the lines',
     'the open issues', 'The plan calls the folders the project-folder and the artifact-folder', 'in four lines, each with these words', 'task types, one at a time and the report', 'A rule or a list inside the harness is not a criterion',
-    'Leave the harness terms', "grep -niE 'start set|profile|playbook|handoff|migration'", 'nor in the characters', 'for example the old files to move']) {
+    'Leave the harness terms', "grep -niE 'start set|profile|playbook|handoff|migration'", 'nor in the characters', 'for example the old files to move',
+    "the project's full check command found in the repo", 'no check found']) {
     assert.ok(plan.includes(part), `plan: ${part}`);
   }
   assert.match(section(init, '2. Facts'), /`date '\+%Z %z'`/, 'the time zone is a fact the agent finds with a command, quoted so that the shell passes one argument');
@@ -149,6 +153,13 @@ test('the AGENTS.md template fills the rules from standard choices and drops a m
   }
 });
 
+test('what "done" means is not asked in the interview: the plan of each task agrees it', () => {
+  const files = [[CORE, 'skill-parts', 'core-rules.md'], [CORE, 'references', 'init.md'], [CORE, 'references', 'style-questions.md'],
+    [CORE, 'references', 'principles.md'], [ROOT, 'skills-src', 'ph-init', 'SKILL.md'], [ROOT, 'README.md'], [ROOT, 'evals', 'scenarios.md']];
+  for (const f of files) assert.doesNotMatch(read(...f), /what "done" means/, f.slice(1).join('/'));
+  assert.doesNotMatch(read(CORE, 'references', 'init.md'), /\bS3\b/, 'init.md: no S3');
+});
+
 test('README describes the new interview', () => {
   const en = read(ROOT, 'README.md');
   assert.match(en, /asks only what you alone can answer/);
@@ -172,7 +183,10 @@ test('the scenarios expect the language question, the short interview, the plan 
     'the first message is the language question in three languages with four options', 'no `ph-init` and no language question']) {
     assert.ok(e10.includes(part), `E10: ${part}`);
   }
-  assert.match(section(sc, 'E1.'), /The first message is the language question in three languages with four options/);
+  const e1 = section(sc, 'E1.');
+  assert.match(e1, /The first message is the language question in three languages with four options/);
+  assert.match(e1, /`make test`/, 'E1: the project has a check the agent can find');
+  assert.match(e1, /full check command found in the repo/, 'E1: the plan gives the found check as information');
   const e2 = section(sc, 'E2.');
   assert.match(e2, /holds the table of moves/);
   assert.match(e2, /within 15 lines apart from the table/, 'the migration table is not counted in the 15 lines');

@@ -3,7 +3,7 @@ name: ph-doctor
 description: Checks and fixes the pan-harness (Panoramic Harness) of a project against the standard: a conformance table, mechanical fixes, structural proposals, migration. Use it when asked to check the harness, AGENTS.md or the agent rules, and for the monthly upkeep.
 license: MIT
 metadata:
-  version: "2.5.2"
+  version: "2.6.2"
   package: "@jiemurat/pan-harness"
 ---
 
@@ -35,7 +35,7 @@ While working with a skill, these rules apply even before the target project's r
 6. **Base an option on a principle.** Before giving options on the structure, read `references/principles.md` and say which principle each option rests on. Study a new practice from the internet by the project's rule or at the owner's request.
 7. **Measure the size.** Count with `wc -c`; the start set limit is in `references/structure.md` → "Size limits".
 8. **Write so that a small model understands it too.** Write the harness text by `references/structure.md` → "Writing" (P26): command form, positive form, completion criterion, one term.
-9. **Ask only what only the owner can know.** The goal, what "done" means, the boundaries and the artifact-folder are asked by `references/style-questions.md` → `Asked`; the chat language by the language question (`references/style-questions.md` → `Language question`). The form of address, permissions, the way of working and the commit order (S6, the agent commits) are standard choices: the plan shows them, no answer is waited for; when the owner names one, it goes into `feedback.md` and the rule is updated.
+9. **Ask only what only the owner can know.** The goal, the boundaries and the artifact-folder are asked by `references/style-questions.md` → `Asked`; when a task counts as done is agreed in each task's plan, not in the interview; the chat language by the language question (`references/style-questions.md` → `Language question`). The form of address, permissions, the way of working and the commit order (S6, the agent commits) are standard choices: the plan shows them, no answer is waited for; when the owner names one, it goes into `feedback.md` and the rule is updated.
 10. **The owner's edits win.** Keep the text the owner changed and build your work on top of it. When it shows a new instruction, write it into the project's `feedback.md`.
 11. **An irreversible action only with permission.** Deleting files and rewriting history only on the owner's explicit instruction. The owner pushes: the agent runs a push only when the owner asks for it explicitly, and does not ask about it itself. A commit goes by the project's commit rule (`AGENTS.md` → `Rules`), in `ph-init` by the standard choice of the commit order (S6). When the hook fails, fix the cause: `--no-verify` needs the owner's separate permission for that commit.
 12. **Git is always there.** The pan-harness works in git: the history, the checkpoints and telling the owner's changes from the agent's rely on it. Without git, `ph-init` installs and sets it up (`references/structure.md` → "Git"). At the end of each task the agent looks after `.gitignore`.

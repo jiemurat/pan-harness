@@ -8,13 +8,13 @@ Tell the test agent: no live system commands, no external side effect, no secret
 
 ## E1. ph-init: a small code project without a harness
 
-**Setup:** a project of a few files (for example, `app.py` in the root, `Dockerfile`, `docker-compose.yml`), git is there, `.env` is there, no agent files.
+**Setup:** a project of a few files (for example, `app.py` in the root, `tests/test_app.py`, a `Makefile` with a `test` target that runs `pytest`, `Dockerfile`, `docker-compose.yml`), git is there, `.env` is there, no agent files.
 
 **Expected:**
 - [ ] The first message is the language question in three languages with four options; every later message, the plan and the report are in the chosen language, the harness in English.
 - [ ] `.env` is not opened, only its name is in the list of secret files and in an R rule.
 - [ ] The profile is found from the repo (`code=yes`, `sensitive-data=secrets`, `live-system` by the compose file), said in plain words in the plan with no question to confirm it, with its reason in D1.
-- [ ] The questions are only those of `Asked`: Q1 the goal, the outcome and measurable criteria (P21), then what "done" means, the boundaries and the artifact-folder; the questions are numbered, each open question has the agent's proposal; no question on style and way of working; the facts are found in the repo; the report has each criterion's result.
+- [ ] The questions are only those of `Asked`: Q1 the goal, the outcome and measurable criteria (P21), then the boundaries and the artifact-folder; no question on when a task counts as done; the plan gives the project's full check command found in the repo (`make test`) as information; the questions are numbered, each open question has the agent's proposal; no question on style and way of working; the facts are found in the repo; the report has each criterion's result.
 - [ ] Every file of the standard part is there, the unneeded ones with one line; `secret-check.mjs` is installed.
 - [ ] Field names, headings and table columns are as the standard has them.
 - [ ] The artifact-folder question comes with the interview: options for code, `src/` recommended with its reason, the owner's own name last, no `docs/`. The code stands in the root, so moving it into the chosen folder is proposed with the goal and the benefit in 1–2 sentences and the list of what moves and what stays in the root; no file moves, the move with the owner's yes is the first large task in `plan.md`; `AGENTS.md` → `Project` names the folder.

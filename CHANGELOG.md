@@ -2,6 +2,14 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 2.6.2
+
+The end of every task now runs the project's own checks, and `/ph-init` asks one question less.
+
+- `/ph-init` no longer asks what counts as done for the whole project: each task's plan agrees it with you. The plan of `/ph-init` shows the check command it found in the repo (for example, `make test`), so the usual interview has three questions: the goal, the limits and the artifact-folder.
+- The end-of-task checklist runs the project's full check (tests, lint, a build) after every task that changed a file outside the harness, small changes too. A failure the task caused is fixed before the commit; a failure that was there before goes into the report and the plan.
+- `/ph-update` adds the new item to a 2.4.2 or 2.5.2 harness.
+
 ## 2.5.2
 
 Three new skills turn documents into Markdown and check the result against the original file.

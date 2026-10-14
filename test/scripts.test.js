@@ -159,3 +159,57 @@ test('the large-task playbook template and scaffold carry the usage limit rule a
   assert.equal(run('scaffold.mjs', '--root', dir).status, 0);
   assert.deepEqual(executionOf(read(dir, 'pan-harness/playbooks/large-task.md')).filter((l) => LIMIT_LINE.test(l)), lines);
 });
+
+// the project's full check: an end-of-task item before the harness check item; migrate brings it to 2.4.2 and 2.5.2 harnesses
+const FULL_CHECK = /^- \[ \] If this task changed a file outside the harness /;
+const HARNESS_CHECK = /^- \[ \] Run `node pan-harness\/scripts\/pan-harness-check\.mjs`/;
+const templateEndOfTask = () => fs.readFileSync(path.join(SKILL, 'templates', 'pan-harness', 'playbooks', 'end-of-task.md.tmpl'), 'utf8').split('\n');
+
+test('the end-of-task template runs the project\'s full check after a change outside the harness, before the harness check', () => {
+  const lines = templateEndOfTask();
+  const at = lines.findIndex((l) => FULL_CHECK.test(l));
+  assert.ok(at >= 0, 'the full check item');
+  assert.ok(HARNESS_CHECK.test(lines[at + 1]), 'right before the harness check item');
+  for (const part of ['`AGENTS.md`, `PAN-HARNESS.md`, `CLAUDE.md`, `pan-harness/`', '`.gitignore` lines of this checklist do not count', '`PAN-HARNESS.md` → `Project checks`',
+    'not the status checks', 'names no full check (for example, "None.")', 'before the commit', 'was there before the task', '`plan.md`', "count it as this task's"]) {
+    assert.ok(lines[at].includes(part), `full check item: ${part}`);
+  }
+  const dir = repo();
+  assert.equal(run('scaffold.mjs', '--root', dir).status, 0);
+  assert.ok(read(dir, 'pan-harness/playbooks/end-of-task.md').split('\n').includes(lines[at]), 'scaffold writes it');
+});
+
+test('migrate: from 2.4.2 and 2.5.2 the end-of-task playbook gets the full check item once; a reworded playbook is left by hand', () => {
+  const item = templateEndOfTask().find((l) => FULL_CHECK.test(l));
+  const without = (dir) => put(dir, 'pan-harness/playbooks/end-of-task.md', read(dir, 'pan-harness/playbooks/end-of-task.md').split('\n').filter((l) => l !== item).join('\n'));
+  const standard = (dir, v) => put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness \S+$/m, `Standard: pan-harness ${v}`));
+  for (const from of ['2.4.2', '2.5.2']) {
+    const dir = current();
+    without(dir);
+    standard(dir, from);
+    const r = run('migrate.mjs', '--root', dir);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, /^done +2\.6\.2 step 1: playbooks\/end-of-task\.md: End of task got the item that runs the project's full check$/m, r.stdout);
+    assert.match(r.stdout, /^done +Standard: pan-harness 2\.6\.2$/m);
+    const lines = read(dir, 'pan-harness/playbooks/end-of-task.md').split('\n');
+    const at = lines.indexOf(item);
+    assert.ok(at >= 0 && HARNESS_CHECK.test(lines[at + 1]), 'before the harness check item');
+    assert.equal(lines.filter((l) => l === item).length, 1, 'once');
+    const again = run('migrate.mjs', '--root', dir);
+    assert.ok(again.stdout.includes(`migrate: ${VERSION} -> ${VERSION}; 0 done, 0 by hand`), again.stdout);
+  }
+  const reworded = current();
+  without(reworded);
+  put(reworded, 'pan-harness/playbooks/end-of-task.md', read(reworded, 'pan-harness/playbooks/end-of-task.md').replace(/^- \[ \] Run `node pan-harness\/scripts\/pan-harness-check\.mjs`/m, '- [ ] Check the harness with `node pan-harness/scripts/pan-harness-check.mjs`'));
+  standard(reworded, '2.5.2');
+  const r = run('migrate.mjs', '--root', reworded);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^by hand 2\.6\.2 step 1: playbooks\/end-of-task\.md: no harness check item in the template form/m, r.stdout);
+  const own = current();
+  without(own);
+  put(own, 'pan-harness/playbooks/end-of-task.md', read(own, 'pan-harness/playbooks/end-of-task.md').replace(new RegExp(HARNESS_CHECK.source, 'm'), '- [ ] Run `make test` (`PAN-HARNESS.md` → `Project checks`).\n$&'));
+  standard(own, '2.5.2');
+  const o = run('migrate.mjs', '--root', own);
+  assert.match(o.stdout, /^by hand 2\.6\.2 step 1: playbooks\/end-of-task\.md: an item in the project's own words names `Project checks`/m, o.stdout);
+  assert.equal(read(own, 'pan-harness/playbooks/end-of-task.md').split('\n').filter((l) => l === item).length, 0, 'not added next to the own item');
+});

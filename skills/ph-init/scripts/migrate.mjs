@@ -47,7 +47,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -62,10 +62,39 @@ function file(rel) {
   return cache.get(rel);
 }
 
+// ---------------------------------------------------------------- 2.6.2 (the project's full check at the end of a task)
+// the template's end-of-task item that runs the project's full check, placed before the harness check item
+const END_OF_TASK = 'pan-harness/playbooks/end-of-task.md';
+const FULL_CHECK_ITEM = fs.readFileSync(path.join(TEMPLATES, 'pan-harness', 'playbooks', 'end-of-task.md.tmpl'), 'utf8').split(/\r?\n/)
+  .find((l) => l.startsWith('- [ ] If this task changed a file outside the harness '));
+const HARNESS_CHECK_ITEM = '- [ ] Run `node pan-harness/scripts/pan-harness-check.mjs`';
+
+function step1FullCheck() {
+  const f = file(END_OF_TASK);
+  const tmpl = 'templates/pan-harness/playbooks/end-of-task.md.tmpl, the item "If this task changed a file outside the harness"';
+  if (!f) { byHand.push(`2.6.2 step 1: no ${END_OF_TASK}; add the template's full check item to the project's end-of-task list (${tmpl})`); return; }
+  if (!FULL_CHECK_ITEM) { byHand.push('2.6.2 step 1: the skill\'s template has no full check item'); return; }
+  if (f.lines.includes(FULL_CHECK_ITEM)) { done.push('2.6.2 step 1: playbooks/end-of-task.md already has the item that runs the project\'s full check'); return; }
+  if (f.lines.some((l) => l.startsWith('- [ ] ') && l.includes('Project checks'))) {
+    byHand.push(`2.6.2 step 1: playbooks/end-of-task.md: an item in the project's own words names \`Project checks\`; show the difference from the template (${tmpl}) to the owner and keep one of them`);
+    return;
+  }
+  const at = f.lines.findIndex((l) => l.startsWith(HARNESS_CHECK_ITEM));
+  if (at < 0) {
+    byHand.push(`2.6.2 step 1: playbooks/end-of-task.md: no harness check item in the template form (a line that starts with "${HARNESS_CHECK_ITEM}"); add the template's full check item (${tmpl}) before the project's harness check item`);
+    return;
+  }
+  f.lines.splice(at, 0, FULL_CHECK_ITEM);
+  f.changed = true;
+  done.push('2.6.2 step 1: playbooks/end-of-task.md: End of task got the item that runs the project\'s full check');
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
-const STEPS = {};
+const STEPS = {
+  '2.6.2': [step1FullCheck],
+};
 
 // ---------------------------------------------------------------- run
 

@@ -36,7 +36,7 @@ The same skills install with `npx skills add jiemurat/pan-harness`, or as a Clau
 
 ## What you get
 
-`/ph-init` first asks which language to talk in, then studies the project, asks only what you alone can answer (the goal, what "done" means, the limits, the artifact-folder: the one folder for your work), shows a short plan and builds the harness once you approve it:
+`/ph-init` first asks which language to talk in, then studies the project, asks only what you alone can answer (the goal, the limits, the artifact-folder: the one folder for your work), shows a short plan and builds the harness once you approve it:
 
 ```
 your-project/
