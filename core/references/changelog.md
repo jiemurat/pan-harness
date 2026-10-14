@@ -4,6 +4,10 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 2.7.2
+
+`ph-pdf-to-md` writes a first draft of the Markdown with a script, and its check sees the columns of ruled tables. The harness standard is the same. There are no migration steps.
+
 ## 2.6.2
 
 The end-of-task list runs the project's full check (`PAN-HARNESS.md` → `Project checks`) after a task that changed a file outside the harness. `ph-init` no longer asks when the work counts as done: each task's plan agrees it, and the plan of `ph-init` shows the full check command found in the repo.

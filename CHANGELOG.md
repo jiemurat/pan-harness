@@ -2,6 +2,15 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 2.7.2
+
+`ph-pdf-to-md` writes a first draft of the Markdown with a script, and its check sees table columns.
+
+- `pdf_to_md.py` writes the draft from the text layer: headings from font sizes and from bold lines that start with a section number, paragraphs, lists, bold and italic, and the tables the PDF draws with rules, with merged cells and tables that go on over a page break; page numbers and running lines are left out. The agent corrects the draft against the pages instead of typing the text, and the script names the pages it leaves to the agent: no text layer, text in columns, a table without rules, a cell cut by a page break.
+- `verify_markdown.py` adds TABLE COLUMNS: on a table drawn with rules, the words of each Markdown cell must sit in one column of the PDF, so a table whose cells were put into one column no longer passes.
+- `ph-pdf-to-md` also runs `pdftohtml` and `pdftocairo`; both come with poppler.
+- There are no migration steps for the harness.
+
 ## 2.6.2
 
 The end of every task now runs the project's own checks, and `/ph-init` asks one question less.

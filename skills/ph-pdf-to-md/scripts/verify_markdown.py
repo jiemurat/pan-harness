@@ -15,6 +15,10 @@ pipes and heading marks never matter. Checks:
           column is empty in them) are matched as one block, each row in its own lines of
           the block and in order. A wrapped line that sits in the neighbouring row instead
           of its own is not seen.
+  TABLE COLUMNS  on a table the PDF draws with rules (lines or thin filled boxes, read with
+          pdftocairo), the words of each Markdown cell sit in one column of the PDF, so cells
+          of several columns were not put into one. A word that also stands outside the ruled
+          tables is not used, and a table without drawn rules is not checked.
   ORDER   inside each paragraph line of 8 or more words, runs of 4 words follow the
           PDF reading order (catches lines mixed across columns); the order of whole
           paragraphs is not checked.
@@ -38,10 +42,12 @@ import argparse
 import collections
 import html
 import math
+import os
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import unicodedata
 
 Counter = collections.Counter
@@ -52,6 +58,8 @@ MAX_LINES = 60   # most consecutive PDF lines one table row may span
 RUN = 4          # words per run in the order check
 SLACK = 12       # most word pieces a table row may differ by through hyphen splits
 HEAD, TAIL = 6, 4  # non-empty lines at the top and bottom of a page that may be furniture
+THIN = 1.6         # a drawn table rule is thinner than this (points)
+NEAR = 1.5         # rule ends and edges closer than this (points) touch
 CJK = re.compile('([\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af])')
 FOLD = str.maketrans({
     **dict.fromkeys('\u2018\u2019\u02b9\u02bb\u02bc\u2032\u00b4`', "'"),
@@ -281,6 +289,140 @@ def row_in_block(own, merged, line_tokens, first, last):
     return None
 
 
+def page_rules(pdf, page):
+    """The drawn horizontal and vertical rules of one page, from pdftocairo's SVG: thin filled rectangles
+    and stroked straight lines. Horizontal: [x0, x1, y]; vertical: [y0, y1, x]; top-left coordinates."""
+    with tempfile.TemporaryDirectory() as tmp:
+        out = os.path.join(tmp, 'page.svg')
+        r = subprocess.run(['pdftocairo', '-svg', '-f', str(page), '-l', str(page), pdf, out], capture_output=True)
+        if r.returncode != 0 or not os.path.exists(out):
+            return [], []
+        svg = open(out, encoding='utf-8', errors='replace').read()
+    hs, vs = [], []
+    for tag in re.findall(r'<path\b[^>]*>', svg[max(0, svg.rfind('</defs>')):]):
+        d = re.search(r'\sd="([^"]*)"', tag)
+        if not d or re.search(r'[CcQqAaSsTt]', d.group(1)):
+            continue
+        nums = [float(n) for n in re.findall(r'-?\d+(?:\.\d+)?(?:e-?\d+)?', d.group(1))]
+        m = re.search(r'transform="matrix\(([^)]*)\)"', tag)
+        a, b, c, e, f, g = [float(n) for n in re.split(r'[\s,]+', m.group(1).strip())] if m else (1, 0, 0, 1, 0, 0)
+        pts = [(a * x + c * y + f, b * x + e * y + g) for x, y in zip(nums[0::2], nums[1::2])]
+        if not pts:
+            continue
+        if 'fill="none"' in tag:                       # a stroked line: each straight segment
+            pairs = list(zip(pts, pts[1:]))
+        else:                                          # a filled shape: its bounding box
+            xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+            pairs = [((min(xs), min(ys)), (max(xs), max(ys)))]
+        for (x0, y0), (x1, y1) in pairs:
+            w, h = abs(x1 - x0), abs(y1 - y0)
+            if h < THIN and w > 2.5:
+                hs.append([min(x0, x1), max(x0, x1), (y0 + y1) / 2])
+            elif w < THIN and h > 2.5:
+                vs.append([min(y0, y1), max(y0, y1), (x0 + x1) / 2])
+    return hs, vs
+
+
+def ruled_tables(hs, vs):
+    """Group touching rules into tables; return each table's vertical rules and its column edges (sorted x)."""
+    items = [(s[0], s[2] - NEAR, s[1], s[2] + NEAR) for s in hs] + [(s[2] - NEAR, s[0], s[2] + NEAR, s[1]) for s in vs]
+    parent = list(range(len(items)))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+    for i, p in enumerate(items):
+        for j in range(i + 1, len(items)):
+            q = items[j]
+            if p[0] <= q[2] and q[0] <= p[2] and p[1] <= q[3] and q[1] <= p[3]:
+                parent[find(i)] = find(j)
+            elif i >= len(hs) and min(p[3], q[3]) - max(p[1], q[1]) > 0.8 * min(p[3] - p[1], q[3] - q[1]):
+                parent[find(i)] = find(j)              # vertical rules side by side: the columns of one row
+    groups = collections.defaultdict(lambda: ([], []))
+    for i in range(len(items)):
+        groups[find(i)][0 if i < len(hs) else 1].append(hs[i] if i < len(hs) else vs[i - len(hs)])
+    tables = []
+    for h, v in groups.values():
+        if not h or len(v) < 2:
+            continue
+        edges = []
+        for x in sorted(s[2] for s in v):
+            if not edges or x - edges[-1] > NEAR:
+                edges.append(x)
+        if len(edges) >= 3:                            # two columns at least
+            box = (min(s[0] for s in h), min(s[0] for s in v), max(s[1] for s in h), max(s[1] for s in v))
+            tables.append((box, v, edges))
+    return tables
+
+
+def table_columns(pdf, first, last):
+    """Map each word inside a ruled table of the pages to the set of columns it sits in, by column number, so a
+    cell that goes on over a page break keeps its column. The column of a word is the one whose left edge is the
+    nearest rule left of it at the word's height, so a cell merged across columns counts as its first column.
+    Two neighbouring words of a column are also mapped joined, for a word the PDF splits in two or hyphenates at a
+    line end. A word that also stands outside the ruled tables is left out: that copy may be the one a Markdown
+    table holds. Return the map and the number of ruled tables (a table on two pages counts twice)."""
+    cmd = ['pdftotext', '-bbox'] + (['-f', str(first)] if first else []) + (['-l', str(last)] if last else [])
+    r = subprocess.run(cmd + [pdf, '-'], capture_output=True, encoding='utf-8', errors='replace')
+    where, count, outside = collections.defaultdict(set), 0, set()
+    for k, page in enumerate(r.stdout.split('<page ')[1:]):
+        page_words = re.findall(r'<word xMin="([\d.]+)" yMin="([\d.]+)" xMax="([\d.]+)" yMax="([\d.]+)">(.*?)</word>', page)
+        if not page_words:
+            continue
+        glued = []                                     # pieces of one word that touch: 'don' + '’' + 't'
+        for x0, y0, x1, y1, text in ((float(a), float(b), float(c), float(d), t) for a, b, c, d, t in page_words):
+            if glued and abs(glued[-1][1] + glued[-1][3] - y0 - y1) < 3 and 0 <= x0 - glued[-1][2] < 0.6:
+                glued[-1][2], glued[-1][4] = x1, glued[-1][4] + text   # same line: centres within 1.5 points
+            else:
+                glued.append([x0, y0, x1, y1, text])
+        tables = ruled_tables(*page_rules(pdf, (first or 1) + k))
+        for x0, y0, x1, y1, text in glued:
+            xc, yc = (x0 + x1) / 2, (y0 + y1) / 2
+            if not any(box[0] < xc < box[2] and box[1] < yc < box[3] for box, _, _ in tables):
+                outside.update(words(html.unescape(text), True))
+        for box, v, edges in tables:
+            count += 1
+            cells = collections.defaultdict(list)
+            for x0, y0, x1, y1, text in glued:
+                xc, yc = (x0 + x1) / 2, (y0 + y1) / 2
+                if not (box[0] < xc < box[2] and box[1] < yc < box[3]):
+                    continue
+                left = [s[2] for s in v if s[0] - NEAR <= yc <= s[1] + NEAR and s[2] < xc]
+                if left:
+                    cells[min(range(len(edges)), key=lambda i: abs(edges[i] - max(left)))].append((yc, x0, html.unescape(text)))
+            for col, found in cells.items():
+                found.sort()
+                line_of, top = [], None                  # reading order: lines from the top, words from the left
+                for yc, x0, text in found:
+                    if top is None or yc - top > 2:
+                        top = yc
+                    line_of.append((top, x0, text))
+                ordered = [text for _, _, text in sorted(line_of)]
+                for i, text in enumerate(ordered):
+                    before = ordered[i - 1] if i else ''
+                    pieces = [text] + ([before + text] if before else []) + ([before[:-1] + text] if before.endswith('-') else [])
+                    for piece in pieces:
+                        for t in words(piece, True):
+                            where[t].add(col)
+    for t in outside:
+        where.pop(t, None)
+    return where, count
+
+
+def mixed_cells(rows, where):
+    """Markdown table rows with a cell whose words sit in no single column of a ruled PDF table."""
+    flagged = []
+    for no, _, text, cells in rows:
+        for cell in cells:
+            spots = [where[t] for t in cell if t in where]
+            if len(spots) >= 2 and not set.intersection(*spots):
+                flagged.append((no, text))
+                break
+    return flagged
+
+
 def run_hashes(tokens):
     return {hash(tuple(tokens[i:i + RUN])) for i in range(len(tokens) - RUN + 1)}
 
@@ -442,6 +584,16 @@ def main():
               + (f' ({grouped} of them as blocks under a merged cell)' if grouped else '') + f', {len(unmatched)} unmatched')
     else:
         print('TABLES: no table rows')
+    mixed = []
+    if rows and not args.text and shutil.which('pdftocairo') is None:
+        print('TABLE COLUMNS: pdftocairo (poppler) missing, columns not checked')
+    elif rows and not args.text:
+        where, ruled = table_columns(args.pdf, first, last)
+        if ruled:
+            mixed = mixed_cells(rows, where)
+            print(f'TABLE COLUMNS: {len(rows)} row(s) checked against {ruled} ruled table(s), {len(mixed)} with cells of several columns')
+        else:
+            print('TABLE COLUMNS: no ruled tables on the PDF pages, columns not checked')
     checked, breaks = order_breaks(md_lines, reading_runs(args.pdf, first, last, args.text))
     print(f'ORDER: {checked} paragraph line(s) checked, {len(breaks)} with word order differing from the PDF')
     if missing:
@@ -455,10 +607,13 @@ def main():
     if unmatched:
         show_list('TABLE ROWS not found together in the PDF text (Markdown line, row)',
                   [f'line {no}: {text[:110]}' for no, text in unmatched], args.show)
+    if mixed:
+        show_list('TABLE CELLS holding words of several PDF columns (Markdown line, row)',
+                  [f'line {no}: {text[:110]}' for no, text in mixed], args.show)
     if breaks:
         show_list('PARAGRAPH LINES whose word order differs from the PDF reading order (Markdown line, runs not found, start)',
                   [f'line {no}: {bad} of {total} runs of {RUN} words not found: {head} ...' for no, bad, total, head in breaks], args.show)
-    clean_result = not missing and not extra and not unmatched and not breaks and (not variants or args.fold_quotes)
+    clean_result = not missing and not extra and not unmatched and not mixed and not breaks and (not variants or args.fold_quotes)
     print('RESULT: ' + ('PASS' if clean_result else 'REVIEW' if args.text else 'FAIL'))
     sys.exit(0 if clean_result else 1)
 

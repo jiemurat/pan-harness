@@ -11,7 +11,7 @@ Panoramic Harness (pan-harness for short) is a set of plain-text rules and knowl
 | `ph-update` | Updates the skills to the newest version, migrates the harness to it and runs a full `ph-doctor` |
 | `ph-grilling` | A planning interview in rounds (adapted from [mattpocock/skills](https://github.com/mattpocock/skills), MIT) |
 | `ph-writing-for-agents` | How to write any text an agent reads: skills, `AGENTS.md`, prompts (the writing-for-agents skill of [mattpocock/skills](https://github.com/mattpocock/skills), MIT, renamed only) |
-| `ph-pdf-to-md` | Converts PDFs and scans into Markdown: the text layer is copied, scanned or garbled pages are read from the page image, and a second reading checks the words and numbers |
+| `ph-pdf-to-md` | Converts PDFs and scans into Markdown: a script drafts the text-layer pages with headings, lists and ruled tables for the agent to correct, scanned or garbled pages are read from the page image, and a check compares the words, numbers and table columns |
 | `ph-word-to-md` | Converts Word documents (`.docx`, `.doc`) into Markdown with list numbers as Word shows them, tables, footnotes and links, and checks every word and number |
 | `ph-excel-to-md` | Converts Excel workbooks (`.xlsx`, `.xlsm`, `.xls`, `.xlsb`) into Markdown, every cell as Excel shows it, and checks every cell, number and date |
 

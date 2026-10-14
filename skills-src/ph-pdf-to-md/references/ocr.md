@@ -82,7 +82,7 @@ When tesseract or a language file cannot be installed (the user declines, or the
 
 ## An earlier OCR layer
 
-TEXT OVER IMAGE PAGES are usually scans that someone ran through OCR before; that earlier layer may be good or garbled. Test one such page before copying it: save its layer with `pdftotext -layout -f N -l N FILE.pdf <scratch>/layer.md`, read the rendered page with tesseract as above into `<scratch>/page-ocr.txt`, and run `verify_markdown.py FILE.pdf <scratch>/layer.md --text <scratch>/page-ocr.txt --pages N | grep AGREEMENT`, reading only that line so that your own reading of the page stays independent. At 90% AGREEMENT or more, copy these pages from the text layer; below it, read them by OCR like the other OCR pages.
+TEXT OVER IMAGE PAGES are usually scans that someone ran through OCR before; that earlier layer may be good or garbled. Test one such page before you write it from its layer: save its layer with `pdftotext -layout -f N -l N FILE.pdf <scratch>/layer.md`, read the rendered page with tesseract as above into `<scratch>/page-ocr.txt`, and run `verify_markdown.py FILE.pdf <scratch>/layer.md --text <scratch>/page-ocr.txt --pages N | grep AGREEMENT`, reading only that line so that your own reading of the page stays independent. At 90% AGREEMENT or more, write these pages from the text layer (`pdf_to_md.py --pages`); below it, read them by OCR like the other OCR pages.
 
 ## Mixed PDF and the finished file
 

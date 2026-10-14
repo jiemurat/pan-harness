@@ -1,6 +1,6 @@
 # Structure rules
 
-How to write the Markdown for a PDF, whether its pages are copied from the text layer or read by OCR. The aim: a reader (or a program) gets every word of the PDF, in the PDF's order, with the structure the PDF shows. On a text-layer page `pdftotext` gives text only, so structure comes from what the text shows: numbering, capital letters, blank lines, column alignment. On an OCR page you see the structure in the image.
+How to write the Markdown for a PDF, whether its pages are written from the text layer or read by OCR. The aim: a reader (or a program) gets every word of the PDF, in the PDF's order, with the structure the PDF shows. On a text-layer page `pdf_to_md.py` takes the structure from fonts, positions and drawn rules; correct it by what the page shows: numbering, capital letters, blank lines, column alignment. On an OCR page you see the structure in the image.
 
 ## Contents
 
