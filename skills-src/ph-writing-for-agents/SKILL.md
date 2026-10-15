@@ -1,12 +1,12 @@
 ---
 name: ph-writing-for-agents
-description: Writing documents for agents. Use when creating or editing skills, or modifying AGENTS.md or CLAUDE.md.
+description: Writes and edits documents an agent reads, so strong and small models take the same process every run. Use it whenever creating or editing a skill, AGENTS.md, CLAUDE.md or a doc an agent reaches through a link.
 license: MIT (Copyright (c) 2026 Matt Pocock), see LICENSE
 metadata:
   version: "{{version}}"
   package: "@jiemurat/pan-harness"
   source: "https://github.com/mattpocock/skills/blob/321658273cb1d20b76026717d027d505790106d4/skills/productivity/writing-for-agents/SKILL.md"
-  changes: "renamed to ph-writing-for-agents"
+  changes: "renamed to ph-writing-for-agents; the description is rewritten"
 ---
 
 Reference for writing any document an agent consumes: a skill, an `AGENTS.md` / `CLAUDE.md`, a doc reached by a pointer. The packaging differs; the writing does not: the same levers make each one predictable, since the agent takes the same _process_ every run rather than producing the same output.

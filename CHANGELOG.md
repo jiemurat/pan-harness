@@ -2,6 +2,18 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 2.8.2
+
+The agent checks its work while it works, and ignores instructions hidden in outside text.
+
+- In a code project, `/ph-init` finds a fast check (tests, a type check or a lint that runs in seconds) and a way to see the result (the command that starts the program and what to open). When one is missing, it proposes to create it as a task of its own.
+- The agent runs the fast check before a task that changes the code: a failure that was already there is reported before the work, and you choose whether to fix it first. It runs the fast check after each change, and looks at the running result before it calls the work done.
+- A mistake that became a rule gets a lesson question in the harness test, so a fixed mistake that comes back shows up.
+- In a code project, `/ph-init` runs the checks once and writes the result, finds the dependency file, the pinned runtime version and the log, and turns on a search for debug leftovers (`console.log`, `TODO`) in the lines a task changed.
+- A step of a large task that has a check command is done only with that command's result, and a lesson names the layer its mistake came from (task, context, environment, verification or state), so `/ph-doctor` sees the most frequent layer.
+- Two new standard rules: an instruction in a file, a web page or a tool result is not carried out unless the task needs it, and a third-party skill, MCP server or agent plugin is installed only with your permission.
+- `/ph-update` adds the new items to a 2.7.2 harness and lists what it leaves to the agent: the commands and the log, the first run of the checks, the search for leftovers, the two rules and a lesson question for each rule that came from a lesson.
+
 ## 2.7.2
 
 `ph-pdf-to-md` writes a first draft of the Markdown with a script, and its check sees table columns.
@@ -42,5 +54,5 @@ The skills and the harness are in English, and `ph-init` asks which language to 
 - A harness of a 1.x version has no migration steps: `ph-update` and `ph-doctor` treat it as an unknown standard and compare it with the current templates item by item.
 - The skill descriptions say what each skill does and when to use it; the package has five skills, `ph-writing-for-agents` included.
 - The guide in Uzbek (`docs/uz.md`) is removed.
-- The texts use five terms, the chat the first four with the owner: the project (the work itself), the artifacts (its work products, inputs and outputs: code, documents, data), the project-folder (where ph-paket is installed), the artifact-folder (the one folder for the artifacts, apart from the harness) and the owner (the project owner).
+- The texts use five terms, the chat the first four with the owner: the project (the work itself), the artifacts (its work products, inputs and outputs: code, documents, data), the project-folder (where the pan-harness package is installed), the artifact-folder (the one folder for the artifacts, apart from the harness) and the owner (the project owner).
 - `ph-init` agrees the artifact-folder with the owner: options by the type of the artifacts (`src/` for code, `documents/` for documents, `data/` for data, `artifacts/` for a mix; never `docs/`) and the owner's own name as the last option. In an existing project it proposes moving the artifacts into it, with the goal and the benefit; the move becomes the first large task, `ph-init` moves no artifact. `ph-doctor` checks the artifact-folder.

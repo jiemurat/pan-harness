@@ -79,7 +79,7 @@ test('the repository is a valid Claude Code plugin: version, default skills/ lay
 
 test('the skill files of the harness skills stay within their size limits', () => {
   // a SKILL.md is read every time its skill runs: the built file keeps to its limit, in bytes
-  const LIMITS = { 'ph-init': 18 * 1024, 'ph-doctor': 16 * 1024, 'ph-update': 16 * 1024 };
+  const LIMITS = { 'ph-init': 19 * 1024, 'ph-doctor': 16 * 1024, 'ph-update': 16 * 1024 }; // ph-init: 18 KB until its steps took the 2.8.2 items
   const built = buildAll();
   for (const [name, limit] of Object.entries(LIMITS)) {
     const size = built.get(name).get('SKILL.md').length;

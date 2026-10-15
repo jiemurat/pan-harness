@@ -4,7 +4,7 @@ description: Converts Word documents (.docx and .doc) into Markdown, keeping lis
 compatibility: python3 (3.8 or newer); LibreOffice for .doc files (installed when missing) and for the second reading of list numbers
 license: MIT
 metadata:
-  version: "2.7.2"
+  version: "2.8.2"
   package: "@jiemurat/pan-harness"
 ---
 

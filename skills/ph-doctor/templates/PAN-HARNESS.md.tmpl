@@ -1,6 +1,6 @@
 <!--
 pan-harness template. Saved in the project as `PAN-HARNESS.md`.
-Fill the `{{…}}` places; when the project uses the word "harness" in another meaning, add the difference to the first paragraph. `{{full check and status checks}}` — the project's full check command (code: tests; documents: lint, links, assembly or export), its status checks and when they are used, for example: "Full check: `make check`. Live state: `pan-harness/project/scripts/status-check.sh` (~1 minute)"; without them: "None.". Apply the `[profile: …]` marks by the rule in `structure.md` → "Profile". Add every file of the project's `project/` to the map with its keywords. The headings and the `Profile:` and `Standard:` lines stay as they are (standard). Remove this note.
+Fill the `{{…}}` places; when the project uses the word "harness" in another meaning, add the difference to the first paragraph. `{{full check and status checks}}` — the project's full check command (code: tests; documents: lint, links, assembly or export), its status checks and when they are used, for example: "Full check: `make check`. Live state: `pan-harness/project/scripts/status-check.sh` (~1 minute)"; without them: "None.". `{{fast check}}` — a check of the artifact-folder that runs in seconds to a minute (a test subset, a type check, a lint), for example "`make check-fast` (~20 s)"; without one: "none yet (`plan.md` → `Awaiting owner decision`); until then the full check at the start and at the end of a task". `{{see the result}}` — how the agent sees the result work: the command that starts it and what to open or look at, for example "`npm run dev`, open http://localhost:3000"; without one: "none yet (`plan.md` → `Awaiting owner decision`); the report says the result was not seen". After the first run `ph-init` adds the result to each check: "(YYYY-MM-DD: 4 passed, 3 s)". `{{logs}}` — where the program writes its log and errors, for example "`logs/app.log`; on the server `docker compose logs web`"; without a log file: "the terminal output of `See the result`". Apply the `[profile: …]` marks by the rule in `structure.md` → "Profile". Add every file of the project's `project/` to the map with its keywords. The headings and the `Profile:` and `Standard:` lines stay as they are (standard). Remove this note.
 -->
 # PAN-HARNESS
 
@@ -31,5 +31,8 @@ Each fact in one place, the other files link to it; all in `pan-harness/`:
 ## Project checks
 
 {{full check and status checks}}
+- [profile: code=yes] **Fast check:** {{fast check}}
+- [profile: code=yes] **See the result:** {{see the result}}
+- [profile: code=yes] **Logs:** {{logs}}
 
 Standard: pan-harness {{version}}

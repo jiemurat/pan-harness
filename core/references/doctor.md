@@ -24,7 +24,7 @@ ph-doctor:
 4. Read the project steps and the owner's standing answer on the fresh-agent test in `playbooks/pan-harness.md`.
 5. Check `node --version` (18 or newer). Without Node, work by the procedure in `structure.md` → "Profile".
 
-Done when: the start set is read, the versions are compared, the playbook steps and the Node version are known.
+Done when: as step 1 of the `ph-doctor` skill says (its `SKILL.md`).
 
 ## 2. Scripts
 
@@ -32,21 +32,21 @@ Done when: the start set is read, the versions are compared, the playbook steps 
 2. When the profile lists `secrets`, run `node pan-harness/scripts/secret-check.mjs`.
 3. Run the status checks of `PAN-HARNESS.md` → `Project checks`. Touch the live system with read-only commands only.
 
-Done when: the result of each script and status check is written in numbers.
+Done when: as step 2 of the `ph-doctor` skill says (its `SKILL.md`).
 
 ## 3. Migration
 
-When the project's version is older than the skill's, run `node <skill>/scripts/migrate.mjs --root .`: it carries out the `mechanical` steps of `changelog.md` after the project's version, from the oldest to the newest, replaces the scripts and updates the `Standard:` line. Do each item it prints as `by hand` by that changelog step, and the `structural` steps in the order of step 6. `ph-update` does this step too, after updating ph-paket. The script updates the `Standard:` line, so write the `by hand` and `structural` items not yet done into `plan.md`: when the work stops midway, the next session takes them from there. Compare the scripts with the skill's whatever the version (`diff`): the copy in the project is the same as the skill's, and when it differs, replace it with the skill's. Compare the hook (`.githooks/pre-commit`) with `templates/githooks/pre-commit.tmpl`: the project may have added its own hook to it (`init.md` → "5. Create"), so show the difference to the owner and, after the approval, update the hook from the template, keeping the project's addition.
+When the project's version is older than the skill's, run `node <skill>/scripts/migrate.mjs --root .`: it carries out the `mechanical` steps of `changelog.md` after the project's version, from the oldest to the newest, replaces the scripts and updates the `Standard:` line. Do each item it prints as `by hand` by that changelog step, and the `structural` steps in the order of step 6. `ph-update` does this step too, after updating the pan-harness package. The script updates the `Standard:` line, so write the `by hand` and `structural` items not yet done into `plan.md`: when the work stops midway, the next session takes them from there. Compare the scripts with the skill's whatever the version (`diff`): the copy in the project is the same as the skill's, and when it differs, replace it with the skill's. Compare the hook (`.githooks/pre-commit`) with `templates/githooks/pre-commit.tmpl`: the project may have added its own hook to it (`init.md` → "5. Create"), so show the difference to the owner and, after the approval, update the hook from the template, keeping the project's addition.
 
 When the harness is on an unknown standard (step 1), compare it item by item with `structure.md` and `templates/` in place of the changelog steps: the files, sections, field names, profile, scripts and hook. Fix the differences in the order of step 6 (mechanical at once, structural with a plan); the owner's knowledge (rules, decisions, journals) is kept. At the end, write the skill version into the `Standard:` line.
 
-Done when: each `by hand` item of the first run of `migrate.mjs` is done or in `plan.md`, `Standard:` equals the skill version.
+Done when: as step 3 of the `ph-doctor` skill says (its `SKILL.md`).
 
 ## 4. Conformance audit
 
 Go through `audit.md` item by item. Write the result of each row: `ok`, `fail` (what was found, file:line), `not checked` (the reason) or `n/a` when it does not concern the profile. In rows with a script result, rely on the script, but the script checks only its own part: when `How to check` has a `manual` part too (for example, the coverage in A3), still check it by hand. Check the other rows yourself. Check the P26 items (the trigger in A20, A43, A44–A48) only in new text, by the `REVIEW` list of step 2 (`audit.md` → "Writing"): each flagged line `ok` or `fail` in the table with the reason, a `fail` with file:line; read the lines without a flag for A46–A48 too. Add the conformance table to the report: the number of `ok`, `fail` and `not checked` per section, then the list of `fail` rows.
 
-Done when: each item of `audit.md` is in the table with `ok`, `fail`, `not checked` or `n/a`, each flagged `REVIEW` line in the table with `ok` or `fail` and the reason, the new lines read for A46–A48.
+Done when: as step 4 of the `ph-doctor` skill says (its `SKILL.md`).
 
 ## 5. Facts
 
@@ -56,7 +56,7 @@ Done when: each item of `audit.md` is in the table with `ok`, `fail`, `not check
 - Check the `Remove when:` condition of the temporary rules (A41): when it is met, propose the removal.
 - When `handoff.md` says `**Status:** active` and the last commit that touched the files of its `Changed files` is older than 14 days (the history and `git log`), tell the owner: the work may be abandoned.
 
-Done when: each fact in `state.md`, `system-map.md` and `project/` is `verified` or `unverified`; each chosen D is `ok`, `fail` or `not checked` with the reason; the items of `plan.md`, `Remove when` and `handoff.md` are looked at, with the result in the report.
+Done when: as step 5 of the `ph-doctor` skill says (its `SKILL.md`).
 
 ## 6. Fix
 
@@ -76,12 +76,14 @@ When in doubt, treat the fix as structural. An unneeded rule moves to a playbook
 
 Say it openly in the report as a skill limitation.
 
-Done when: each `fail` row is fixed, stands as a proposal in `plan.md` → `Awaiting owner decision`, or is in the report as a skill limitation.
+Done when: as step 6 of the `ph-doctor` skill says (its `SKILL.md`).
 
 ## 7. Re-check and test
 
 1. Run `pan-harness-check.mjs` and (when the profile lists `secrets`) `secret-check.mjs` again: 0 errors and `RESULT: clean`.
 2. Ask the owner whether to run the fresh-agent test (`testing.md`): after a structural change the fixed set (a run before is not needed, it is compared with the last recorded result); with more than 5 findings, checking them in skeptic mode; at every third `ph-doctor` (count the `ph-doctor` entries in the history) the simplification experiment.
+
+Done when: as step 7 of the `ph-doctor` skill says (its `SKILL.md`).
 
 ## 8. History entry and report
 
@@ -89,4 +91,5 @@ Done when: each `fail` row is fixed, stands as a proposal in `plan.md` → `Awai
 - Write a D entry for a structural change and an F entry for the owner's new words. An L entry only for a lesson drawn from a mistake (of the agent or of the harness); an ordinary finding stays in the report.
 - The report (`SKILL.md` → "Report"): the results of the criteria of the structural fixes, the map of changed components, the conformance count (numbers per section and the findings in plain words, the full table in the history entry), the list of mechanical fixes, the structural proposals (numbered, with options and a recommendation), the skill limitations, the changed files, the next step.
 
-Done when: the history entry is there, a D for a structural fix and an F for the owner's new words are written, the report is with the owner.
+Done when: as step 8 of the `ph-doctor` skill says (its `SKILL.md`).
+

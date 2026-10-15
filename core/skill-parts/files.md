@@ -2,7 +2,8 @@
 
 | File | Contents | When to read |
 |---|---|---|
-| `references/structure.md` | The pan-harness standard: glossary, profile, files, journals, size limits, writing rules (P26) | At the start of every skill |
+| `references/structure.md` | The pan-harness standard: glossary, profile, files, journals, writing rules (P26) | At the start of every skill |
+| `references/settings.md` | The settings of the standard: git, size limits, history and archive, extensions and `project/check.json`, version | When a step links to it; when writing or checking `project/check.json` or a check extension (`ph-doctor` step 4: A35–A38); on a size warning; before a commit and its history entry |
 | `references/audit.md` | The conformance list (A1…): each requirement, its smell, how to check it and the kind of fix | In step 4 of `ph-doctor` and at the end of `ph-init` |
 | `references/changelog.md` | The standard versions and the migration steps of each | In `ph-doctor` and `ph-update`, when the project's version differs from the skill's |
 | `references/principles.md` | The principles (P1…) and their sources | Before a decision on the structure or a rule |

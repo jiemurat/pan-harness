@@ -1,5 +1,6 @@
 // The repository is the package as it is: no development history (date-shaped
-// versions, dates, script names that are not part of the package) and no private details
+// versions, dates, script names that are not part of the package), no name used only by its
+// author's own project, and no private details
 // (e-mail addresses other than example ones, home folders, long numbers, IP addresses).
 // The patterns are built at run time so that this file itself holds none of them.
 import { test } from 'node:test';
@@ -25,6 +26,7 @@ const RULES = [
   ['private project name', new RegExp(['oc', 'srv'].join('-'), 'i')],
   ['old script name', new RegExp(`\\b(?:pan-harness-check|secret-check)\\.${'py'}\\b`)],
   ['old Standard spelling', new RegExp(`${'Standar'}t: pan-harness`)],
+  ['a name used only inside this project', new RegExp(['ph', 'paket'].join('-'), 'i')], // the package is "the pan-harness package"
   ['home folder', new RegExp(`(?:/${'home'}/|/${'Users'}/|[A-Z]:\\\\${'Users'}\\\\)`)],
   ['long number', /\d{9,}/],
   ['IP address', /\b\d{1,3}(?:\.\d{1,3}){3}\b/],

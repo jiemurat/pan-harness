@@ -15,6 +15,7 @@ Ask the questions with the `ph-grilling` skill. If it is not installed (a new cl
   - the goal and what the owner has at the end: 2–3 sentences, plain words, terms explained;
   - criteria: 1–5, each an outcome the owner sees: what is observed, the threshold (a number or yes/no), how and when it is checked; a criterion holds only this task's outcome, the checks of every task are in `playbooks/end-of-task.md`;
   - evidence is re-run where possible (a command, a script, a test);
+  - each criterion and each step names its check command, or `no command` and the evidence it uses; a step with a command is `done` only when the command passes or prints the expected output, with that output as evidence;
   - for a subjective outcome, a rubric of 2–4 levels and who grades; for a numeric criterion, an anchor that shows the real goal (the owner's spot check, real use, ground truth); an agent or LLM grader is first compared with the owner's grades on a small sample;
 - each round asks every question that can be answered now, in order of impact: the low-impact questions with a clear recommendation go into one "accept as recommended?" list, from which the owner picks out what they want. A question that depends on another answer waits for the next round;
 - each question in the `ph-grilling` format: options a/b/c, the recommendation and its reason. The numbers run on to the end of the task;

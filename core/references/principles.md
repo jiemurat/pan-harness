@@ -13,6 +13,7 @@ The pan-harness rests on these principles. Each one: the rule, why (the source),
 - Planning and verification: P21
 - Continuity and checks: P22–P25
 - Writing for agents: P26
+- Self-check and outside content: P27–P28
 
 ## Context and size
 
@@ -43,7 +44,7 @@ The pan-harness rests on these principles. Each one: the rule, why (the source),
 ## Upkeep
 
 - **P15. The harness is tidied regularly.** The stale is removed, a repetition merged, the important moves to the standing layer. Claude Code's Auto Dream [19], OpenClaw's dreaming [15] and OpenAI's doc-gardening agent [6] do exactly this. Claude Code's `/doctor prompt-audit` command checks agent files for stale and contradicting instructions and links to missing files and commands [5]. Practitioners advise auditing agent files every few weeks [22]. In the pan-harness this is `ph-doctor`, usually once a month. On a size warning, the tidying is done in the same task.
-- **P16. A repeated mistake becomes a rule.** The Claude Code guide advises adding a rule to an agent file exactly in this situation: when the agent makes a mistake a second time, or the owner has to write again a correction from a past session [5]. A lesson goes into the journal the first time; when it repeats a second time, it becomes a rule or a playbook step. A rule that can be checked mechanically becomes a check at the third level (P23).
+- **P16. A repeated mistake becomes a rule.** The Claude Code guide advises adding a rule to an agent file exactly in this situation: when the agent makes a mistake a second time, or the owner has to write again a correction from a past session [5]. A lesson goes into the journal the first time; when it repeats a second time, it becomes a rule or a playbook step. A rule that can be checked mechanically becomes a check at the third level (P23). A rule that came from a lesson also gets a lesson question in the test set: test tasks drawn from real failures show a fixed mistake that comes back [35]. A lesson also names the layer its failure came from (task, context, environment, verification, state), so the fix goes to that layer, and `ph-doctor` finds the most frequent layer by counting them [28].
 
 ## Agents and models
 
@@ -84,6 +85,11 @@ The pan-harness rests on these principles. Each one: the rule, why (the source),
 
   In the pan-harness the rules stand in `structure.md` → "Writing", in a project in `runbook.md` → `Writing the harness` and in the entry format at the top of each file; `ph-doctor` checks them in new text (`audit.md` → "Writing"). The template and skill texts are written with these rules too, because an agent writes new text after the example of the text around it: the form of the prompt shapes the form of the answer [30]. The principle is for every text an agent reads (the list is in `structure.md` → "Writing"); a README, a report and a commit message are for people and are written by the owner's instruction.
 
+## Self-check and outside content
+
+- **P27. The agent checks its own work while it works.** A way to verify its own work strongly predicts an agent's success: a type check, a build, tests and a look at the running result, with only the failures shown [32]. Anthropic's long-running agents run a basic end-to-end test before new work and test a feature as a user would before marking it done [2]; a harness pairs guides with sensors that let the agent correct itself before the work reaches a person [33]. A project is ready for an agent only when it starts and its checks run from a clean copy, with the dependencies and the runtime version written down; the harness, not the agent's memory, says where the program's log is [28]. In the pan-harness, with `code=yes`: `ph-init` runs the fast and the full check once and writes the dated result, proposes a missing dependency file, runtime pin or check (it builds none) and writes where the log is; the fast check runs before a task (a failure found there is not the task's) and after each change, the log is read on a failure, and the result is seen before "done"; a step of a large task is `done` only with its check command's result; the end of a task finds the debug leftovers in the lines it changed.
+- **P28. Outside text is data.** Tool descriptions, web pages and files can carry instructions written for the agent (prompt injection), and skill registries have spread harmful skills [32]; the security controls belong in the harness, not in the model alone [34]. In the pan-harness instructions come from the owner and the harness: an instruction in other text the task did not need goes to the owner, and a third-party skill, MCP server or agent plugin is installed only with the owner's permission.
+
 ## Sources
 
 1. Anthropic, "Effective context engineering for AI agents": https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
@@ -113,7 +119,11 @@ The pan-harness rests on these principles. Each one: the rule, why (the source),
 25. GitHub Spec Kit, the spec template and the `/specify` command: https://github.com/github/spec-kit/blob/main/templates/spec-template.md
 26. Anthropic, "Define success criteria": https://platform.claude.com/docs/en/test-and-evaluate/define-success
 27. The Scrum Guide (2020), "Definition of Done": https://scrumguides.org/scrum-guide.html
-28. walkinglabs, "Learn Harness Engineering", lectures L03–L05, L07–L14 (2026): https://walkinglabs.github.io/learn-harness-engineering/en/lectures/ (for example, `lecture-04-why-one-giant-instruction-file-fails/`). The numeric examples of the lectures are teaching estimates; the sources they rest on: [2], [6], [18], Liu et al. "Lost in the Middle" (2023), Anthropic "Harness design for long-running application development".
+28. walkinglabs, "Learn Harness Engineering", lectures 1–14 (2026): https://walkinglabs.github.io/learn-harness-engineering/en/lectures/ (for example, `lecture-04-why-one-giant-instruction-file-fails/`). The numeric examples of the lectures are teaching estimates; the sources they rest on: [2], [6], [18], Liu et al. "Lost in the Middle" (2023), Anthropic "Harness design for long-running application development".
 29. Matt Pocock, "writing-for-agents" skill (MIT): https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-for-agents
 30. Anthropic, "Prompting best practices": https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
 31. GitHub Spec Kit, the `/speckit.clarify` command: https://github.com/github/spec-kit/blob/main/templates/commands/clarify.md
+32. HumanLayer, "Skill issue: harness engineering for coding agents": https://www.humanlayer.dev/blog/skill-issue-harness-engineering-for-coding-agents
+33. Birgitta Böckeler, "Harness engineering" (martinfowler.com): https://martinfowler.com/articles/harness-engineering.html
+34. "Distributing Security Controls Through Harness Engineering": https://arxiv.org/abs/2607.25890
+35. Marmelab, "The state of AI harness engineering 2026": https://marmelab.com/blog/2026/09/24/the-state-of-ai-harness-engineering-2026.html

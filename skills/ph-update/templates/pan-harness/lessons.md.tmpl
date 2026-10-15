@@ -3,6 +3,7 @@
 This file holds the mistakes made in the work and the lessons drawn from them (L…). The rules in `AGENTS.md` refer to them with `← L…`. A topic tag follows each lesson's heading (`runbook.md` → `Writing the harness`).
 
 A new lesson goes at the end with the next number; the old numbers do not change. Format:
-- **L<n> (YYYY-MM-DD) — <title>.** [tag] What happened. Rule: … Check: …
+- **L<n> (YYYY-MM-DD) — <title>.** [tag] What happened. Layer: … Rule: … Check: …
 
 `Rule:` says what to do (positive form), `Check:` says how to see that the rule is followed (completion criterion).
+`Layer:` is one word, where the failure came from: `task` (the task was unclear), `context` (the agent lacked knowledge), `environment` (a tool, a version, a setting), `verification` (no check caught it), `state` (progress or a decision was lost); the fix goes to that layer.

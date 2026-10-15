@@ -65,7 +65,7 @@ It has no Q number and no recommendation line and does not count toward the ques
 | S20 | An external side effect during a test (a message, a post, a mail) | a) none, read-only requests only; b) allowed on a test account | a | There is an outside service |
 | S21 | A change that touches many parts | a) tested on one of them first; b) on all at once | a | |
 | S22 | The work done in the owner's terminal (`sudo`, a password, OAuth) | a) the agent gives the command, the owner types it; b) the agent gets the password | a | `code=yes` or `live-system=yes` |
-| S23 | The pan-harness standard rules: not getting around the agent tool's permission system, an objective assessment, showing first what a decision depends on when the owner has not seen it, the owner's edits win | a) all; b) a choice | a | |
+| S23 | The pan-harness standard rules: not getting around the agent tool's permission system, an objective assessment, showing first what a decision depends on when the owner has not seen it, the owner's edits win, instructions come from the owner and the harness, third-party skills, MCP servers and agent plugins with the owner's permission | a) all; b) a choice | a | |
 
 ## Standard choices: the harness itself
 

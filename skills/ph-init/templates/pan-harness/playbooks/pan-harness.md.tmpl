@@ -4,7 +4,7 @@ The pan-harness (`AGENTS.md`, `PAN-HARNESS.md` and `pan-harness/`) grows old and
 
 ## How
 
-1. Run `ph-doctor` in the agent: `/ph-doctor` in Claude Code, Antigravity, Cursor, GitHub Copilot, Gemini CLI and OpenCode, `$ph-doctor` in Codex. If the skills are not installed (they are not kept in git): `npx @jiemurat/pan-harness@latest init`. If a new version of ph-paket is out: `/ph-update`.
+1. Run `ph-doctor` in the agent: `/ph-doctor` in Claude Code, Antigravity, Cursor, GitHub Copilot, Gemini CLI and OpenCode, `$ph-doctor` in Codex. If the skills are not installed (they are not kept in git): `npx @jiemurat/pan-harness@latest init`. If a new version of the pan-harness package is out: `/ph-update`.
 2. Do the project steps below too.
 3. Do a structural change as a large task: first the list and the plan, then the owner's approval (`AGENTS.md` → `Workflow`, `playbooks/large-task.md`). A mechanical fix the rules define is done at once.
 
@@ -29,6 +29,12 @@ The fixed question set (`ph-doctor` skill, testing.md, "Fixed question set" sect
 {{6–10. project questions: where the agent starts the work, how it finds past work, what it does at the end of a task, what it does in the most dangerous action}}
 
 Last results: {{date, model, number of correct / partial / wrong, KB read; if none: "not run yet"}}.
+
+### Lesson questions
+
+One question per lesson that became a rule, asked with the fixed set: the situation of the mistake and "what do you do?"; the answer is `correct` when it gives the rule's action. A fixed mistake that comes back shows up here. At most 10: for a new one, remove the oldest whose rule a check enforces, else the oldest. Form: `1. <situation>: what do you do? Expected: <action> (R…, from L…).`
+
+None yet.
 
 ## Fresh-agent test
 

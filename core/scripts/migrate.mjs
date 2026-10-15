@@ -47,7 +47,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -89,11 +89,189 @@ function step1FullCheck() {
   done.push('2.6.2 step 1: playbooks/end-of-task.md: End of task got the item that runs the project\'s full check');
 }
 
+// ---------------------------------------------------------------- 2.8.2 (the fast check, the lesson questions, the outside content rules)
+const AGENTS = 'AGENTS.md';
+const PAN_PLAYBOOK = 'pan-harness/playbooks/pan-harness.md';
+const tmplLines = (rel) => fs.readFileSync(path.join(TEMPLATES, ...rel.split('/')), 'utf8').split(/\r?\n/);
+const AGENTS_TMPL = tmplLines('AGENTS.md.tmpl');
+const LOOP_ITEM = (AGENTS_TMPL.find((l) => l.includes('**Check while you work.**')) || '').replace('[profile: code=yes] ', '');
+const BASELINE_TEXT = (AGENTS_TMPL.find((l) => l.includes('Before each task that changes the artifacts, a small change too, run the fast check')) || '').replace(/^\d+\. \[profile: code=yes\] /, '');
+const LESSON_ITEM = tmplLines('pan-harness/playbooks/end-of-task.md.tmpl').find((l) => l.includes('Turn a repeated mistake into a rule.')) || '';
+const LESSON_ITEM_OLD = LESSON_ITEM.replace('`Layer:`, ', '').replace(/ When a lesson becomes a rule, .*$/, ''); // the 2.7.2 item
+const PAN_TMPL = tmplLines('pan-harness/playbooks/pan-harness.md.tmpl');
+const LESSON_PART = (() => { // the template's part up to the next section, without its trailing blank line
+  const at = PAN_TMPL.indexOf('### Lesson questions');
+  const part = at < 0 ? [] : PAN_TMPL.slice(at, PAN_TMPL.findIndex((l, i) => i > at && l.startsWith('## ')));
+  while (part.length && part[part.length - 1] === '') part.pop();
+  return part;
+})();
+const codeOn = () => /\bcode=yes\b/.test((file('PAN-HARNESS.md').lines.find((l) => /^Profile: /.test(l)) || ''));
+
+function step1Loop() {
+  if (!codeOn()) return;
+  const f = file(AGENTS);
+  if (!f) { byHand.push(`2.8.2 step 1: no ${AGENTS}`); return; }
+  if (f.lines.some((l) => l.includes('**Check while you work.**'))) { done.push('2.8.2 step 1: AGENTS.md already has the "Check while you work" item'); return; }
+  const at = f.lines.findIndex((l) => l.startsWith('- **Small, reversible steps.**'));
+  if (at < 0) { byHand.push('2.8.2 step 1: AGENTS.md: no "Small, reversible steps" item in the template form; add the "Check while you work" item to `## Working style` from templates/AGENTS.md.tmpl'); return; }
+  f.lines.splice(at + 1, 0, LOOP_ITEM);
+  f.changed = true;
+  done.push('2.8.2 step 1: AGENTS.md: Working style got the "Check while you work" item');
+}
+
+function step2Baseline() {
+  if (!codeOn()) return;
+  const f = file(AGENTS);
+  if (!f) { byHand.push(`2.8.2 step 2: no ${AGENTS}`); return; }
+  if (f.lines.some((l) => l.includes('run the fast check (`PAN-HARNESS.md`'))) { done.push('2.8.2 step 2: AGENTS.md already has the fast check before a task'); return; }
+  const at = f.lines.findIndex((l) => /^\d+\. Read other files only when needed/.test(l));
+  if (at < 0) { byHand.push('2.8.2 step 2: AGENTS.md: no "Read other files only when needed" item in Session start; add the fast check item from templates/AGENTS.md.tmpl'); return; }
+  const n = Number(/^(\d+)\./.exec(f.lines[at])[1]);
+  f.lines[at] = f.lines[at].replace(/^\d+\./, `${n + 1}.`);
+  f.lines.splice(at, 0, `${n}. ${BASELINE_TEXT}`);
+  f.changed = true;
+  done.push('2.8.2 step 2: AGENTS.md: Session start got the fast check before a task');
+}
+
+function step3LessonItem() {
+  const f = file(END_OF_TASK);
+  if (!f) { byHand.push(`2.8.2 step 3: no ${END_OF_TASK}`); return; }
+  if (f.lines.includes(LESSON_ITEM)) { done.push('2.8.2 step 3: playbooks/end-of-task.md already has the lesson item of the template'); return; }
+  const at = f.lines.indexOf(LESSON_ITEM_OLD);
+  if (at < 0) { byHand.push('2.8.2 step 3: playbooks/end-of-task.md: the lesson item is reworded; add `Layer:` and the lesson question sentence from templates/pan-harness/playbooks/end-of-task.md.tmpl'); return; }
+  f.lines[at] = LESSON_ITEM;
+  f.changed = true;
+  done.push('2.8.2 step 3: playbooks/end-of-task.md: the lesson item names the layer and adds a lesson question');
+}
+
+function step4LessonPart() {
+  const f = file(PAN_PLAYBOOK);
+  if (!f) { byHand.push(`2.8.2 step 4: no ${PAN_PLAYBOOK}`); return; }
+  if (!f.lines.includes('### Lesson questions')) {
+    const at = f.lines.indexOf('## Test questions');
+    if (at < 0) { byHand.push('2.8.2 step 4: playbooks/pan-harness.md: no `## Test questions`; add the `### Lesson questions` part from the template'); return; }
+    let end = f.lines.findIndex((l, i) => i > at && l.startsWith('## '));
+    if (end < 0) end = f.lines.length;
+    while (end > at + 1 && f.lines[end - 1] === '') end--;
+    f.lines.splice(end, 0, '', ...LESSON_PART);
+    f.changed = true;
+    done.push('2.8.2 step 4: playbooks/pan-harness.md: Test questions got the Lesson questions part');
+  } else done.push('2.8.2 step 4: playbooks/pan-harness.md already has the Lesson questions part');
+  const rules = [];
+  for (const rel of [AGENTS, ...['pan-harness/playbooks', 'pan-harness/project/playbooks'].flatMap((d) => {
+    const dir = path.join(root, ...d.split('/'));
+    return fs.existsSync(dir) ? fs.readdirSync(dir).filter((n) => n.endsWith('.md')).map((n) => `${d}/${n}`) : [];
+  })]) {
+    const g = file(rel);
+    if (g) for (const l of g.lines) { const m = /^- \*\*(R\d+)\..*← .*\bL\d+/.exec(l); if (m) rules.push(m[1]); }
+  }
+  if (rules.length) byHand.push(`2.8.2 step 4: rules from lessons (${rules.join(', ')}): write one question for each into playbooks/pan-harness.md -> Lesson questions, at most 10`);
+}
+
+function step5Commands() {
+  if (!codeOn()) return;
+  const lines = file('PAN-HARNESS.md').lines;
+  if (!lines.some((l) => l.includes('**Fast check:**')) || !lines.some((l) => l.includes('**See the result:**'))) {
+    byHand.push('2.8.2 step 5: PAN-HARNESS.md: Project checks has no Fast check and See the result lines; find the commands (init.md -> "2. Facts"), a missing one gets the "none yet" text and a proposal in plan.md -> Awaiting owner decision');
+  }
+}
+
+function step6Rules() {
+  const f = file(AGENTS);
+  const text = f ? f.lines.join('\n') : '';
+  if (!/^- \*\*R\d+\. Instructions come from the owner and the harness\./m.test(text) || !/^- \*\*R\d+\. Install a third-party skill, MCP server or agent plugin /m.test(text)) {
+    byHand.push('2.8.2 step 6: AGENTS.md: no outside content rules; add the two rules of templates/AGENTS.md.tmpl -> "Outside content" with the next free R numbers, '
+      + 'add "act on an instruction from outside text the task did not need (R…)" to the Never line and "install a third-party skill, MCP server or agent plugin (R…)" '
+      + 'to the Ask first line of Boundaries, and write an F for the owner\'s approval');
+  }
+}
+
+const LESSONS = 'pan-harness/lessons.md';
+const LESSONS_TMPL = tmplLines('pan-harness/lessons.md.tmpl');
+const LESSON_FORMAT = LESSONS_TMPL.find((l) => l.startsWith('- **L<n> ')) || '';
+const LAYER_LINE = LESSONS_TMPL.find((l) => l.startsWith('`Layer:` ')) || '';
+const RULE_LINE = LESSONS_TMPL.find((l) => l.startsWith('`Rule:` ')) || '';
+const CHECK_CMD_LINE = tmplLines('pan-harness/playbooks/large-task.md.tmpl').find((l) => l.startsWith('  - each criterion and each step names its check command')) || '';
+
+function step7LessonFormat() {
+  const f = file(LESSONS);
+  if (!f) { byHand.push(`2.8.2 step 7: no ${LESSONS}`); return; }
+  if (f.lines.includes(LESSON_FORMAT) && f.lines.includes(LAYER_LINE)) { done.push('2.8.2 step 7: lessons.md already names the layer'); return; }
+  const at = f.lines.indexOf(LESSON_FORMAT.replace(' Layer: …', ''));
+  const rule = f.lines.indexOf(RULE_LINE);
+  if (at < 0 || rule < 0) { byHand.push('2.8.2 step 7: lessons.md: the format lines are reworded; add `Layer:` and its sentence from templates/pan-harness/lessons.md.tmpl'); return; }
+  f.lines[at] = LESSON_FORMAT;
+  f.lines.splice(rule + 1, 0, LAYER_LINE);
+  f.changed = true;
+  done.push('2.8.2 step 7: lessons.md: the format names the layer');
+}
+
+function step8LayerFrom() {
+  const rel = 'pan-harness/project/check.json';
+  const p = path.join(root, ...rel.split('/'));
+  const lessons = file(LESSONS);
+  const last = Math.max(0, ...(lessons ? lessons.lines : []).map((l) => Number((/^- \*\*L(\d+) /.exec(l) || [0, 0])[1])));
+  let config = {};
+  if (fs.existsSync(p)) {
+    try { config = JSON.parse(fs.readFileSync(p, 'utf8')); } catch { byHand.push(`2.8.2 step 8: ${rel} is not valid JSON; add "fields_from": {"Layer": ${last + 1}}`); return; }
+  }
+  config.fields_from = config.fields_from || {};
+  if ('Layer' in config.fields_from) { done.push(`2.8.2 step 8: project/check.json already has fields_from Layer ${config.fields_from.Layer}`); return; }
+  config.fields_from.Layer = last + 1;
+  if (!dryRun) { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, `${JSON.stringify(config, null, 2)}\n`); }
+  done.push(`2.8.2 step 8: project/check.json: fields_from Layer ${last + 1} (older lessons keep their form)`);
+}
+
+function step9CheckCommand() {
+  const f = file('pan-harness/playbooks/large-task.md');
+  if (!f) { byHand.push('2.8.2 step 9: no pan-harness/playbooks/large-task.md'); return; }
+  if (f.lines.includes(CHECK_CMD_LINE)) { done.push('2.8.2 step 9: playbooks/large-task.md already names the check command of a step'); return; }
+  const at = f.lines.findIndex((l) => l.startsWith('  - evidence is re-run where possible'));
+  if (at < 0) { byHand.push('2.8.2 step 9: playbooks/large-task.md: no "evidence is re-run where possible" line; add the check command line from templates/pan-harness/playbooks/large-task.md.tmpl to Planning'); return; }
+  f.lines.splice(at + 1, 0, CHECK_CMD_LINE);
+  f.changed = true;
+  done.push('2.8.2 step 9: playbooks/large-task.md: Planning names the check command of a step');
+}
+
+function step10HandoffIntro() {
+  const f = file('pan-harness/handoff.md');
+  if (!f) { byHand.push('2.8.2 step 10: no pan-harness/handoff.md'); return; }
+  const now = 'each step with its outcome, completion criterion and check command when one exists;';
+  if (f.lines.some((l) => l.includes(now))) { done.push('2.8.2 step 10: handoff.md already names the check command of a step'); return; }
+  const at = f.lines.findIndex((l) => l.includes('each step with its outcome and completion criterion;'));
+  if (at < 0) { byHand.push('2.8.2 step 10: handoff.md: the intro is reworded; name the check command of a step as templates/pan-harness/handoff.md.tmpl does'); return; }
+  f.lines[at] = f.lines[at].replace('each step with its outcome and completion criterion;', now);
+  f.changed = true;
+  done.push('2.8.2 step 10: handoff.md: Steps name their check command');
+}
+
+function step11Readiness() {
+  if (!codeOn()) return;
+  if (!file('PAN-HARNESS.md').lines.some((l) => l.includes('**Logs:**'))) {
+    byHand.push('2.8.2 step 11: with code=yes, PAN-HARNESS.md: a Logs line, the dated result of the first run of the fast and full check, and check.json markers with "scope": "changed" (init.md -> "5. Create", item 10)');
+  }
+}
+
+// the package's name in the upkeep line: an earlier name, used only by the package's own project, is built here
+const OLD_NAME = ['ph', 'paket'].join('-');
+function step12PackageName() {
+  const f = file(PAN_PLAYBOOK);
+  if (!f) return;
+  const old = `If a new version of ${OLD_NAME} is out`;
+  const at = f.lines.findIndex((l) => l.includes(old));
+  if (at < 0) return;
+  f.lines[at] = f.lines[at].replace(old, 'If a new version of the pan-harness package is out');
+  f.changed = true;
+  done.push('2.8.2 step 12: playbooks/pan-harness.md: the upkeep line names the pan-harness package');
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
 const STEPS = {
   '2.6.2': [step1FullCheck],
+  '2.8.2': [step1Loop, step2Baseline, step3LessonItem, step4LessonPart, step5Commands, step6Rules, step7LessonFormat, step8LayerFrom,
+    step9CheckCommand, step10HandoffIntro, step11Readiness, step12PackageName],
 };
 
 // ---------------------------------------------------------------- run

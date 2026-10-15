@@ -213,3 +213,84 @@ test('migrate: from 2.4.2 and 2.5.2 the end-of-task playbook gets the full check
   assert.match(o.stdout, /^by hand 2\.6\.2 step 1: playbooks\/end-of-task\.md: an item in the project's own words names `Project checks`/m, o.stdout);
   assert.equal(read(own, 'pan-harness/playbooks/end-of-task.md').split('\n').filter((l) => l === item).length, 0, 'not added next to the own item');
 });
+
+// 2.8.2: the fast check items (code=yes), the lesson questions part, the end-of-task sentence; the commands and the outside content rules by hand
+test('migrate: from 2.7.2 the fast check items come with code=yes only, the lesson questions once; the commands and the two rules by hand', () => {
+  const tmpl = (rel) => fs.readFileSync(path.join(SKILL, 'templates', ...rel.split('/')), 'utf8').split('\n');
+  const loop = tmpl('AGENTS.md.tmpl').find((l) => l.includes('**Check while you work.**')).replace('[profile: code=yes] ', '');
+  const baseline = tmpl('AGENTS.md.tmpl').find((l) => l.includes('Before each task that changes the artifacts, a small change too, run the fast check')).replace(/^\d+\. \[profile: code=yes\] /, '');
+  const lessonItem = tmpl('pan-harness/playbooks/end-of-task.md.tmpl').find((l) => l.includes('Turn a repeated mistake into a rule.'));
+  const oldItem = lessonItem.replace('`Layer:`, ', '').replace(/ When a lesson becomes a rule, .*$/, '');
+  // a 2.7.2 harness: the scaffolded one without the new parts
+  const old = (code) => {
+    const dir = current();
+    const agents = read(dir, 'AGENTS.md').split('\n')
+      .filter((l) => !l.includes('**Check while you work.**') && !l.includes('Before each task that changes the artifacts') && !/^(\*\*Outside content\*\*|- \*\*R2[45]\. )/.test(l))
+      .map((l) => l.replace(/^(\d+)\. Read other files only when needed/, (m, n) => `${n - 1}. Read other files only when needed`));
+    put(dir, 'AGENTS.md', agents.join('\n'));
+    put(dir, 'pan-harness/playbooks/end-of-task.md', read(dir, 'pan-harness/playbooks/end-of-task.md').replace(lessonItem, oldItem));
+    put(dir, 'pan-harness/playbooks/pan-harness.md', read(dir, 'pan-harness/playbooks/pan-harness.md').replace(/\n### Lesson questions\n[\s\S]*?(?=\n## )/, ''));
+    put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness \S+$/m, 'Standard: pan-harness 2.7.2')
+      .replace(/^Profile: .*$/m, `Profile: live-system=no, code=${code}, sensitive-data=none`).split('\n').filter((l) => !/\*\*(Fast check|See the result):\*\*/.test(l)).join('\n'));
+    return dir;
+  };
+  const dir = old('yes');
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  for (const line of [/^done +2\.8\.2 step 1: AGENTS\.md: Working style got the "Check while you work" item$/m, /^done +2\.8\.2 step 2: AGENTS\.md: Session start got the fast check before a task$/m,
+    /^done +2\.8\.2 step 3: playbooks\/end-of-task\.md: the lesson item names the layer and adds a lesson question$/m, /^done +2\.8\.2 step 4: playbooks\/pan-harness\.md: Test questions got the Lesson questions part$/m,
+    /^by hand 2\.8\.2 step 5: PAN-HARNESS\.md: Project checks has no Fast check and See the result lines/m, /^by hand 2\.8\.2 step 6: AGENTS\.md: no outside content rules/m, /^done +Standard: pan-harness 2\.8\.2$/m]) {
+    assert.match(r.stdout, line, r.stdout);
+  }
+  const agents = read(dir, 'AGENTS.md').split('\n');
+  assert.ok(agents[agents.indexOf(loop) - 1].startsWith('- **Small, reversible steps.**'), 'after "Small, reversible steps"');
+  const b = agents.findIndex((l) => l.endsWith(baseline));
+  assert.ok(b >= 0 && /^(\d+)\. /.test(agents[b]), 'the baseline item');
+  assert.equal(Number(/^(\d+)\./.exec(agents[b + 1])[1]), Number(/^(\d+)\./.exec(agents[b])[1]) + 1, '"Read other files" moved one down');
+  assert.ok(read(dir, 'pan-harness/playbooks/end-of-task.md').split('\n').includes(lessonItem));
+  assert.equal(read(dir, 'pan-harness/playbooks/pan-harness.md').split('### Lesson questions\n').length, 2, 'the part once');
+  const again = run('migrate.mjs', '--root', dir);
+  assert.ok(again.stdout.includes(`migrate: ${VERSION} -> ${VERSION}; 0 done, 0 by hand`), again.stdout);
+  const doc = old('no');
+  const d = run('migrate.mjs', '--root', doc);
+  assert.equal(d.status, 0, d.stdout + d.stderr);
+  assert.doesNotMatch(d.stdout, /step [125]:/, d.stdout);
+  assert.ok(!read(doc, 'AGENTS.md').includes('**Check while you work.**'), 'code=no: no item');
+  assert.match(d.stdout, /^done +2\.8\.2 step 4: /m);
+});
+
+// 2.8.2, the second part: the lesson layer, the check command of a step; the logs, the first run and markers by hand
+test('migrate: from 2.7.2 the lessons get the layer, check.json starts it at the next lesson, a step names its check command', () => {
+  const tmpl = (rel) => fs.readFileSync(path.join(SKILL, 'templates', ...rel.split('/')), 'utf8').split('\n');
+  const format = tmpl('pan-harness/lessons.md.tmpl').find((l) => l.startsWith('- **L<n> '));
+  const layerLine = tmpl('pan-harness/lessons.md.tmpl').find((l) => l.startsWith('`Layer:` '));
+  const checkLine = tmpl('pan-harness/playbooks/large-task.md.tmpl').find((l) => l.startsWith('  - each criterion and each step names its check command'));
+  const lessonItem = tmpl('pan-harness/playbooks/end-of-task.md.tmpl').find((l) => l.includes('Turn a repeated mistake into a rule.'));
+  const dir = current();
+  put(dir, 'pan-harness/lessons.md', read(dir, 'pan-harness/lessons.md').replace(format, format.replace(' Layer: …', '')).replace(`${layerLine}\n`, '')
+    + `\n- **L1 (${DAY}) — A lesson.** [docs] It happened. Rule: do it. Check: see it.\n- **L2 (${DAY}) — Another.** [docs] It happened. Rule: do it. Check: see it.\n`);
+  put(dir, 'pan-harness/playbooks/large-task.md', read(dir, 'pan-harness/playbooks/large-task.md').replace(`${checkLine}\n`, ''));
+  const oldName = ['ph', 'paket'].join('-'); // the earlier name, kept out of this file
+  put(dir, 'pan-harness/playbooks/pan-harness.md', read(dir, 'pan-harness/playbooks/pan-harness.md').replace('If a new version of the pan-harness package is out', `If a new version of ${oldName} is out`));
+  put(dir, 'pan-harness/handoff.md', read(dir, 'pan-harness/handoff.md').replace('each step with its outcome, completion criterion and check command when one exists;', 'each step with its outcome and completion criterion;'));
+  put(dir, 'pan-harness/playbooks/end-of-task.md', read(dir, 'pan-harness/playbooks/end-of-task.md').replace(lessonItem, lessonItem.replace('`Layer:`, ', '').replace(/ When a lesson becomes a rule, .*$/, '')));
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness \S+$/m, 'Standard: pan-harness 2.7.2')
+    .replace(/^Profile: .*$/m, 'Profile: live-system=no, code=yes, sensitive-data=none').split('\n').filter((l) => !/\*\*(Fast check|See the result|Logs):\*\*/.test(l)).join('\n'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  for (const line of [/^done +2\.8\.2 step 3: playbooks\/end-of-task\.md: the lesson item names the layer and adds a lesson question$/m,
+    /^done +2\.8\.2 step 7: lessons\.md: the format names the layer$/m, /^done +2\.8\.2 step 8: project\/check\.json: fields_from Layer 3 \(older lessons keep their form\)$/m,
+    /^done +2\.8\.2 step 9: playbooks\/large-task\.md: Planning names the check command of a step$/m, /^done +2\.8\.2 step 10: handoff\.md: Steps name their check command$/m,
+    /^done +2\.8\.2 step 12: playbooks\/pan-harness\.md: the upkeep line names the pan-harness package$/m,
+    /^by hand 2\.8\.2 step 11: with code=yes, PAN-HARNESS\.md: a Logs line, the dated result of the first run of the fast and full check, and check\.json markers/m]) {
+    assert.match(r.stdout, line, r.stdout);
+  }
+  assert.ok(read(dir, 'pan-harness/lessons.md').split('\n').includes(format) && read(dir, 'pan-harness/lessons.md').includes(layerLine));
+  assert.equal(JSON.parse(read(dir, 'pan-harness/project/check.json')).fields_from.Layer, 3);
+  const planning = read(dir, 'pan-harness/playbooks/large-task.md').split('\n');
+  assert.equal(planning[planning.findIndex((l) => l.startsWith('  - evidence is re-run where possible')) + 1], checkLine);
+  assert.ok(read(dir, 'pan-harness/playbooks/end-of-task.md').split('\n').includes(lessonItem));
+  assert.ok(!read(dir, 'pan-harness/playbooks/pan-harness.md').includes(oldName), 'the old name is gone');
+  const again = run('migrate.mjs', '--root', dir);
+  assert.ok(again.stdout.includes(`migrate: ${VERSION} -> ${VERSION}; 0 done, 0 by hand`), again.stdout);
+});

@@ -9,7 +9,7 @@ pan-harness template. Saved in the project as `pan-harness/handoff.md`.
 
 The state of the active large task. The agent updates it with each status message, before stopping to ask the owner a question and near the end of the context; the checks run in full even when the context is running out. A new session goes on with the work from this file.
 
-When a large task is approved, write `**Status:** active` and fill the sections: `## Task` (task, goal, not done, budget), `## Criteria` (K1…: what is observed, the threshold, how and when it is checked, status), `## Steps` (each step with its outcome and completion criterion; status — `todo`, `active`, `blocked` or `done`, one `active` at a time), `## Changed files` (the files this task has changed so far), `## Checks`, `## Decisions`, `## Open questions`, `## Next step`, `## Work files` (the planned and the temporary files). When the task ends, move the decisions into `decisions.md` and the rest into the history entry, and leave `**Status:** none` here.
+When a large task is approved, write `**Status:** active` and fill the sections: `## Task` (task, goal, not done, budget), `## Criteria` (K1…: what is observed, the threshold, how and when it is checked, status), `## Steps` (each step with its outcome, completion criterion and check command when one exists; status — `todo`, `active`, `blocked` or `done`, one `active` at a time), `## Changed files` (the files this task has changed so far), `## Checks`, `## Decisions`, `## Open questions`, `## Next step`, `## Work files` (the planned and the temporary files). When the task ends, move the decisions into `decisions.md` and the rest into the history entry, and leave `**Status:** none` here.
 
 **Status:** {{none or active}}
 
@@ -26,7 +26,7 @@ When a large task is approved, write `**Status:** active` and fill the sections:
 
 ## Steps
 
-- {{`active` — a stage or step: its outcome and completion criterion (a condition one can check). Only one step `active` at a time. `done` with evidence, `blocked` with the reason}}
+- {{`active` — a stage or step: its outcome and completion criterion (a condition one can check). Only one step `active` at a time. `done` with the check command's passing output, or the evidence when it has no command, `blocked` with the reason}}
 
 ## Changed files
 

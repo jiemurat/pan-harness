@@ -54,8 +54,8 @@ test('the language question: the first message, in three languages, four options
     assert.ok(question.includes(part), `language question: ${part}`);
   }
   const situation = section(read(CORE, 'references', 'init.md'), '0. Finding the situation');
-  assert.ok(situation.includes(lines), 'the question as it is, in init.md');
-  assert.match(situation, /the first message to the owner is always this question/);
+  assert.ok(!situation.includes(lines), 'init.md holds no copy of the question');
+  assert.match(situation, /the first message to the owner is the language question of `style-questions\.md` → `Language question`/);
   assert.match(situation, /in an existing project 2 \(the language question, then the interview\), in an empty folder 3/, 'the rounds');
   const skill = read(ROOT, 'skills-src', 'ph-init', 'SKILL.md');
   assert.match(skill, /^0\. \*\*Situation\.\*\* .*the first message is the language question in three languages/m);
@@ -137,7 +137,7 @@ test('the core rules ask only what the owner alone can know, and ph-init says th
   assert.doesNotMatch(rules, /Ask the owner about the style/);
   assert.match(rules, /^1\. \*\*Find the facts yourself, the owner makes the decisions\.\*\* .*without a question/m, 'core rule 1: a clear, safe standard choice is taken without a question');
   const skill = read(ROOT, 'skills-src', 'ph-init', 'SKILL.md');
-  const steps = Object.fromEntries([...skill.matchAll(/^(\d)\. \*\*([^*]+)\*\* (.*)$/gm)].map((m) => [m[1], m[3]]));
+  const steps = Object.fromEntries([...skill.matchAll(/^(\d)\. \*\*([^*]+)\*\* ([\s\S]*?)(?=^\d\. \*\*|^<!--|(?![\s\S]))/gm)].map((m) => [m[1], m[3]])); // a step with its items
   assert.match(steps['3'], /`Asked`/);
   assert.match(steps['3'], /standard choices/);
   assert.match(steps['3'], /templates\/pan-harness\/playbooks\/large-task\.md\.tmpl` → `Planning`/, 'the shape of the first question is read before it is written');

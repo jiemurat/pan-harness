@@ -8,7 +8,7 @@ Changes: renamed to `ph-grilling`; facts are looked up by the agent itself, a su
 
 `skills/ph-writing-for-agents/` (`SKILL.md`, `SKILL-MECHANICS.md`, `agents/openai.yaml`) is the `writing-for-agents` skill of the same
 repository (commit 321658273cb1d20b76026717d027d505790106d4, `skills/productivity/writing-for-agents/`).
-Changes: renamed to `ph-writing-for-agents`; the frontmatter adds the license and the package metadata.
+Changes: renamed to `ph-writing-for-agents`; the frontmatter adds the license and the package metadata; the description is rewritten.
 
 Both are under this license:
 

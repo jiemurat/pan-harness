@@ -39,9 +39,9 @@ The questions are kept in the project's `playbooks/pan-harness.md` → `## Test 
 4. How is it checked (tests, lint, proofreading, facts)?
 5. What is the current state, which work is open?
 
-Then 4–6 project questions: which files the work starts from, how past work is found, what happens at the end of a task, what happens in the project's most dangerous action. At the end: "Is there anything in the harness you did not understand clearly or that made you make an assumption? For each: file:line and what is unclear."
+Then 4–6 project questions: which files the work starts from, how past work is found, what happens at the end of a task, what happens in the project's most dangerous action. Then the lesson questions (`playbooks/pan-harness.md` → `Lesson questions`): each puts the agent into the situation of a past mistake, so a fixed mistake that comes back shows up. At the end: "Is there anything in the harness you did not understand clearly or that made you make an assumption? For each: file:line and what is unclear."
 
-Grade each answer `correct`, `partial` or `wrong`. Measure the context use with the number the tool gives: tokens and the number of tool calls. The KB read that the agent reports itself is unreliable; use it only to know which files were read. After a structure change, the set is asked with the model of the last recorded result (a run before is not needed; when there is no recorded result or the owner asks, before too): the number of `correct` answers must not be lower than in the last recorded result.
+Grade each answer `correct`, `partial` or `wrong`. Measure the context use with the number the tool gives: tokens and the number of tool calls. The KB read that the agent reports itself is unreliable; use it only to know which files were read. After a structure change, the set is asked with the model of the last recorded result (a run before is not needed; when there is no recorded result or the owner asks, before too): the number of `correct` answers to the universal and project questions must not be lower than in the last recorded result, and a lesson question `correct` then stays `correct`.
 
 ## Resume test
 

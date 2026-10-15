@@ -35,29 +35,19 @@ Look at what the folder holds (`ls -A`, `git status`):
 - **An empty folder** (only `.git`, `.gitignore` and the agent tool folders: `.agents/`, `.claude/skills/`, `.gemini/commands/`, `.opencode/commands/`): in the first round of questions, together with Q1, ask what the project will be: code (language, what it does) or documents (which documents, for whom) and its name (the owner's name is not asked). Installing git and `git init` (step 1) do not wait for the answer. After the answer, make the minimal structure: `README.md` (the goal in 2–3 sentences, in the chat language), a `.gitignore` that fits the project type and the first commit (step 1), then the rest of `ph-init`. The facts come from the owner's answer; the repo holds nothing yet, so `Facts` is short.
 - **An existing project** (code or documents): start from step 1.
 
-**The language question.** Without a harness, the first message to the owner is always this question, in three languages, as it is:
+**The language question.** Without a harness, the first message to the owner is the language question of `style-questions.md` → `Language question`, as it is there; it also says how its answer sets the chat language. The rounds: in an existing project 2 (the language question, then the interview), in an empty folder 3.
 
-```
-Which language should we talk in? / Qaysi tilda gaplashamiz? / На каком языке будем общаться?
-a. English
-b. O'zbek
-c. Русский
-d. Other
-```
-
-It has no Q number, no recommendation line and does not count toward the question limit (`style-questions.md` → `Language question`). When the owner picks "d" without naming the language, ask again in the three languages. From the answer on, every message, the plan and the report are in the chosen language (a message the owner writes in another language is answered in that one: `SKILL.md` → "Core rules", rule 14); the harness is in English. The rounds: in an existing project 2 (the language question, then the interview), in an empty folder 3.
-
-Done when: one of the three situations is found; with a harness, the offer is with the owner; without one, the owner has answered the language question.
+Done when: as step 0 of the `ph-init` skill says (its `SKILL.md`).
 
 ## 1. Preparation
 
 These steps are part of the `ph-init` command: do them at once, before the plan's approval (the read-only rule until approval covers the harness itself, `SKILL.md` → "Core rules", rule 5).
 1. Find the project-folder. The skills are installed into it with `npx @jiemurat/pan-harness@latest init` and stand in `.gitignore` (they are tools, not project knowledge). This command goes into `playbooks/pan-harness.md`.
-2. **Git.** The pan-harness works in git (`structure.md` → "Git"):
+2. **Git.** The pan-harness works in git (`settings.md` → "Git"):
    - `git --version`. If git is not installed, install it: macOS — `xcode-select --install`, Windows — `winget install --id Git.Git -e`, Linux — the package manager (`sudo apt install git`, `sudo dnf install git`). When `sudo` or a password is needed: if the agent has a terminal the owner can see, run the command there, the owner types the password, then check with `git --version` and go on. Without such a terminal, give the command to the owner and wait.
    - If the folder is not a git repo (`git rev-parse --is-inside-work-tree` gives an error), run `git init -b main`.
    - Identity: first look at `git config user.name` and `git config user.email` (the global and the local setting come out together). When both are set, the commits are made with that name and the setting stays as it is. When they are empty, ask in the first round of questions (S2), write the answer into the repo's local setting and commit after the answer; take the name and the email only from the owner's answer: the commit author is the owner.
-   - `.gitignore`: make it when there is none, complete it when there is one (`structure.md` → "Git"). Write only what this project has or what the work makes:
+   - `.gitignore`: make it when there is none, complete it when there is one (`settings.md` → "Git"). Write only what this project has or what the work makes:
      - secrets: the exact names of the secret files found in item 4 below, `.env` and `.env.*` (with `!.env.example`), `*.pem`, `*.key`. The search patterns of item 4 (`*secret*`, `*token*`, `credentials*`) only serve to find files: `.gitignore` gets the exact names found, because a broad pattern hides ordinary files too;
      - the project's build or export folder (the README, a script or a manifest says where it is written), the cache and dependencies of the project's language, logs;
      - OS and editor files, office lock files in a document project (`~$*`, `.~lock.*#`).
@@ -70,13 +60,15 @@ These steps are part of the `ph-init` command: do them at once, before the plan'
 5. Skip these folders when scanning: `.git`, `node_modules`, `venv`, `.venv`, `__pycache__`, `dist`, `build`, `volumes`, data folders.
 6. Check `node --version` (18 or newer). Without Node, work by the procedure in `structure.md` → "Profile".
 
-Done when: `git status` works, `.gitignore` and the first commit are there, the agent and secret files are listed, whether Node is there is known.
+Done when: as step 1 of the `ph-init` skill says (its `SKILL.md`).
 
 ## 2. Facts
 
 Study these in the repo: the README and the manifests (`package.json`, `pyproject.toml`, `requirements.txt`, `Dockerfile`, `docker-compose*.yml`, `Makefile`, CI files). In a document project, count the folders of the root and the first level and the file types (pdf, docx, xlsx, md). Find:
 - the language and the stack, the commands to run, test and deploy (where they are written);
 - the existing checks and how they run: tests, linters, CI, document linters (markdownlint, Vale, a link checker), whether the project has a full check command;
+- with `code=yes`, the fast check and the way to see the result: a check of the artifact-folder that runs in seconds to a minute (a test subset, a type check, a lint) and the command that starts the program, with what to open or look at (`package.json` scripts, `Makefile`, the CI file, the README); the agent runs the fast check before a task and after each change, so a missing one costs every task;
+- with `code=yes`, the environment and the logs: the file that declares the dependencies (`package.json` with its lock file, `requirements.txt`, `pyproject.toml`), the pinned runtime version (`.nvmrc`, `.python-version`, `engines`, `.tool-versions`), and where the program writes its log and errors (a log file, the terminal, `docker compose logs`);
 - the project's invariants written in the repo: in code the architecture layers and the dependency rules, in documents the terms, the structure, the quotation form;
 - whether there is a live system (compose, systemd, cron, a server), where it runs;
 - the outside services and the secret names (the names of environment variables, without values);
@@ -86,6 +78,8 @@ Study these in the repo: the README and the manifests (`package.json`, `pyprojec
 - the computer's time zone: `date '+%Z %z'` (for example, `+05 +0500` — UTC+5); it is a standard choice (S11) and goes into the plan as information.
 
 Make the profile draft from the facts (`structure.md` → "Profile"): `live-system`, `code`, `sensitive-data`. Note the facts for yourself, each marked `verified` or `unverified`.
+
+Done when: as step 2 of the `ph-init` skill says (its `SKILL.md`).
 
 ## 3. Interview
 
@@ -105,7 +99,7 @@ A fact the agent finds (the computer's time zone, the profile) is neither a ques
 
 The questions are numbered for the owner Q1, Q2 …, and the numbers run on to the end of the work. The S numbers in `style-questions.md` are table IDs, not question numbers.
 
-Done when: each question asked has an answer ("yes" too) or an "I don't know" written as an open issue; the artifact-folder is agreed; the questions are counted.
+Done when: as step 3 of the `ph-init` skill says (its `SKILL.md`).
 
 ## 4. Plan
 
@@ -114,12 +108,14 @@ Give a short plan: up to 15 lines (up to 3 000 characters; the migration table c
 - the final list of criteria (1–5): each an outcome the owner sees, that is what is observed, the threshold, how and when it is checked. The constant checks (a file exists, the script gives 0 errors, the size) are not criteria. A rule or a list inside the harness is not a criterion (the owner does not read the harness files): a criterion is a behaviour a new agent or the owner sees. The owner's approval covers the criteria too;
 - what changes in the owner's project outside the harness: git (init, the check before a commit, `.gitignore`), in an empty folder `README.md` and its language (the chat language, another when the owner says so) and the empty artifact-folder, in an existing project the agreed move of the artifacts as the first large task, the owner's existing files when they move;
 - the migration table: where each existing file or section goes (a rule → `AGENTS.md`, a fact → `system-map.md` or `state.md`, a playbook → `project/playbooks/`, a decision → `decisions.md`; the originals are kept as they are in `archive/` too). It is given only when old content moves, together with what happens to `CLAUDE.md`;
-- the profile in plain words (is there code, a service that runs all the time, secrets or personal data) and the facts the agent found as information: the time zone, the project's full check command found in the repo (or "no check found: each task's plan agrees it");
+- the profile in plain words (is there code, a service that runs all the time, secrets or personal data) and the facts the agent found as information: the time zone, the project's full check command found in the repo (or "no check found: each task's plan agrees it"); with `code=yes` the fast check and the way to see the result, or that one is missing and goes to the work plan as a proposal, and the checks the agent runs once after the approval;
 - the standard choices (`style-questions.md` → `Standard choices`) in four lines, each with these words: chat language, time zone and style; task types, one at a time and the report; irreversible actions, secrets and push; commit order and upkeep. Leave out the form of address and the technical level: unless named, they do not go into a rule. No answer is waited for; when the owner wants a change, the owner says so;
 - the open issues (what the owner said "I don't know" to, when there are some): they do not stop the work and go into `plan.md` in step 5;
 - where the owner's hand is needed (a password, `sudo`, a sign-in), the risk and the way back.
 
 The file list is not in the plan: it goes into the report as "changed files". The plan calls the folders the project-folder and the artifact-folder, by these English terms. Leave the harness terms (start set, profile, playbook, handoff, migration table) out of the plan: write their meaning in plain words (the files read at session start, the project type, the table of moves). Before sending, write the plan into a temporary file outside the project-folder (`mktemp`), run `LC_ALL=C.UTF-8 wc -lm` (characters, not bytes), the three `grep` commands of `Report` and `grep -niE 'start set|profile|playbook|handoff|migration' <file>` on it, then delete the file: it is your file, not the owner's. Until the owner's approval, write no harness file. Done when: the plan is within 15 lines and 3 000 characters, the four `grep` results are clean (file names only of the owner's own files, for example the old files to move), the temporary file is deleted, the owner approved the plan.
+
+Done when: as step 4 of the `ph-init` skill says (its `SKILL.md`).
 
 ## 5. Create
 
@@ -136,13 +132,14 @@ The file list is not in the plan: it goes into the report as "changed files". Th
 6. Migration: move the content of the originals in `archive/` (item 1) to its places by the table. Compare each claim with the code and the configuration: old files hold stale or wrong sentences; fix them as you move them and say so in the report. When there is a `CLAUDE.md`, only `@AGENTS.md` stays in it.
 7. When the project has other `AGENTS.md` files with a purpose of their own, add a rule to `AGENTS.md`: they are objects of editing (template R17).
 8. The hook: `scaffold.mjs` makes it and connects git to it. When the project has another hook (`.git/hooks/pre-commit`, the pre-commit framework or another `core.hooksPath`), the script does not connect it and says so: keep that hook, ask the owner and merge both into one hook, then `git config core.hooksPath .githooks`.
-9. Write the project's full check command into `PAN-HARNESS.md` → `Project checks` (when found). In `project/check.json` → `co_change`, agreeing with the owner, tie each code and document folder (for example, `src/`, `docs/`) to the doc that describes it; in a project where unfinished-work marks occur, `markers` too (`structure.md` → "Extensions and settings").
-10. When there is a live system and the owner agrees (S28), write a read-only status script into `project/scripts/` (without `sudo`, network and secret files) and add it to `PAN-HARNESS.md` → `Project checks`. A `project/scripts/check-*.mjs --live` extension only compares the harness facts with the live system.
-11. When the profile lists `pii` or `confidential`, offer the owner to write a `project/scripts/secret-check-pii.mjs` extension. Agree on the patterns with the owner (for example, a passport or phone number format). The main protection is still the rule: the harness gets a path, an ID and a neutral description in place of the content.
+9. Write the project's full check command into `PAN-HARNESS.md` → `Project checks` (when found). With `code=yes`, fill its `Fast check:` and `See the result:` lines with the fast check and the way to see the result found in step 2; for a missing one, write the template's "none yet" text and add a proposal to `plan.md` → `Awaiting owner decision`: create it as a task of its own (`ph-init` does not create it: it changes the artifacts). In `project/check.json` → `co_change`, agreeing with the owner, tie each code and document folder (for example, `src/`, `docs/`) to the doc that describes it; with `code=no`, in a project where unfinished-work marks occur, `markers` too (`settings.md` → "Extensions and settings"); with `code=yes`, item 10 sets it.
+10. With `code=yes`, run the fast check and the full check once, each a command that installs nothing, uses no network and reads no secret file (a command that breaks one of these three is not run: write the reason in its place), and write the result after its command in `Project checks`: `(YYYY-MM-DD: <result>, <time>)`. A failure or a missing tool is written as it is and goes to `plan.md` → `Awaiting owner decision` as a proposal: `ph-init` changes no code and installs no tool. A missing dependency file or runtime pin goes there too. Fill the `Logs:` line from step 2. Turn on `check.json` → `markers` with `"scope": "changed"`, globs of the code files in `paths` (`src/**/*.js`, `app/**/*.py`: a folder name alone matches no file) and the patterns of the project's languages as JSON strings (`console\\.log\\(`, `\\bdebugger\\b`, `\\bprint\\(`, `breakpoint\\(\\)`, `\\bTODO\\b`, `\\bFIXME\\b`): the end of a task then finds the debug leftovers this task added (`settings.md` → "Extensions and settings").
+11. When there is a live system and the owner agrees (S28), write a read-only status script into `project/scripts/` (without `sudo`, network and secret files) and add it to `PAN-HARNESS.md` → `Project checks`. A `project/scripts/check-*.mjs --live` extension only compares the harness facts with the live system.
+12. When the profile lists `pii` or `confidential`, offer the owner to write a `project/scripts/secret-check-pii.mjs` extension. Agree on the patterns with the owner (for example, a passport or phone number format). The main protection is still the rule: the harness gets a path, an ID and a neutral description in place of the content.
 
-12. Write the agreed artifact-folder into `AGENTS.md` → `Project`; when the move waits in `plan.md`, the line says where the artifacts stand now; when the owner has not chosen, the line says so and points to the open issue. In an empty folder, make the artifact-folder empty: no file in it and no commit (git takes it with its first file). When the owner agreed to move the artifacts, write the move into `plan.md` → `Queue` as the first large task.
+13. Write the agreed artifact-folder into `AGENTS.md` → `Project`; when the move waits in `plan.md`, the line says where the artifacts stand now; when the owner has not chosen, the line says so and points to the open issue. In an empty folder, make the artifact-folder empty: no file in it and no commit (git takes it with its first file). When the owner agreed to move the artifacts, write the move into `plan.md` → `Queue` as the first large task.
 
-Done when: each standard file is made from its template and holds no `{{…}}`, the hook and the `project/` files are there, each row of the migration table shows its new place, `AGENTS.md` names the artifact-folder.
+Done when: as step 5 of the `ph-init` skill says (its `SKILL.md`).
 
 ## 6. Check
 
@@ -151,6 +148,8 @@ Done when: each standard file is made from its template and holds no `{{…}}`, 
 3. Measure the start set size with `wc -c`.
 4. Check the harness by `audit.md` item by item and fix what is found. A58 (does the start set answer the 5 main questions) costs no tokens: always do it.
 5. Ask the owner whether to run the fresh-agent test (`testing.md`). When it runs, fix the gaps found and write the result into `playbooks/pan-harness.md` → `## Test questions`.
+
+Done when: as step 6 of the `ph-init` skill says (its `SKILL.md`).
 
 ## 7. Report
 
@@ -163,7 +162,7 @@ Done when: each standard file is made from its template and holds no `{{…}}`, 
 
 When the commit order (S6) is a, commit the `ph-init` work before the report (the commit item of `playbooks/end-of-task.md`). With (b), give the file list; the owner commits.
 
-Done when: the report is with the owner, with each criterion's result and its evidence.
+Done when: as step 7 of the `ph-init` skill says (its `SKILL.md`).
 
 ## Common cases
 
@@ -179,4 +178,4 @@ Done when: the report is with the owner, with each criterion's result and its ev
 | A document project (no code) | `code=no` in the profile: `runbook.md` gets the document formats and the tools that read them, the code rules go. The full check — lint, links, assembly or export; `co_change` ties the document folders to the plan or the terms file; `markers` searches for draft marks (`TODO`, `TK`, "[source needed]"). `.gitignore` gets the office lock files (`~$*`, `.~lock.*#`) and the export results |
 | A monorepo | One pan-harness stands in the root. The packages' own knowledge is in `project/`, by package name |
 | A secret file in git | Go on with the work and tell the owner at once: the secret stays in the history and has to be replaced. Add the file to `.gitignore` and run `git rm --cached` (the file stays on disk). The history is rewritten only with the owner's permission. Never read the value |
-| A project in a folder a cloud service syncs | `structure.md` → "Git": tell the owner, offer to move the repo or keep `.git` out of syncing |
+| A project in a folder a cloud service syncs | `settings.md` → "Git": tell the owner, offer to move the repo or keep `.git` out of syncing |
