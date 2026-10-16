@@ -3,7 +3,7 @@ name: ph-init
 description: Builds a pan-harness (Panoramic Harness) in a project without one: AGENTS.md, PAN-HARNESS.md and pan-harness/, with the owner's goal and rules. Use it when asked to set up agent rules, an AGENTS.md or a harness, also when AGENTS.md, CLAUDE.md or .cursor/rules of another shape are there.
 license: MIT
 metadata:
-  version: "2.8.2"
+  version: "2.8.3"
   package: "@jiemurat/pan-harness"
 ---
 

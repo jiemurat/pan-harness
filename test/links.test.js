@@ -36,7 +36,7 @@ const ALLOWED_IDS = {
   D2: [['core/references/init.md'], 'the decision ph-init writes into the project'],
   F2: [['core/references/init.md'], 'an example rule source'],
   K1: [['core/templates/pan-harness/handoff.md.tmpl', 'core/templates/pan-harness/history/YYYY-MM.md.tmpl',
-    'core/templates/pan-harness/plan.md.tmpl'], 'a criterion number in an example'],
+    'core/templates/pan-harness/plan.md.tmpl', 'core/scripts/migrate.mjs'], 'a criterion number in an example (migrate.mjs: the old handoff intro)'],
   K2: [['core/templates/pan-harness/history/YYYY-MM.md.tmpl'], 'a criterion number in an example'],
   K4: [['core/references/audit.md', 'core/scripts/pan-harness-check.mjs',
     'core/skill-parts/core-rules.md', 'core/templates/AGENTS.md.tmpl'], 'a criterion number in the example label set'],

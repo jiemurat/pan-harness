@@ -4,7 +4,7 @@ description: Converts Excel workbooks (.xlsx, .xlsm, .xls, .xlsb, web-page expor
 compatibility: python3 (3.8 or newer); LibreOffice for .xls and .xlsb files (installed when missing) and for the second reading of numbers and dates
 license: MIT
 metadata:
-  version: "2.8.2"
+  version: "2.8.3"
   package: "@jiemurat/pan-harness"
 ---
 

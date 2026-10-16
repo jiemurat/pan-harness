@@ -324,7 +324,7 @@ test('a large task step and criterion name their check command: the large-task p
   const at = planning.findIndex((l) => l.startsWith('  - evidence is re-run where possible'));
   assert.equal(planning[at + 1], '  - each criterion and each step names its check command, or `no command` and the evidence it uses; a step with a command is `done` only when the command passes or prints the expected output, with that output as evidence;');
   const handoff = read('templates/pan-harness/handoff.md.tmpl');
-  assert.match(handoff, /`## Steps` \(each step with its outcome, completion criterion and check command when one exists;/);
+  assert.match(handoff, / Steps \(each step with its outcome, completion criterion and check command when one exists;/);
   assert.match(handoff, /`done` with the check command's passing output, or the evidence when it has no command/);
 });
 

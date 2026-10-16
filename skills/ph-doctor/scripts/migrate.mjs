@@ -47,7 +47,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -265,6 +265,27 @@ function step12PackageName() {
   done.push('2.8.2 step 12: playbooks/pan-harness.md: the upkeep line names the pan-harness package');
 }
 
+// ---------------------------------------------------------------- 2.8.3 (the handoff intro names no heading line)
+// the 2.8.2 intro named each section as `## Name` and the status line as `**Status:** active`, so a script
+// that edits by the first match landed in the intro; the template's intro names them in plain words
+const OLD_HANDOFF_INTRO = 'When a large task is approved, write `**Status:** active` and fill the sections: `## Task` (task, goal, not done, budget), `## Criteria` (K1…: what is observed, the threshold, how and when it is checked, status), `## Steps` (each step with its outcome, completion criterion and check command when one exists; status — `todo`, `active`, `blocked` or `done`, one `active` at a time), `## Changed files` (the files this task has changed so far), `## Checks`, `## Decisions`, `## Open questions`, `## Next step`, `## Work files` (the planned and the temporary files). When the task ends, move the decisions into `decisions.md` and the rest into the history entry, and leave `**Status:** none` here.';
+const HANDOFF_INTRO = fs.readFileSync(path.join(TEMPLATES, 'pan-harness', 'handoff.md.tmpl'), 'utf8').split(/\r?\n/)
+  .find((l) => l.startsWith('When a large task is approved, '));
+
+function step1PlainIntro() {
+  const f = file('pan-harness/handoff.md');
+  if (!f) { byHand.push('2.8.3 step 1: no pan-harness/handoff.md'); return; }
+  if (f.lines.includes(HANDOFF_INTRO)) { done.push('2.8.3 step 1: handoff.md already names the sections in plain words'); return; }
+  const at = f.lines.indexOf(OLD_HANDOFF_INTRO);
+  if (at < 0) {
+    byHand.push('2.8.3 step 1: handoff.md: the intro is reworded; name the sections and the status line without `## ` and `**Status:**`, as templates/pan-harness/handoff.md.tmpl does');
+    return;
+  }
+  f.lines[at] = HANDOFF_INTRO;
+  f.changed = true;
+  done.push('2.8.3 step 1: handoff.md: the intro names the sections and the status line in plain words');
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
@@ -272,6 +293,7 @@ const STEPS = {
   '2.6.2': [step1FullCheck],
   '2.8.2': [step1Loop, step2Baseline, step3LessonItem, step4LessonPart, step5Commands, step6Rules, step7LessonFormat, step8LayerFrom,
     step9CheckCommand, step10HandoffIntro, step11Readiness, step12PackageName],
+  '2.8.3': [step1PlainIntro],
 };
 
 // ---------------------------------------------------------------- run

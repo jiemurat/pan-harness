@@ -1,6 +1,6 @@
 <!--
 pan-harness template. Saved in the project as `pan-harness/handoff.md`.
-- Without an active large task, the file holds the heading, the two paragraphs and the `**Status:** none` line, without this note: the second paragraph keeps the form of an active task.
+- Without an active large task, the file holds the heading, the two paragraphs and the status line with `none`, without this note: the second paragraph keeps the form of an active task.
 - The sections and the status words (`todo`, `active`, `blocked`, `done`) stay as they are (standard): the script reads them.
 - A file still to be made is written without backticks and with the mark "(new)", else the script reports it as a missing path.
 - Remove this note.
@@ -9,7 +9,7 @@ pan-harness template. Saved in the project as `pan-harness/handoff.md`.
 
 The state of the active large task. The agent updates it with each status message, before stopping to ask the owner a question and near the end of the context; the checks run in full even when the context is running out. A new session goes on with the work from this file.
 
-When a large task is approved, write `**Status:** active` and fill the sections: `## Task` (task, goal, not done, budget), `## Criteria` (K1…: what is observed, the threshold, how and when it is checked, status), `## Steps` (each step with its outcome, completion criterion and check command when one exists; status — `todo`, `active`, `blocked` or `done`, one `active` at a time), `## Changed files` (the files this task has changed so far), `## Checks`, `## Decisions`, `## Open questions`, `## Next step`, `## Work files` (the planned and the temporary files). When the task ends, move the decisions into `decisions.md` and the rest into the history entry, and leave `**Status:** none` here.
+When a large task is approved, set the status line below to `active` and fill the sections: Task (task, goal, not done, budget), Criteria (K1…: what is observed, the threshold, how and when it is checked, status), Steps (each step with its outcome, completion criterion and check command when one exists; status — `todo`, `active`, `blocked` or `done`, one `active` at a time), Changed files (the files this task has changed so far), Checks, Decisions, Open questions, Next step, Work files (the planned and the temporary files). When the task ends, move the decisions into `decisions.md` and the rest into the history entry, and set the status line to `none`.
 
 **Status:** {{none or active}}
 

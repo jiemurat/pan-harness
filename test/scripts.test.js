@@ -254,7 +254,7 @@ test('migrate: from 2.7.2 the fast check items come with code=yes only, the less
   const doc = old('no');
   const d = run('migrate.mjs', '--root', doc);
   assert.equal(d.status, 0, d.stdout + d.stderr);
-  assert.doesNotMatch(d.stdout, /step [125]:/, d.stdout);
+  assert.doesNotMatch(d.stdout, /2\.8\.2 step [125]:/, d.stdout);
   assert.ok(!read(doc, 'AGENTS.md').includes('**Check while you work.**'), 'code=no: no item');
   assert.match(d.stdout, /^done +2\.8\.2 step 4: /m);
 });
@@ -293,4 +293,27 @@ test('migrate: from 2.7.2 the lessons get the layer, check.json starts it at the
   assert.ok(!read(dir, 'pan-harness/playbooks/pan-harness.md').includes(oldName), 'the old name is gone');
   const again = run('migrate.mjs', '--root', dir);
   assert.ok(again.stdout.includes(`migrate: ${VERSION} -> ${VERSION}; 0 done, 0 by hand`), again.stdout);
+});
+
+// 2.8.3: the handoff intro names the sections and the status line in plain words
+test('migrate: from 2.8.2 the handoff intro loses its heading names; a reworded intro is left by hand', () => {
+  const OLD = 'When a large task is approved, write `**Status:** active` and fill the sections: `## Task` (task, goal, not done, budget), `## Criteria` (K1…: what is observed, the threshold, how and when it is checked, status), `## Steps` (each step with its outcome, completion criterion and check command when one exists; status — `todo`, `active`, `blocked` or `done`, one `active` at a time), `## Changed files` (the files this task has changed so far), `## Checks`, `## Decisions`, `## Open questions`, `## Next step`, `## Work files` (the planned and the temporary files). When the task ends, move the decisions into `decisions.md` and the rest into the history entry, and leave `**Status:** none` here.';
+  const intro = fs.readFileSync(path.join(SKILL, 'templates', 'pan-harness', 'handoff.md.tmpl'), 'utf8').split('\n').find((l) => l.startsWith('When a large task is approved, '));
+  const old = (line) => {
+    const dir = current();
+    put(dir, 'pan-harness/handoff.md', read(dir, 'pan-harness/handoff.md').replace(intro, line));
+    put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness \S+$/m, 'Standard: pan-harness 2.8.2'));
+    return dir;
+  };
+  const dir = old(OLD);
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^done +2\.8\.3 step 1: handoff\.md: the intro names the sections and the status line in plain words$/m);
+  assert.match(r.stdout, /^done +Standard: pan-harness 2\.8\.3$/m);
+  const handoff = read(dir, 'pan-harness/handoff.md');
+  assert.ok(handoff.split('\n').includes(intro) && !handoff.includes(OLD), 'the new intro in place of the old');
+  const again = run('migrate.mjs', '--root', dir);
+  assert.ok(again.stdout.includes(`migrate: ${VERSION} -> ${VERSION}; 0 done, 0 by hand`), again.stdout);
+  const mine = old(OLD.replace('When a large task is approved', 'When the owner approves a large task'));
+  assert.match(run('migrate.mjs', '--root', mine).stdout, /^by hand 2\.8\.3 step 1: handoff\.md: the intro is reworded/m);
 });

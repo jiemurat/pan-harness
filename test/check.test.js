@@ -464,3 +464,43 @@ test('markers with scope "changed": only the lines changed since the last commit
   assert.match(r.out, /WARN +src\/new\.js:1: marker '\\bTODO\\b' /);
   assert.doesNotMatch(r.out, /src\/app\.js:[12]: marker/, r.out);
 });
+
+// handoff.md from the template, active, with its placeholders filled
+function activeHandoff() {
+  return fs.readFileSync(path.join(CORE, 'templates', 'pan-harness', 'handoff.md.tmpl'), 'utf8')
+    .replace(/^<!--[\s\S]*?-->\n/, '').replace('{{none or active}}', 'active')
+    .replace(/\{\{[^}]*\}\}/g, '`todo` the item of this section, with its evidence');
+}
+const handoffErrors = (out) => out.split('\n').filter((l) => l.startsWith('ERROR pan-harness/handoff.md'));
+
+test('handoff.md: the template names each heading once, so an edit by the first match lands in its section', () => {
+  const dir = harness();
+  let s = activeHandoff();
+  for (const name of ['## Task', '## Next step', '## Work files', '**Status:**']) assert.equal(s.split(name).length, 2, name);
+  s = `${s.slice(0, s.indexOf('## Next step'))}## Next step\n\nNEW TEXT\n\n${s.slice(s.indexOf('## Work files'))}`;
+  put(dir, 'pan-harness/handoff.md', s);
+  const r = check(dir);
+  assert.deepEqual(handoffErrors(r.out), [], r.out);
+  assert.match(fs.readFileSync(path.join(dir, 'pan-harness', 'handoff.md'), 'utf8'), /\n## Next step\n\nNEW TEXT\n\n## Work files\n/);
+});
+
+test('handoff.md: text in the intro, a heading twice, two status lines, a missing section and sections under none are errors', () => {
+  const dir = harness();
+  // an intro that names the headings, edited by the first match: the new text lands inside it
+  let s = activeHandoff().replace('Next step, Work files', '`## Next step`, `## Work files`');
+  s = `${s.slice(0, s.indexOf('## Next step'))}## Next step\n\nNEW TEXT\n\n${s.slice(s.indexOf('## Work files'))}`;
+  put(dir, 'pan-harness/handoff.md', s);
+  let r = check(dir);
+  assert.equal(r.code, 1, r.out);
+  assert.match(r.out, /^ERROR pan-harness\/handoff\.md: the intro before the status line has 4 paragraphs and the line '## Work files` /m);
+  put(dir, 'pan-harness/handoff.md', `${activeHandoff()}\n## Next step\n\nagain\n\n**Status:** none\n`);
+  r = check(dir);
+  assert.match(r.out, /^ERROR pan-harness\/handoff\.md: '## Next step' stands 2 times - /m);
+  assert.match(r.out, /^ERROR pan-harness\/handoff\.md: 2 status lines - /m);
+  put(dir, 'pan-harness/handoff.md', activeHandoff().replace(/\n## Work files\n[\s\S]*$/, '\n'));
+  assert.match(check(dir).out, /^ERROR pan-harness\/handoff\.md: an active task without '## Work files'/m);
+  put(dir, 'pan-harness/handoff.md', '# Handoff\n\nThe state.\n\n**Status:** none\n\n## Task\n\n- Done.\n');
+  r = check(dir);
+  assert.match(r.out, /^ERROR pan-harness\/handoff\.md: '\*\*Status:\*\* none' with ## Task - /m);
+  assert.equal(handoffErrors(r.out).length, 1, r.out);
+});

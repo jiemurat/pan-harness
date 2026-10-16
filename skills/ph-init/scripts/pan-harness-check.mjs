@@ -102,7 +102,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const VERSION = '2.8.2';
+const VERSION = '2.8.3';
 
 // Sizes in bytes. 24 KB fits the start set of a complex project written
 // compactly; 40 KB keeps any doc readable in one go. An agent reads a doc over
@@ -888,6 +888,27 @@ if (openItems.length) {
 if (isFile(HANDOFF)) {
   const ht = text.has(HANDOFF) ? text.get(HANDOFF) : read(HANDOFF);
   const st = /^\*\*Status:\*\*\s*(\w+)/m.exec(ht);
+  // the shape: a script edit that took the first match of a name (an older intro names each heading)
+  // lands outside its section and leaves a heading twice or text in the intro; errors, so the hook stops it
+  const hl = outsideCode(ht);
+  const rebuild = 'a script edit landed outside its section; take the file from git (`git show HEAD:pan-harness/handoff.md`) '
+    + 'and redo the edit on the whole heading line';
+  const statusLines = hl.filter((line) => line.startsWith('**Status:**'));
+  if (statusLines.length > 1) errors.push(`pan-harness/handoff.md: ${statusLines.length} status lines - ${rebuild}`);
+  for (const sec of HANDOFF_SECTIONS) {
+    const n = hl.filter((line) => starts(line, sec)).length;
+    if (n > 1) errors.push(`pan-harness/handoff.md: '${sec}' stands ${n} times - ${rebuild}`);
+  }
+  const statusAt = hl.findIndex((line) => line.startsWith('**Status:**'));
+  if (statusAt >= 0) {
+    const intro = hl.slice(hl.slice(0, statusAt).findIndex((line) => line.startsWith('# ')) + 1, statusAt);
+    const stray = intro.find((line) => line.startsWith('#'));
+    const paragraphs = intro.filter((line, i) => line.trim() && !(intro[i - 1] || '').trim()).length;
+    if (stray || paragraphs > 2) {
+      errors.push(`pan-harness/handoff.md: the intro before the status line has ${paragraphs} paragraphs`
+        + `${stray ? ` and the line '${stray.slice(0, 40)}'` : ''} (template: 2, no heading) - ${rebuild}`);
+    }
+  }
   if (!st) {
     warnings.push("pan-harness/handoff.md: no '**Status:** none' or '**Status:** active' line - the next "
       + 'session cannot tell whether a task is in progress; add it (template handoff.md.tmpl)');
@@ -897,10 +918,9 @@ if (isFile(HANDOFF)) {
       warnings.push(`pan-harness/handoff.md: ${size} bytes (> ${HANDOFF_LIMIT}) - an active handoff is read at `
         + 'every session start with the start set; move finished stages to the history entry');
     }
-    const lines = outsideCode(ht);
     for (const sec of HANDOFF_SECTIONS) {
-      if (!lines.some((line) => starts(line, sec))) {
-        warnings.push(`pan-harness/handoff.md: an active task without '${sec}' - a new session resumes `
+      if (!hl.some((line) => starts(line, sec))) {
+        errors.push(`pan-harness/handoff.md: an active task without '${sec}' - a new session resumes `
           + 'the task from this file; add the section (template handoff.md.tmpl)');
       }
     }
@@ -919,7 +939,13 @@ if (isFile(HANDOFF)) {
           + 'say what showed it (P21)');
       }
     }
-  } else if (st[1] !== 'none') {
+  } else if (st[1] === 'none') {
+    const left = HANDOFF_SECTIONS.filter((sec) => hl.some((line) => starts(line, sec)));
+    if (left.length) {
+      errors.push(`pan-harness/handoff.md: '**Status:** none' with ${left.join(', ')} - a finished task leaves `
+        + 'only the heading, the two paragraphs and the status line; move the rest into the history entry');
+    }
+  } else {
     warnings.push(`pan-harness/handoff.md: unknown status '${st[1]}' - the next session reads only `
       + 'none or active; use one of them');
   }

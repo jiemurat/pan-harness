@@ -2,6 +2,13 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 2.8.3
+
+A fix for `handoff.md`, the file that keeps the state of a large task.
+
+- The intro of the file named every section heading (`## Next step`) and the status line in the same form as the lines themselves, so an agent that edited the file by script could write into the intro instead of the section. The intro now names them in plain words, and `/ph-update` rewrites it in an existing harness.
+- The harness check stops the commit when `handoff.md` is damaged: a heading or the status line twice, extra text or a heading in the intro, a missing section in an active task, or sections left after the task ended.
+
 ## 2.8.2
 
 The agent checks its work while it works, and ignores instructions hidden in outside text.

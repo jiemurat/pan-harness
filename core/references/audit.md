@@ -143,7 +143,7 @@ The P26 items (the keyword order and trigger in A20, A43, A44–A48) and the tex
 | ID | Requirement | Smell | How to check | Fix |
 |---|---|---|---|---|
 | A58 | The start set answers the 5 main questions or leads to the answer with one link: what the project is; how it is built; how the result is made or run; how it is checked; the current state (P22) | Blank map | manual (no tokens): the place of the answer for each question (file → section) | structural: write the gap into the matching file or the map |
-| A59 | `handoff.md` says `**Status:** none` without an active task; in an active task all sections are there, each step has a status, no more than one `active`, `done` with evidence (P24) | Lost thread | script | mechanical |
+| A59 | `handoff.md` says `**Status:** none` without an active task and keeps no section then; in an active task all sections are there; each section heading and the status line stand once, the intro before the status line has at most two paragraphs and no heading; each step has a status, no more than one `active`, `done` with evidence (P24) | Lost thread | script | mechanical |
 | A60 | Each project playbook ends with `## Done`: the check levels in order and the safe form of the whole flow (`structure.md` → "Project part") | Unverified done | manual | structural |
 | A61 | A rule with a big harm that can be checked mechanically is enforced by a check (a script, a test, a git hook) whose message says what, why and how to fix (P23) | Paper rule | manual: for each `Boundaries` rule, "can a script or a hook check it?", the list of candidates | structural |
 | A62 | A doc over 10 KB that is read on demand starts with `## Contents` | Hidden section | script | mechanical |
