@@ -14,7 +14,8 @@ pan-harness-check.mjs reports any that are left. The Standard line and the month
 of the history file are filled in here. Existing files are kept as they are.
 --secrets also copies secret-check.mjs (the profile lists sensitive-data=secrets).
 The pre-commit hook goes to .githooks/pre-commit and git is pointed at it, unless
-the project already has another hook: then the agent merges the two with the owner.
+the project already has another hook (then the agent merges the two with the owner)
+or is a subfolder of another repository (then the note gives the owner the command).
 */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -90,15 +91,24 @@ const git = (...args) => spawnSync('git', ['-C', root, ...args], { encoding: 'ut
 if (git('rev-parse', '--is-inside-work-tree').stdout.trim() !== 'true') {
   notes.push('not a git repository yet: run `git config core.hooksPath .githooks` after `git init` (references/init.md -> "1. Preparation")');
 } else {
+  // core.hooksPath holds for the whole repository and is read from its top: a project in a
+  // subfolder (prefix "apps/book/") needs the path from the top, and the owner sets it
+  const prefix = git('rev-parse', '--show-prefix').stdout.trim();
+  const top = git('rev-parse', '--show-toplevel').stdout.trim();
+  const want = `${prefix}.githooks`;
+  const command = prefix ? `git -C "${top}" config core.hooksPath ${want}` : 'git config core.hooksPath .githooks';
   const hooksPath = git('config', '--get', 'core.hooksPath').stdout.trim();
   const gitDir = git('rev-parse', '--git-dir').stdout.trim();
   const oldHook = path.join(path.resolve(root, gitDir), 'hooks', 'pre-commit');
-  const framework = fs.existsSync(path.join(root, '.pre-commit-config.yaml'));
-  if (hooksPath === '.githooks') {
+  const framework = fs.existsSync(path.join(top, '.pre-commit-config.yaml'));
+  if (hooksPath === want) {
     // already set
   } else if (hooksPath || fs.existsSync(oldHook) || framework) {
     notes.push(`the project already has a pre-commit hook (${hooksPath ? `core.hooksPath=${hooksPath}` : framework ? '.pre-commit-config.yaml' : '.git/hooks/pre-commit'}): `
-      + 'merge it with .githooks/pre-commit together with the owner (references/init.md -> "5. Create"), then run `git config core.hooksPath .githooks`');
+      + `merge it with .githooks/pre-commit together with the owner (references/init.md -> "5. Create"), then run \`${command}\``);
+  } else if (prefix) {
+    notes.push(`the project is a subfolder (${prefix}) of the git repository ${top}: core.hooksPath was not set, as it holds for the whole repository; `
+      + `with the owner's yes, run \`${command}\` (references/init.md -> "5. Create")`);
   } else {
     git('config', 'core.hooksPath', '.githooks');
     notes.push('git config core.hooksPath .githooks: the hook runs the checks before every commit');

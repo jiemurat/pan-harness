@@ -3,10 +3,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { tmpDir } from './tmp.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CORE = path.join(ROOT, 'core');
@@ -99,7 +99,7 @@ function git(dir, ...args) {
 
 /** A clean harness in a fresh git repository (everything committed). */
 function harness({ gitInit = true } = {}) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-check-'));
+  const dir = tmpDir('ph-check-');
   for (const [rel, body] of Object.entries(FILES)) {
     fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
     fs.writeFileSync(path.join(dir, rel), body);
@@ -271,7 +271,7 @@ test('co_change: a watched file changed and its doc did not', () => {
 
 test('co_change: a harness in a subfolder of the repository sees its own changes', () => {
   const dir = harness();
-  const top = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-mono-'));
+  const top = tmpDir('ph-mono-');
   fs.renameSync(path.join(dir, '.git'), path.join(top, '.git'));
   fs.cpSync(dir, path.join(top, 'apps', 'book'), { recursive: true });
   git(top, 'add', '-A');
@@ -317,6 +317,29 @@ test('the pre-commit hook passes a clean commit and stops a staged secret', { sk
   assert.match(r.stderr, /secret-check is not clean/);
 });
 
+test('the pre-commit hook of a harness in a subfolder of the repository runs from its own folder', { skip: process.platform === 'win32' && 'needs sh' }, () => {
+  const top = tmpDir('ph-mono-');
+  const base = harness();
+  fs.renameSync(path.join(base, '.git'), path.join(top, '.git'));
+  const sub = path.join(top, 'apps', 'book');
+  fs.cpSync(base, sub, { recursive: true });
+  fs.mkdirSync(path.join(sub, '.githooks'));
+  fs.copyFileSync(path.join(CORE, 'templates', 'githooks', 'pre-commit.tmpl'), path.join(sub, '.githooks', 'pre-commit'));
+  fs.chmodSync(path.join(sub, '.githooks', 'pre-commit'), 0o755);
+  git(top, 'config', 'core.hooksPath', 'apps/book/.githooks');
+  put(top, 'other/keys.md', `${FAKE_KEY}\n`); // outside the project: not its secret check's business
+  git(top, 'add', '-A');
+  const env = { ...process.env, PATH: `${path.dirname(process.execPath)}${path.delimiter}${process.env.PATH}` };
+  let r = spawnSync('git', ['commit', '-q', '-m', 'move'], { cwd: top, encoding: 'utf8', env });
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stderr, /pan-harness checks passed/);
+  put(sub, 'docs/keys.md', `${FAKE_KEY}\n`);
+  git(top, 'add', 'apps/book/docs/keys.md');
+  r = spawnSync('git', ['commit', '-q', '-m', 'secret'], { cwd: top, encoding: 'utf8', env });
+  assert.notEqual(r.status, 0);
+  assert.match(r.stderr, /secret-check is not clean/);
+});
+
 test('terms: a glossed term in a new or changed line is a warning, old text is not', () => {
   const dir = harness();
   put(dir, 'pan-harness/system-map.md', '# System map\n\n- Chapters in `docs/`: the layout (structure), old.\n', true);
@@ -338,7 +361,7 @@ test('terms: untracked files, code blocks, the archive and a harness in a subfol
   assert.match(out, /^WARN +terms: pan-harness\/project\/notes\.md:7: .*\("edge \(limit or boundary\)"\)/m, out);
   assert.doesNotMatch(out, /terms: pan-harness\/archive/);
 
-  const top = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-mono-'));
+  const top = tmpDir('ph-mono-');
   const base = harness();
   fs.renameSync(path.join(base, '.git'), path.join(top, '.git'));
   fs.cpSync(base, path.join(top, 'apps', 'book'), { recursive: true });

@@ -22,6 +22,7 @@ Exit codes: 0 done, 2 usage, 3 unknown standard.
 */
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const SKILL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -47,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -286,6 +287,19 @@ function step1PlainIntro() {
   done.push('2.8.3 step 1: handoff.md: the intro names the sections and the status line in plain words');
 }
 
+// ---------------------------------------------------------------- 2.8.4 (the hook of a project in a subfolder)
+// core.hooksPath holds for the whole repository and is read from its top: the scaffold of 2.8.3 and
+// earlier set it to .githooks, which in a subfolder points to no folder; the owner sets the right path
+function step2SubfolderHook() {
+  const git = (...args) => spawnSync('git', ['-C', root, ...args], { encoding: 'utf8' }).stdout.trim();
+  if (git('rev-parse', '--is-inside-work-tree') !== 'true') return;
+  const prefix = git('rev-parse', '--show-prefix');
+  const want = `${prefix}.githooks`;
+  if (!prefix || git('config', '--get', 'core.hooksPath') === want) return;
+  byHand.push(`2.8.4 step 2: the project is a subfolder (${prefix}) of a git repository and its hook is not connected: `
+    + `with the owner's yes, run \`git -C "${git('rev-parse', '--show-toplevel')}" config core.hooksPath ${want}\``);
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
@@ -294,6 +308,7 @@ const STEPS = {
   '2.8.2': [step1Loop, step2Baseline, step3LessonItem, step4LessonPart, step5Commands, step6Rules, step7LessonFormat, step8LayerFrom,
     step9CheckCommand, step10HandoffIntro, step11Readiness, step12PackageName],
   '2.8.3': [step1PlainIntro],
+  '2.8.4': [step2SubfolderHook],
 };
 
 // ---------------------------------------------------------------- run
@@ -323,16 +338,23 @@ for (const s of ['pan-harness-check.mjs', 'secret-check.mjs']) {
     done.push(`pan-harness/scripts/${s}: replaced with the skill's copy`);
   }
 }
-// the hook: replaced only when the project kept the standard one (its commands equal the template's)
+// the hook: replaced only when the project kept the standard one (its commands equal the template's,
+// or the 2.4.2-2.8.3 hook's, which ran the checks from the repository's top and so failed in a project
+// in a subfolder: [the template's text, the old text])
+const OLD_HOOK = [['cd "$(dirname "$0")/.." || exit 1', 'root=$(git rev-parse --show-toplevel) || exit 1\ncd "$root" || exit 1'], [' --relative -z', ' -z']];
 const hook = path.join(root, '.githooks', 'pre-commit');
 if (fs.existsSync(hook)) {
   const tmpl = fs.readFileSync(path.join(TEMPLATES, 'githooks', 'pre-commit.tmpl'), 'utf8');
   const code = (s) => s.split(/\r?\n/).filter((l) => !/^\s*#/.test(l) && l.trim()).join('\n');
+  const oldCode = OLD_HOOK.reduce((s, [now, then]) => s.replace(now, then), code(tmpl));
   const now = fs.readFileSync(hook, 'utf8');
   if (now !== tmpl) {
     if (code(now) === code(tmpl)) {
       if (!dryRun) fs.writeFileSync(hook, tmpl, { mode: 0o755 });
       done.push('.githooks/pre-commit: comments updated from the template');
+    } else if (code(now) === oldCode) {
+      if (!dryRun) fs.writeFileSync(hook, tmpl, { mode: 0o755 });
+      done.push('.githooks/pre-commit: replaced with the template (the checks run in the project-folder)');
     } else {
       byHand.push('.githooks/pre-commit differs from the template: show the difference to the owner (references/doctor.md -> "3. Migration")');
     }

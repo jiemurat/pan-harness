@@ -3,7 +3,7 @@ name: ph-writing-for-agents
 description: Writes and edits documents an agent reads, so strong and small models take the same process every run. Use it whenever creating or editing a skill, AGENTS.md, CLAUDE.md or a doc an agent reaches through a link.
 license: MIT (Copyright (c) 2026 Matt Pocock), see LICENSE
 metadata:
-  version: "2.8.3"
+  version: "2.8.4"
   package: "@jiemurat/pan-harness"
   source: "https://github.com/mattpocock/skills/blob/321658273cb1d20b76026717d027d505790106d4/skills/productivity/writing-for-agents/SKILL.md"
   changes: "renamed to ph-writing-for-agents; the description is rewritten"

@@ -5,10 +5,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { tmpDir } from './tmp.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SKILL = path.join(ROOT, 'skills', 'ph-update');
@@ -22,7 +22,7 @@ function git(dir, ...args) {
   return r.stdout;
 }
 function repo() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-scripts-'));
+  const dir = tmpDir('ph-scripts-');
   git(dir, 'init', '-q', '-b', 'main');
   git(dir, 'config', 'user.name', 'Test');
   git(dir, 'config', 'user.email', 'test@example.com');
@@ -81,6 +81,17 @@ test('scaffold: another pre-commit hook is left for the owner', () => {
   assert.equal(spawnSync('git', ['config', '--get', 'core.hooksPath'], { cwd: dir, encoding: 'utf8' }).stdout.trim(), '');
 });
 
+test('scaffold: in a subfolder of a repository the hook is left to the owner with the command', () => {
+  const top = repo();
+  const sub = path.join(top, 'apps', 'book');
+  fs.mkdirSync(sub, { recursive: true });
+  const r = run('scaffold.mjs', '--root', sub);
+  assert.equal(r.status, 0, r.stderr);
+  assert.ok(fs.existsSync(path.join(sub, '.githooks', 'pre-commit')));
+  assert.equal(spawnSync('git', ['config', '--get', 'core.hooksPath'], { cwd: top, encoding: 'utf8' }).stdout.trim(), '', 'the repository config is left as it is');
+  assert.match(r.stdout, /^note +the project is a subfolder \(apps\/book\/\) of the git repository .*: core\.hooksPath was not set.*`git -C .+ config core\.hooksPath apps\/book\/\.githooks`/m);
+});
+
 /** A harness on the current standard, made by scaffold, with an old script copy and the hook's comments edited. */
 function current() {
   const dir = repo();
@@ -107,6 +118,34 @@ test('migrate: on the current standard it replaces an old script copy and the st
 
   const again = run('migrate.mjs', '--root', dir);
   assert.ok(again.stdout.includes(`migrate: ${VERSION} -> ${VERSION}; 0 done, 0 by hand`), again.stdout);
+});
+
+test('migrate: the old standard hook, which ran from the repository top, is replaced with the template', () => {
+  const dir = current();
+  const tmpl = fs.readFileSync(path.join(SKILL, 'templates', 'githooks', 'pre-commit.tmpl'), 'utf8');
+  put(dir, '.githooks/pre-commit', tmpl
+    .replace('cd "$(dirname "$0")/.." || exit 1', 'root=$(git rev-parse --show-toplevel) || exit 1\ncd "$root" || exit 1')
+    .replace(' --relative -z', ' -z'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^done +\.githooks\/pre-commit: replaced with the template \(the checks run in the project-folder\)$/m);
+  assert.equal(read(dir, '.githooks/pre-commit'), tmpl);
+});
+
+test('migrate: from 2.8.3 a project in a subfolder with the hook pointed at the top gets the command by hand', () => {
+  const top = repo();
+  const sub = path.join(top, 'apps', 'book');
+  fs.mkdirSync(sub, { recursive: true });
+  assert.equal(run('scaffold.mjs', '--root', sub).status, 0);
+  put(sub, 'PAN-HARNESS.md', read(sub, 'PAN-HARNESS.md').replace(/^Standard: pan-harness \S+$/m, 'Standard: pan-harness 2.8.3'));
+  git(top, 'config', 'core.hooksPath', '.githooks'); // what the old scaffold set
+  const r = run('migrate.mjs', '--root', sub);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^by hand 2\.8\.4 step 2: the project is a subfolder \(apps\/book\/\) .*`git -C ".+" config core\.hooksPath apps\/book\/\.githooks`$/m);
+  assert.equal(git(top, 'config', '--get', 'core.hooksPath').trim(), '.githooks', 'the repository config is left as it is');
+  git(top, 'config', 'core.hooksPath', 'apps/book/.githooks');
+  put(sub, 'PAN-HARNESS.md', read(sub, 'PAN-HARNESS.md').replace(/^Standard: pan-harness \S+$/m, 'Standard: pan-harness 2.8.3'));
+  assert.doesNotMatch(run('migrate.mjs', '--root', sub).stdout, /2\.8\.4 step 2/);
 });
 
 test('migrate: a project hook with its own commands is left by hand for the owner', () => {

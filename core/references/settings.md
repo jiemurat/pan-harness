@@ -74,7 +74,7 @@ Measure the size with `wc -c`. In UTF-8, characters such as `—`, `…`, `→`,
   - `never_track` — extra patterns git should not track: a folder at any depth when it ends with `/`, otherwise a file name or a path (glob). The script's own list (secrets, caches, logs, OS and editor files) always works; this key adds to it;
   - `track_ok` — paths tracked on purpose (exceptions);
   - `large_file_mb` — the size limit of a tracked file (standard 50).
-- **Git hook** (mandatory). To make the checks mandatory before a commit, the project keeps `.githooks/pre-commit` (from `templates/githooks/pre-commit.tmpl`) in the repo and connects it with `git config core.hooksPath .githooks`. The hook runs `pan-harness-check.mjs` (without `--live`) and (when the profile lists `secrets`) `secret-check.mjs`; on an error the commit stops and the cause is fixed; without Node, the hook lets the commit pass and says to run the checks by hand; skipping the check (`git commit --no-verify`) is the owner's decision only.
+- **Git hook** (mandatory). To make the checks mandatory before a commit, the project keeps `.githooks/pre-commit` (from `templates/githooks/pre-commit.tmpl`) in the repo and connects it with `git config core.hooksPath .githooks` (a project in a subfolder of a repository: the path from the repository's top, `apps/book/.githooks`). The hook runs the checks in its own project-folder: `pan-harness-check.mjs` (without `--live`) and (when the profile lists `secrets`) `secret-check.mjs`; on an error the commit stops and the cause is fixed; without Node, the hook lets the commit pass and says to run the checks by hand; skipping the check (`git commit --no-verify`) is the owner's decision only.
 
 ## Version
 

@@ -2,10 +2,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { tmpDir, removeAtExit } from './tmp.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CLI = path.join(ROOT, 'cli', 'pan-harness.js');
@@ -13,7 +13,7 @@ const VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf
 const SKILLS = fs.readdirSync(path.join(ROOT, 'skills')).filter((n) => n.startsWith('ph-')).sort();
 
 function project() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'ph-cli-'));
+  return tmpDir('ph-cli-');
 }
 
 function runEnv(dir, env, ...args) {
@@ -199,7 +199,7 @@ test('help, version and an unknown command', () => {
 test('a manifest path outside the skill folders is refused and nothing is deleted', () => {
   const dir = project();
   run(dir, 'init');
-  const victim = path.join(path.dirname(dir), `ph-victim-${path.basename(dir)}.txt`);
+  const victim = removeAtExit(path.join(path.dirname(dir), `ph-victim-${path.basename(dir)}.txt`));
   fs.writeFileSync(victim, 'keep\n');
   const mfile = path.join(dir, '.agents/skills/.pan-harness.json');
   const m = JSON.parse(fs.readFileSync(mfile, 'utf8'));
@@ -298,7 +298,7 @@ test('a .gitignore with CRLF line endings keeps them', () => {
 
 test('a linked skill file is replaced, never written through', { skip: noLinks }, () => {
   const dir = project();
-  const outside = path.join(path.dirname(dir), `ph-outside-${path.basename(dir)}.md`);
+  const outside = removeAtExit(path.join(path.dirname(dir), `ph-outside-${path.basename(dir)}.md`));
   fs.writeFileSync(outside, 'mine\n');
   fs.mkdirSync(path.join(dir, '.claude/skills/ph-init'), { recursive: true });
   fs.symlinkSync(outside, path.join(dir, '.claude/skills/ph-init/SKILL.md'));
@@ -309,7 +309,7 @@ test('a linked skill file is replaced, never written through', { skip: noLinks }
 
 test('a skill folder that links out of the project stops the install before any file is written', { skip: noLinks }, () => {
   const dir = project();
-  const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-outside-'));
+  const outside = tmpDir('ph-outside-');
   fs.mkdirSync(path.join(dir, '.claude/skills'), { recursive: true });
   fs.symlinkSync(outside, path.join(dir, '.claude/skills/ph-init'), 'dir');
   const r = run(dir, 'init', '--yes');

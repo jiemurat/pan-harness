@@ -4,6 +4,13 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 2.8.4
+
+The pre-commit hook runs the checks in its own project-folder (the folder above `.githooks`), so it works in a project that is a subfolder of another git repository too; its secret check scans only the project's staged files. In such a subfolder `scaffold.mjs` leaves `core.hooksPath` unset, as it holds for the whole repository, and prints the command with the path from the repository's top.
+
+1. `mechanical` — the standard `.githooks/pre-commit` of 2.4.2–2.8.3 is replaced with the template (`scripts/migrate.mjs`); a hook with the project's own commands is printed "by hand": show the difference to the owner.
+2. `structural` — when the project is a subfolder of another git repository and `core.hooksPath` is not the path from the repository's top to its `.githooks`, `scripts/migrate.mjs` prints the command "by hand" and leaves the config as it is: show the command to the owner and run it on the owner's yes.
+
 ## 2.8.3
 
 The intro of `handoff.md` names the sections and the status line in plain words, so a script that edits the file by the first match of `## Next step` or `**Status:**` lands on the real line. `pan-harness-check` gives an error (it stops the commit) when a section heading or the status line stands twice, when the intro before the status line has more than two paragraphs or a heading line, when an active task lacks a section (a warning until now) and when `**Status:** none` keeps sections. When the check reports one of them after the migration, fix the file as the error says.

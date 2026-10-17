@@ -3,7 +3,7 @@ name: ph-update
 description: Updates the pan-harness package (@jiemurat/pan-harness), migrates the harness to the new standard and ends with a full ph-doctor run. Use it when asked to update the pan-harness package or its ph-* skills, when a new version is out, or when PAN-HARNESS.md names an older standard.
 license: MIT
 metadata:
-  version: "2.8.3"
+  version: "2.8.4"
   package: "@jiemurat/pan-harness"
 ---
 

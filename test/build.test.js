@@ -3,12 +3,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { buildAll } from '../scripts/build.js';
 import { validateSkill } from '../scripts/validate.js';
+import { tmpDir } from './tmp.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
@@ -42,7 +42,7 @@ test('every shipped skill passes the specification checks', () => {
 });
 
 function fakeSkill(name, frontmatter) {
-  const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'ph-val-')), name);
+  const dir = path.join(tmpDir('ph-val-'), name);
   fs.mkdirSync(dir);
   fs.writeFileSync(path.join(dir, 'SKILL.md'), `---\n${frontmatter}\n---\nbody\n`);
   return dir;

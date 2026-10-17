@@ -2,6 +2,14 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 2.8.4
+
+Fixes for a project that is a subfolder of another git repository, and for the tests.
+
+- The pre-commit hook ran its checks from the top of the repository. In a project in a subfolder it found no check script, so every commit stopped with a misleading message. It now runs in its own project-folder, and its secret check scans only that project's staged files. `/ph-update` replaces the old standard hook.
+- `ph-init` set `core.hooksPath` in the containing repository's config, where it pointed at a folder that does not exist, so the hook never ran. In a subfolder it now leaves the setting unset and prints the command to run with the owner's yes.
+- The tests delete the temporary folders and files they create.
+
 ## 2.8.3
 
 A fix for `handoff.md`, the file that keeps the state of a large task.

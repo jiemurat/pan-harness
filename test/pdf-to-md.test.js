@@ -6,10 +6,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { tmpDir } from './tmp.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPTS = path.join(ROOT, 'skills', 'ph-pdf-to-md', 'scripts');
@@ -23,7 +23,7 @@ const SKIP = !PYTHON ? 'needs Python 3.8 or newer' : !POPPLER ? 'needs poppler (
 let pdfDir;
 function pdfs() {
   if (!pdfDir) {
-    pdfDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-pdf-'));
+    pdfDir = tmpDir('ph-pdf-');
     const r = spawnSync(PYTHON, ['-I', path.join(FIXTURES, 'make_pdfs.py'), pdfDir], { encoding: 'utf8' });
     assert.equal(r.status, 0, r.stderr);
   }
