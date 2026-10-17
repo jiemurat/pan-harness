@@ -2,6 +2,13 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 2.9.4
+
+A new skill: `ph-rename-claude-session`.
+
+- In Claude Desktop, `/ph-rename-claude-session` gives the session a title that names what it is about now, in the language you write in, and reports a short summary of the session: its goal, what is done and what is next. A title that already fits is kept.
+- In other agents the skill says the rename is unavailable there and stops.
+
 ## 2.8.4
 
 Fixes for a project that is a subfolder of another git repository, and for the tests.

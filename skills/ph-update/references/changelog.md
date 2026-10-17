@@ -4,6 +4,10 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 2.9.4
+
+A skill that retitles a Claude Desktop session joins the pan-harness package: `ph-rename-claude-session`. The harness standard is the same. There are no migration steps.
+
 ## 2.8.4
 
 The pre-commit hook runs the checks in its own project-folder (the folder above `.githooks`), so it works in a project that is a subfolder of another git repository too; its secret check scans only the project's staged files. In such a subfolder `scaffold.mjs` leaves `core.hooksPath` unset, as it holds for the whole repository, and prints the command with the path from the repository's top.

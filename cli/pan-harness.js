@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // pan-harness CLI: installs the ph-* agent skills into a project and keeps them current.
 // The skills do the real work inside the agent (ph-init, ph-doctor, ph-update, ph-grilling, ph-writing-for-agents,
-// and the ph-pdf-to-md, ph-word-to-md and ph-excel-to-md converters).
+// the ph-pdf-to-md, ph-word-to-md and ph-excel-to-md converters, and ph-rename-claude-session).
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';

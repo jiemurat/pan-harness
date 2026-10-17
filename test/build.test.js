@@ -70,7 +70,8 @@ test('the repository is a valid Claude Code plugin: version, default skills/ lay
   // Claude Code scans skills/ itself; a "skills" list would add the same folders a second time
   assert.equal(plugin.skills, undefined);
   assert.deepEqual(fs.readdirSync(path.join(ROOT, 'skills')).filter((n) => n.startsWith('ph-')).sort(),
-    ['ph-doctor', 'ph-excel-to-md', 'ph-grilling', 'ph-init', 'ph-pdf-to-md', 'ph-update', 'ph-word-to-md', 'ph-writing-for-agents']);
+    ['ph-doctor', 'ph-excel-to-md', 'ph-grilling', 'ph-init', 'ph-pdf-to-md', 'ph-rename-claude-session', 'ph-update', 'ph-word-to-md',
+      'ph-writing-for-agents']);
   // a plugin with a top-level bin/ is not installed by claude.ai and Cowork, and bin/ goes on the Bash PATH
   assert.ok(!fs.existsSync(path.join(ROOT, 'bin')));
   const market = JSON.parse(fs.readFileSync(path.join(ROOT, '.claude-plugin', 'marketplace.json'), 'utf8'));
