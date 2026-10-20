@@ -94,6 +94,7 @@ Each concept is written with one term, with no gloss in brackets and no synonym 
     ├── playbooks/
     │   ├── large-task.md      planning and carrying out a large task
     │   ├── end-of-task.md     the end-of-task checklist, journal rules
+    │   ├── delegation.md      sub-agent work
     │   └── pan-harness.md     `ph-doctor`, growth limits and the project steps
     ├── scripts/               copies from the skill only, not edited in the project
     │   ├── pan-harness-check.mjs   mandatory
@@ -170,6 +171,7 @@ Profile: live-system=yes, code=yes, sensitive-data=secrets+pii
 | `history/` | History of the work, each month in its own file | When past work is needed, with grep |
 | `archive/` | Superseded decisions, old parts of the journals, originals of migrated old agent files | When a journal lacks it, with grep |
 | `playbooks/large-task.md` | Planning a large task (questions round by round, criteria, the plan) and carrying it out (`handoff.md`, evidence, budget, usage limit) | Before planning a large task and when one goes on |
+| `playbooks/delegation.md` | Sub-agent work: when, model, brief, check | Before a sub-agent |
 | `playbooks/end-of-task.md` | The journal rules and the end-of-task checklist: history entry, `plan.md`, feedback and lessons, `.gitignore`, checks, commit, report | At the end of every task |
 | `playbooks/pan-harness.md` | The command that installs the skills, `ph-doctor`, the growth limits, the project's extra steps, the fixed question set and its last result (`## Test questions`), the lesson questions (`### Lesson questions`), the owner's standing answer on the fresh-agent test | In `ph-doctor`, on a size warning and before a test |
 | `scripts/pan-harness-check.mjs` | Structure, ID, field, path, size and term check | At the end of every task |

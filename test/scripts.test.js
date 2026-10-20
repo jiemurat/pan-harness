@@ -356,3 +356,37 @@ test('migrate: from 2.8.2 the handoff intro loses its heading names; a reworded 
   const mine = old(OLD.replace('When a large task is approved', 'When the owner approves a large task'));
   assert.match(run('migrate.mjs', '--root', mine).stdout, /^by hand 2\.8\.3 step 1: handoff\.md: the intro is reworded/m);
 });
+
+test('migrate 2.9.4 -> 2.10.4: AGENTS.md gets the main-agent, one task in each session, the Agent: line, the ph-workers pointer and the delegation item; the delegation playbook is made', () => {
+  const dir = current();
+  const old = read(dir, 'AGENTS.md')
+    .replace(/^- \*\*Main-agent:\*\* .*\n/m, '')
+    .replace('one task at a time in each session (R1)', 'one task at a time (R1)')
+    .replace('**R1. One task at a time in each session.**', '**R1. One task at a time.**')
+    .replace(/ End each commit message with the line `Agent: <your name>`[^.]*\./, '')
+    .replace(/\n\nSet the type first[^\n]*/, '')
+    .replace(/\n\nA request that names a worker-agent[^\n]*/, '')
+    .replace(/\n- \*\*Delegate reading\.\*\*[^\n]*/, '');
+  put(dir, 'AGENTS.md', old);
+  fs.rmSync(path.join(dir, 'pan-harness', 'playbooks', 'delegation.md'));
+  put(dir, 'pan-harness/project/check.json', read(dir, 'pan-harness/project/check.json').replace(/"start_limit_bytes": \d+/, '"start_limit_bytes": 20480'));
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 2.9.4'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  for (const step of [1, 2, 3, 4, 5, 6]) assert.match(r.stdout, new RegExp(`^done +2\\.10\\.4 step ${step}: `, 'm'));
+  const agents = read(dir, 'AGENTS.md');
+  const tmpl = fs.readFileSync(path.join(SKILL, 'templates', 'AGENTS.md.tmpl'), 'utf8');
+  for (const line of ['- **Main-agent:** COOPER.', '**R1. One task at a time in each session.**', 'one task at a time in each session (R1)',
+    'End each commit message with the line `Agent: <your name>`', 'A request that names a worker-agent', '- **Delegate reading.** ']) {
+    assert.ok(agents.includes(line), line);
+    assert.ok(tmpl.includes(line), `the template has ${line}`);
+  }
+  assert.match(read(dir, 'pan-harness/project/check.json'), /"start_limit_bytes": 21504/);
+  const playbook = read(dir, 'pan-harness/playbooks/delegation.md');
+  assert.match(playbook, /^# Playbook: delegation$/m);
+  assert.doesNotMatch(playbook, /<!--/, 'the template note is left out');
+  assert.match(read(dir, 'PAN-HARNESS.md'), /^Standard: pan-harness 2\.10\.4$/m);
+  const again = run('migrate.mjs', '--root', dir);
+  assert.ok(again.stdout.includes('0 by hand'), again.stdout);
+  assert.equal(read(dir, 'AGENTS.md'), agents, 'a second run changes nothing');
+});

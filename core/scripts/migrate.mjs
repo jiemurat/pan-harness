@@ -48,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -300,6 +300,90 @@ function step2SubfolderHook() {
     + `with the owner's yes, run \`git -C "${git('rev-parse', '--show-toplevel')}" config core.hooksPath ${want}\``);
 }
 
+// ---------------------------------------------------------------- 2.10.4 (the main-agent and its worker-agents)
+// the template's lines: the main-agent's name, one task in each session, the Agent: commit line, the
+// type-first line and the pointer to ph-workers; and the start set limit one KB higher for them
+const MAIN_AGENT_LINE = AGENTS_TMPL.find((l) => l.startsWith('- **Main-agent:** ')) || '';
+const TYPE_FIRST = AGENTS_TMPL.find((l) => l.startsWith('Set the type first, before any skill runs')) || '';
+const WORKER_POINTER = AGENTS_TMPL.find((l) => l.startsWith('A request that names a worker-agent')) || '';
+const TRAILER = (/ End each commit message with the line `Agent: <your name>`[^.]*\./.exec(AGENTS_TMPL.join('\n')) || [''])[0];
+
+function step1MainAgent() {
+  const f = file(AGENTS);
+  if (f.lines.some((l) => l.startsWith('- **Main-agent:** '))) { done.push('2.10.4 step 1: AGENTS.md already names the main-agent'); return; }
+  let at = f.lines.findIndex((l) => l.startsWith('- **Artifact-folder:** '));
+  if (at < 0) at = f.lines.findIndex((l) => l.startsWith('- **Goal:** '));
+  if (at < 0) { byHand.push(`2.10.4 step 1: AGENTS.md: no Artifact-folder or Goal line in Project; add the line "${MAIN_AGENT_LINE}" there`); return; }
+  f.lines.splice(at + 1, 0, MAIN_AGENT_LINE);
+  f.changed = true;
+  done.push('2.10.4 step 1: AGENTS.md: Project names the main-agent COOPER');
+}
+
+function step2TaskPerSession() {
+  const f = file(AGENTS);
+  let n = 0;
+  f.lines = f.lines.map((l) => {
+    const now = l.replace(/(\*\*R\d+\. One task at a time)\.\*\*/, '$1 in each session.**').replace(/\bone task at a time \((R\d+)\)/, 'one task at a time in each session ($1)');
+    if (now !== l) n++;
+    return now;
+  });
+  if (n) { f.changed = true; done.push(`2.10.4 step 2: AGENTS.md: one task at a time in each session (${n} line(s))`); }
+  else if (!f.lines.some((l) => l.includes('One task at a time in each session'))) byHand.push('2.10.4 step 2: AGENTS.md: no "One task at a time." rule in the template form; make it "One task at a time in each session."');
+}
+
+function step3Trailer() {
+  const f = file(AGENTS);
+  if (f.lines.some((l) => l.includes('`Agent: <your name>`'))) { done.push('2.10.4 step 3: AGENTS.md already asks for the Agent: commit line'); return; }
+  const at = f.lines.findIndex((l) => l.includes('The agent commits, the owner pushes.**') && l.includes('only when files changed.'));
+  if (at < 0) { byHand.push(`2.10.4 step 3: AGENTS.md: the commit rule is reworded; add to it "${TRAILER.trim()}"`); return; }
+  f.lines[at] = f.lines[at].replace('only when files changed.', `only when files changed.${TRAILER}`);
+  f.changed = true;
+  done.push('2.10.4 step 3: AGENTS.md: each commit message ends with the Agent: line');
+}
+
+function step4WorkerPointer() {
+  const f = file(AGENTS);
+  const missing = [TYPE_FIRST, WORKER_POINTER].filter((l) => !f.lines.includes(l));
+  if (!missing.length) { done.push('2.10.4 step 4: AGENTS.md already has the type-first line and points to ph-workers'); return; }
+  const at = f.lines.findIndex((l) => l.startsWith('An unclear type is a large task.'));
+  if (at < 0) { byHand.push(`2.10.4 step 4: AGENTS.md: no "An unclear type is a large task." line in Workflow; add at the end of Workflow: ${missing.map((l) => `"${l}"`).join(' and ')}`); return; }
+  f.lines.splice(at + 1, 0, ...missing.flatMap((l) => ['', l]));
+  f.changed = true;
+  done.push('2.10.4 step 4: AGENTS.md: Workflow sets the type before any skill and points worker-agent requests to ph-workers');
+}
+
+// the delegation rule: the Working style item and the standard playbook it points to
+const DELEGATE_ITEM = AGENTS_TMPL.find((l) => l.startsWith('- **Delegate reading.** ')) || '';
+const DELEGATION = 'pan-harness/playbooks/delegation.md';
+
+function step6Delegation() {
+  const f = file(AGENTS);
+  if (f.lines.some((l) => l.startsWith('- **Delegate reading.** '))) done.push('2.10.4 step 6: AGENTS.md already has the Delegate reading item');
+  else {
+    const at = f.lines.findIndex((l) => l.startsWith('- **Keep the scope.** '));
+    if (at < 0) byHand.push(`2.10.4 step 6: AGENTS.md: no "Keep the scope." item in Working style; add "${DELEGATE_ITEM}" there`);
+    else {
+      f.lines.splice(at + 1, 0, DELEGATE_ITEM);
+      f.changed = true;
+      done.push('2.10.4 step 6: AGENTS.md: Working style hands reading work to sub-agents');
+    }
+  }
+  if (file(DELEGATION)) return;
+  const text = fs.readFileSync(path.join(TEMPLATES, 'pan-harness', 'playbooks', 'delegation.md.tmpl'), 'utf8').replace(/^<!--[\s\S]*?-->\r?\n/, '');
+  cache.set(DELEGATION, { eol: '\n', lines: text.split(/\r?\n/), changed: true });
+  done.push(`2.10.4 step 6: ${DELEGATION} made from the template`);
+}
+
+function step5StartLimit() {
+  const f = file('pan-harness/project/check.json');
+  if (!f) return;
+  const at = f.lines.findIndex((l) => /"start_limit_bytes":\s*\d+/.test(l));
+  if (at < 0) return;
+  f.lines[at] = f.lines[at].replace(/("start_limit_bytes":\s*)(\d+)/, (_, k, v) => `${k}${Number(v) + 1024}`);
+  f.changed = true;
+  done.push('2.10.4 step 5: project/check.json: start_limit_bytes one KB higher for the worker-agent lines');
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
@@ -309,6 +393,7 @@ const STEPS = {
     step9CheckCommand, step10HandoffIntro, step11Readiness, step12PackageName],
   '2.8.3': [step1PlainIntro],
   '2.8.4': [step2SubfolderHook],
+  '2.10.4': [step1MainAgent, step2TaskPerSession, step3Trailer, step4WorkerPointer, step5StartLimit, step6Delegation],
 };
 
 // ---------------------------------------------------------------- run

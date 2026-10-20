@@ -33,7 +33,7 @@ The pan-harness works in git in every project: the history, the checkpoints and 
 
 | What | Limit | How to trim |
 |---|---|---|
-| Start set (`AGENTS.md`, `PAN-HARNESS.md`, `state.md`, `plan.md`) | Standard 24 KB (24 576 bytes), in a small project 20 KB (S24). The project's own limit is in `project/check.json` → `start_limit_bytes`; `PAN-HARNESS.md` does not repeat the number, or one of them goes stale | The "would the agent make a mistake if I removed it?" test (P2), moving a domain rule to a playbook |
+| Start set (`AGENTS.md`, `PAN-HARNESS.md`, `state.md`, `plan.md`) | Standard 25 KB (25 600 bytes), in a small project 21 KB (S24). The project's own limit is in `project/check.json` → `start_limit_bytes`; `PAN-HARNESS.md` does not repeat the number, or one of them goes stale | The "would the agent make a mistake if I removed it?" test (P2), moving a domain rule to a playbook |
 | Any other doc | 40 KB (`doc_limit_bytes`). A doc over 10 KB is not read whole, so it starts with a `## Contents` list | Closed parts to the archive; splitting by topic |
 | `history/`, `archive/` | No limit | Searched with grep |
 | `decisions.md` | Only current decisions, size as any other doc (`doc_limit_bytes`) | Superseded and done ones to the archive |
@@ -50,7 +50,7 @@ Measure the size with `wc -c`. In UTF-8, characters such as `—`, `…`, `→`,
 
   ```json
   {
-    "start_limit_bytes": 24576,
+    "start_limit_bytes": 25600,
     "doc_limit_bytes": 40960,
     "path_bases": ["src", "services/*"],
     "path_prefixes": ["pan-harness", "project", "playbooks", "scripts", "docs", "src"],

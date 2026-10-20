@@ -9,7 +9,7 @@
     {
       "name": "pan-harness",
       "source": "./",
-      "description": "ph-init, ph-doctor, ph-update, ph-grilling and ph-writing-for-agents: create, audit, update and plan a Panoramic Harness (AGENTS.md, PAN-HARNESS.md, pan-harness/) and write text for agents; ph-pdf-to-md, ph-word-to-md and ph-excel-to-md convert PDF, Word and Excel files into checked Markdown; ph-rename-claude-session retitles a Claude Desktop session.",
+      "description": "ph-init, ph-doctor, ph-update, ph-grilling and ph-writing-for-agents: create, audit, update and plan a Panoramic Harness (AGENTS.md, PAN-HARNESS.md, pan-harness/) and write text for agents; ph-workers, ph-create-worker, ph-merge-work and ph-delete-worker run worker-agents in parallel sessions and merge their work; ph-pdf-to-md, ph-word-to-md and ph-excel-to-md convert PDF, Word and Excel files into checked Markdown; ph-rename-claude-session retitles a Claude Desktop session.",
       "category": "productivity",
       "keywords": [
         "agents-md",

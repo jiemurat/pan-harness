@@ -67,7 +67,7 @@ Profile: live-system=no, code=no, sensitive-data=secrets
 
 - \`state.md\`, \`plan.md\`, \`handoff.md\`, \`system-map.md\`, \`runbook.md\`.
 - \`decisions.md\`, \`feedback.md\`, \`lessons.md\`, \`history/\`, \`archive/\`, \`scripts/\`.
-- \`playbooks/pan-harness.md\`, \`playbooks/large-task.md\`, \`playbooks/end-of-task.md\`.
+- \`playbooks/pan-harness.md\`, \`playbooks/large-task.md\`, \`playbooks/end-of-task.md\`, \`playbooks/delegation.md\`.
 
 ## Project checks
 
@@ -86,6 +86,7 @@ Standard: pan-harness ${VERSION}
   'pan-harness/playbooks/pan-harness.md': '# Playbook: pan-harness\n\n- Run ph-doctor monthly.\n\n## Growth limits\n\n- Limits are in `project/check.json`.\n',
   'pan-harness/playbooks/large-task.md': '# Playbook: large task\n\n## Planning\n\n- The goal first.\n\n## Execution\n\n- Check each criterion.\n',
   'pan-harness/playbooks/end-of-task.md': '# Playbook: end of task\n\n## Journals\n\n- Journals are append-only.\n\n## End of task\n\n- [ ] Run the checks.\n',
+  'pan-harness/playbooks/delegation.md': '# Playbook: delegation\n\n## When\n\n- A broad search goes to a sub-agent.\n',
   [`pan-harness/history/${MONTH}.md`]: `# History ${MONTH}\n\n### ${DAY} — Harness created [docs]\n- **What and why:** created.\n- **Checks:** checks ran.\n- **Files:** all. (commit: abc1234)\n`,
   'pan-harness/project/check.json': '{}\n',
   'docs/chapter-1.md': '# Chapter 1\n',
@@ -526,4 +527,13 @@ test('handoff.md: text in the intro, a heading twice, two status lines, a missin
   r = check(dir);
   assert.match(r.out, /^ERROR pan-harness\/handoff\.md: '\*\*Status:\*\* none' with ## Task - /m);
   assert.equal(handoffErrors(r.out).length, 1, r.out);
+});
+
+test('pan-harness/workers.md is a standard file; another file in pan-harness/ is not', () => {
+  const dir = harness();
+  put(dir, 'pan-harness/workers.md', '# Workers\n\n| Name | Status | Task | Branch | Folder | Session |\n|---|---|---|---|---|---|\n| TARS | free | — | — | — | — |\n', true);
+  put(dir, 'pan-harness/notes.md', '# Notes\n', true);
+  const { out } = check(dir);
+  assert.doesNotMatch(out, /pan-harness\/workers\.md: not part of the standard/);
+  assert.match(out, /pan-harness\/notes\.md: not part of the standard/);
 });

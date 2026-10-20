@@ -2,6 +2,18 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 2.10.4
+
+Worker-agents: parallel work in one project, each worker in a session and a folder of its own.
+
+- The agent of a session you open is the main-agent, COOPER; it introduces itself by that name. On your word ("TARS, prepare …") it gives a task to a worker-agent: TARS, CASE, PLEX, KIPP and WALLE come preset. Each worker is a full agent session that works like the main-agent, in a folder of its own on a new branch for each task. You can watch and talk to every worker session.
+- A worker's folder is a git worktree filled with copy-on-write copies of the main folder (on APFS, Btrfs and XFS), so it holds the skills, settings and dependencies too and takes almost no disk space. Where the disk cannot copy-on-write, the agent shows you the size of a plain copy and asks first. A worker folder is never placed in a cloud-synced folder (Dropbox, iCloud, OneDrive, Google Drive). A nested repo, such as an artifact-folder with its own git, gets a worktree of its own. A git submodule gets a worktree of its own at its commit; a worker's commit inside it waits for your word.
+- A large task keeps its plan and your word, whoever does it: the agent sets the task's type before any skill runs, and a worker plans a large task with you in its own session (the questions, the plan, your "start") before it changes files.
+- Less spend at the same quality: the main-agent and the workers hand a side task whose raw output they will not need again (a broad search, many files to read, long test or log output, a fresh review) to a sub-agent on a cheaper model, and keep the decisions, the plan and the edits. The new playbook `pan-harness/playbooks/delegation.md` says when, on which model and effort, how to brief it and how to check its result; `/ph-update` adds it.
+- `ph-workers` gives tasks and shows who works on what; `ph-merge-work` merges a finished branch on your word and resolves the conflicts; `ph-create-worker` adds a name; `ph-delete-worker` removes a worker after showing you what goes. The main-agent cannot be removed; you can rename it and the workers.
+- Every commit message ends with the line `Agent: <name>`, so `git log` shows which agent made each commit. `/ph-update` adds the new lines to an existing `AGENTS.md`.
+- `ph-init` opens with "I am COOPER, the main agent of this project" and no longer asks the project's name: it takes the folder's name (in an existing project, the name the repo gives) and shows it in the plan, where you can change it.
+
 ## 2.9.4
 
 A new skill: `ph-rename-claude-session`.

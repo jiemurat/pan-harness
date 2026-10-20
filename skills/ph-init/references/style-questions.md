@@ -15,6 +15,7 @@ Project knowledge the repo does not give (dangerous actions, outside services, c
 Without a harness, the first message to the owner is this question in three languages, as it is (`init.md` → "0. Finding the situation"):
 
 ```
+I am COOPER, the main agent of this project. / Men COOPER'man, bu loyihaning asosiy agentiman. / Я COOPER, главный агент этого проекта.
 Which language should we talk in? / Qaysi tilda gaplashamiz? / На каком языке будем общаться?
 a. English
 b. O'zbek
@@ -22,13 +23,13 @@ c. Русский
 d. Other
 ```
 
-It has no Q number and no recommendation line and does not count toward the question limit. When "d" comes without a language, ask again in the three languages. The answer sets the chat language (S7): every later message, the plan and the report are in it (a message the owner writes in another language is answered in that one: `SKILL.md` → "Core rules", rule 14); the harness is in English. When a harness is there, the question is not asked.
+Its first line introduces the agent as COOPER, the main-agent name the harness writes into `AGENTS.md`. It has no Q number and no recommendation line and does not count toward the question limit. When "d" comes without a language, ask again in the three languages. The answer sets the chat language (S7): every later message, the plan and the report are in it (a message the owner writes in another language is answered in that one: `SKILL.md` → "Core rules", rule 14); the harness is in English. When a harness is there, the question is not asked.
 
 ## Asked
 
 | # | Question | Options | Suggestion | Condition |
 |---|---|---|---|---|
-| S1 | The project's goal, what the owner expects from the harness and for whom; near plans; in an existing project, known problems the repo does not show. In an empty folder, also what the project will be: code, documents, data or a mix, and its name (the owner's name is not asked) | Open question; the plan restates the goal in 2–3 sentences (no separate confirmation question) | In an existing project: the goal found in the README and the manifest (as a proposal); in an empty folder — | |
+| S1 | The project's goal, what the owner expects from the harness and for whom; near plans; in an existing project, known problems the repo does not show. In an empty folder, also what the project will be: code, documents, data or a mix; the project's name comes from the folder, and the owner's name is not asked | Open question; the plan restates the goal in 2–3 sentences (no separate confirmation question) | In an existing project: the goal found in the README and the manifest (as a proposal); in an empty folder — | |
 | S2 | Which name and email the commits carry (git `user.name`, `user.email`) | Open question; the answer goes into the repo's local setting | — | Git has no identity |
 | S4 | Boundaries: is there personal or confidential data and where (its content is not asked); the most dangerous or irreversible action (for example, deleting or moving a document); an invariant, a rule the work must never break; a step the repo does not show (a deploy by hand, sending the result to someone, someone's approval); outside services and their limits (a quota, a token with a term, syncing to a cloud); a service that runs all the time and what an outage leads to | Open question; write your own proposal | No deleting or moving without permission; the names of the secret and confidential files from Facts (without values) | The service part: `live-system=yes` |
 | S31 | The artifact-folder: the one folder of the project-folder for the artifacts (the work products, inputs and outputs: code, documents, data), apart from the harness, the tool folders and the files the tools look for in the root. In an existing project whose artifacts are not in one folder, the move into it too | Options by the type of the artifacts, the recommended one first; the last option is the owner's own folder name. It is a decision even when the artifacts stand in one folder: that folder is then the recommendation | code: `src/` (recommended), `app/`; documents: `documents/` (recommended), `files/`; data: `data/` (recommended), `datasets/`; a mix: `artifacts/` (recommended), `work/`; the artifacts already in one folder: that folder; never `docs/` (a harness may need it in the root): artifacts in `docs/` get `documents/` and the move | |
@@ -71,7 +72,7 @@ It has no Q number and no recommendation line and does not count toward the ques
 
 | # | Choice | Options | Standard | Condition |
 |---|---|---|---|---|
-| S24 | The size limit of the start set | a) 24 KB; b) 20 KB; c) another | b with fewer than ~50 files in git, else a | |
+| S24 | The size limit of the start set | a) 25 KB; b) 21 KB; c) another | b with fewer than ~50 files in git, else a | |
 | S25 | How often `ph-doctor` runs and who reminds | a) once a month, a reminder (a calendar, cron or an agent system); b) only when the owner says; c) on a size warning | a; offer to set up the reminder in the report | |
 | S26 | The mechanical fixes of `ph-doctor` | a) a mechanical fix the rules define at once, a structural change with a plan; b) everything with a plan | a | |
 | S27 | Research on a structure question | a) before options, the practice on the internet is studied, with sources; b) the agent's own knowledge is enough | a | |

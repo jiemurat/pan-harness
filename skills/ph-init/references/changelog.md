@@ -4,6 +4,19 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 2.10.4
+
+The main-agent and its worker-agents. The agent of a session the owner opens is the main-agent, COOPER by default (`AGENTS.md` → `Project`); on the owner's word it gives tasks to worker-agents (TARS, CASE, PLEX, KIPP, WALLE, or names the owner adds), each a full agent session in a folder of its own, with the skills `ph-workers`, `ph-create-worker`, `ph-merge-work` and `ph-delete-worker`. `pan-harness/workers.md` is a standard file of a harness that uses them. Every commit message ends with the line `Agent: <name>`. `ph-init` introduces itself as COOPER in the language question and takes the project's name from the folder or the repo, shown in the plan. The start set limit is 1 KB higher for the new lines (25 KB, a small project 21 KB). A side task whose raw output is not needed again (a broad search, many files, long test or log output, a fresh review) goes to a sub-agent on a cheaper model by the new standard playbook `playbooks/delegation.md`.
+
+1. `mechanical` — `AGENTS.md` → `Project` gets the `Main-agent` line after the Artifact-folder line (`scripts/migrate.mjs`).
+2. `mechanical` — the one-task rule and its `Boundaries` item read "one task at a time in each session".
+3. `mechanical` — the commit rule asks for the `Agent: <your name>` line right above any `Co-Authored-By` line.
+4. `mechanical` — `Workflow` ends with two lines: the type is set before any skill runs, and worker-agent requests go to `ph-workers`, where a worker runs its task by `Workflow`.
+5. `mechanical` — `project/check.json` → `start_limit_bytes` is 1024 higher.
+6. `mechanical` — `AGENTS.md` → `Working style` gets the "Delegate reading" item after "Keep the scope", and the new standard playbook `pan-harness/playbooks/delegation.md` is made from the template.
+
+Each step a reworded `AGENTS.md` does not fit is printed "by hand": add the template's line in the project's words, with the owner.
+
 ## 2.9.4
 
 A skill that retitles a Claude Desktop session joins the pan-harness package: `ph-rename-claude-session`. The harness standard is the same. There are no migration steps.

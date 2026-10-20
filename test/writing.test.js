@@ -54,7 +54,8 @@ test('each skill description stays within 300 bytes', () => {
 });
 
 test('a skill description says what the skill does and when to use it, its first sentence within 160 characters', () => {
-  for (const s of ['ph-init', 'ph-doctor', 'ph-update', 'ph-pdf-to-md', 'ph-word-to-md', 'ph-excel-to-md', 'ph-rename-claude-session']) {
+  for (const s of ['ph-init', 'ph-doctor', 'ph-update', 'ph-pdf-to-md', 'ph-word-to-md', 'ph-excel-to-md', 'ph-rename-claude-session',
+    'ph-workers', 'ph-create-worker', 'ph-merge-work', 'ph-delete-worker']) {
     const description = /^description: (.*)$/m.exec(fs.readFileSync(path.join(ROOT, 'skills-src', s, 'SKILL.md'), 'utf8'))[1];
     const first = description.split(/(?<=\.)\s/)[0];
     assert.ok(first.length <= 160, `${s}: ${first.length} characters`);
@@ -220,7 +221,7 @@ test('the usage limit rule is in the large-task playbook template, the structure
   }
   assert.match(read('references/structure.md'), /`## Execution`: .*the limit rule/);
   const audit = read('references/audit.md');
-  assert.match(audit, /^- Continuity and checks: A58–A72$/m);
+  assert.match(audit, /^- Continuity and checks: A58–A74$/m);
   assert.match(audit, /^\| A66 \| .*Execution.*limit.* \| Interrupted work \| manual.* \| mechanical.* \|$/m);
   assert.match(read('references/changelog.md'), /^## 2\.4\.2$/m);
 });
@@ -256,7 +257,7 @@ test('the fast check is in the AGENTS.md and PAN-HARNESS.md templates, ph-init, 
   assert.match(init.split('## 5. Create\n')[1].split(/\n## /)[0], /`Awaiting owner decision`.*does not create it/);
   assert.match(read('references/structure.md'), /^\| fast check \| /m);
   const audit = read('references/audit.md');
-  assert.match(audit, /^- Continuity and checks: A58–A72$/m);
+  assert.match(audit, /^- Continuity and checks: A58–A74$/m);
   assert.match(audit, /^\| A68 \| `code=yes`: .*\*\*Fast check:\*\*.*\*\*See the result:\*\*.*Check while you work.* \| Unchecked work \| script.* \|$/m);
   assert.match(read('references/principles.md'), /^- \*\*P27\. The agent checks its own work while it works\.\*\*/m);
   assert.match(read('references/changelog.md'), /^## 2\.8\.2$/m);
@@ -313,7 +314,7 @@ test('the readiness check, the environment and the logs are in init.md, the PAN-
   const loop = read('templates/AGENTS.md.tmpl').split('\n').find((l) => l.includes('**Check while you work.**'));
   assert.ok(loop.includes('When the fast check or the run of `See the result` fails, read the log lines of that run (`PAN-HARNESS.md` → `Project checks` → `Logs`) before you change code.'), loop);
   const audit = read('references/audit.md');
-  assert.match(audit, /^- Continuity and checks: A58–A72$/m);
+  assert.match(audit, /^- Continuity and checks: A58–A74$/m);
   assert.match(audit, /^\| A71 \| `code=yes`: .*dated result.*dependency file.*runtime.*\*\*Logs:\*\*.*markers.*`changed`.* \| Untested start \| /m);
 });
 

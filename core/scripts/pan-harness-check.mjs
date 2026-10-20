@@ -102,23 +102,25 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const VERSION = '2.9.4';
+const VERSION = '2.10.4';
 
-// Sizes in bytes. 24 KB fits the start set of a complex project written
+// Sizes in bytes. 25 KB fits the start set of a complex project written
 // compactly; 40 KB keeps any doc readable in one go. An agent reads a doc over
 // READ_WHOLE only in parts (AGENTS.md -> Session start), so such a doc needs a
 // list of its sections.
-const DEFAULT_START_LIMIT = 24 * 1024;
+const DEFAULT_START_LIMIT = 25 * 1024;
 const DEFAULT_DOC_LIMIT = 40 * 1024;
 const READ_WHOLE = 10 * 1024;
 const HANDOFF_LIMIT = 8 * 1024; // an active handoff.md is read at session start along with the start set
 
 const STANDARD_FILES = ['state.md', 'plan.md', 'handoff.md', 'system-map.md', 'runbook.md',
   'decisions.md', 'feedback.md', 'lessons.md'];
+// standard files a harness has only when it uses them: workers.md (the worker-agents, ph-workers)
+const OPTIONAL_FILES = ['workers.md'];
 const STANDARD_DIRS = new Set(['history', 'archive', 'playbooks', 'scripts', 'project']);
 const SCRIPTS = ['pan-harness-check.mjs', 'secret-check.mjs'];
-// the standard playbooks: upkeep, a large task, the end of a task
-const PLAYBOOKS = ['pan-harness.md', 'large-task.md', 'end-of-task.md'];
+// the standard playbooks: upkeep, a large task, the end of a task, delegation to sub-agents
+const PLAYBOOKS = ['pan-harness.md', 'large-task.md', 'end-of-task.md', 'delegation.md'];
 const MAP_ENTRIES = [...STANDARD_FILES, 'history/', 'archive/', ...PLAYBOOKS.map((f) => `playbooks/${f}`), 'scripts/'];
 // standard places inside project/ that a young harness may not have yet
 const OPTIONAL_DIRS = new Set(['project', 'project/playbooks', 'project/scripts', 'project/references']);
@@ -406,7 +408,7 @@ if (isDir(H)) {
   for (const entry of sortPaths(listDir(H))) {
     const name = path.basename(entry);
     if (name.startsWith('.') || name === '__pycache__') continue;
-    if ((isDir(entry) && !STANDARD_DIRS.has(name)) || (isFile(entry) && !STANDARD_FILES.includes(name))) {
+    if ((isDir(entry) && !STANDARD_DIRS.has(name)) || (isFile(entry) && !STANDARD_FILES.includes(name) && !OPTIONAL_FILES.includes(name))) {
       warnings.push(`${rel(entry)}: not part of the standard - agents look here only for standard names; `
         + 'move project-specific things to pan-harness/project/');
     }
