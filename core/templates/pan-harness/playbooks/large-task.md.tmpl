@@ -11,14 +11,14 @@ Planning and carrying out a large task (`AGENTS.md` → `Workflow`). Read it bef
 ## Planning
 
 Ask the questions with the `ph-grilling` skill. If it is not installed (a new clone has no skills: they are outside git), install it first with `npx @jiemurat/pan-harness@latest init`. The questions come round by round:
-- Q1 of the first round is a draft of the goal, the outcome and the criteria, which the owner approves or corrects:
+- Question 1 of the first round is a draft of the goal, the outcome and the criteria, which the owner approves or corrects:
   - the goal and what the owner has at the end: 2–3 sentences, plain words, terms explained;
   - criteria: 1–5, each an outcome the owner sees: what is observed, the threshold (a number or yes/no), how and when it is checked; a criterion holds only this task's outcome, the checks of every task are in `playbooks/end-of-task.md`;
   - evidence is re-run where possible (a command, a script, a test);
   - each criterion and each step names its check command, or `no command` and the evidence it uses; a step with a command is `done` only when the command passes or prints the expected output, with that output as evidence;
   - for a subjective outcome, a rubric of 2–4 levels and who grades; for a numeric criterion, an anchor that shows the real goal (the owner's spot check, real use, ground truth); an agent or LLM grader is first compared with the owner's grades on a small sample;
 - each round asks every question that can be answered now, in order of impact: the low-impact questions with a clear recommendation go into one "accept as recommended?" list, from which the owner picks out what they want. A question that depends on another answer waits for the next round;
-- each question in the `ph-grilling` format: options a/b/c, the recommendation and its reason. The numbers run on to the end of the task;
+- each question in the form of `playbooks/questions.md` (the `ph-grilling` skill writes it too): options a), b), c), the recommendation and its reason. The numbers run on to the end of the task;
 - the answer comes as "1. a 2. c …";
 - at the end, a short plan: the final list of criteria, which files of the project change (the harness files every task updates are not listed), the exceptions, the budget (time, tokens or the number of sub-agents, paid API cost), where the owner's hand is needed. Work that does not fit one session is split into stages, each ending with its own check and report. [profile: live-system=yes] Restarts and outages are named too. The approval covers the criteria as well: after it, the goal, the criteria and the exceptions go into the task's item in `plan.md`, the stages and steps into `pan-harness/handoff.md` (`**Status:** active`). Before the approval, only reading is allowed.
 

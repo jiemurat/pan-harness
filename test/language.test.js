@@ -15,8 +15,9 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIRS = ['skills-src', 'core', 'lib', 'test', 'evals'];
-const QUESTION = ['Qaysi tilda gaplashamiz?', 'На каком языке будем общаться?', "b. O'zbek", 'c. Русский',
-  "Men COOPER'man, bu loyihaning asosiy agentiman.", 'Я COOPER, главный агент этого проекта.'];
+const QUESTION = ['Qaysi tilda gaplashamiz?', 'На каком языке будем общаться?', "b) O'zbek", 'c) Русский',
+  "Men COOPER'man, bu loyihaning asosiy agentiman.", 'Я COOPER, главный агент этого проекта.',
+  'Javobsiz inglizcha gaplashaman.', 'Без ответа буду общаться по-английски.'];
 
 const joined = (list) => list.map((w) => w.split('_').join(''));
 // whole words, in any letter case

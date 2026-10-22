@@ -2,6 +2,14 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 2.10.5
+
+Questions to you come in one form, and long messages are easy to scan.
+
+- Every question the agent asks is a block: `❓ **title**: the question`, the options as an `a)`, `b)` list, and one `➡️` line with the recommended option and why. Several questions are numbered blocks, never joined into one line. A short one-sentence question drops only its title. A question the agent cannot recommend an answer to says after `➡️` what it does without your answer.
+- In a long message, the label of each item and a few important words are bold.
+- The short rule is in `AGENTS.md`; the filled examples are in the new playbook `pan-harness/playbooks/questions.md`. `ph-grilling`, the language question and the questions of `ph-init` and `ph-doctor` use the same form. `/ph-update` adds the rule and the playbook to an existing harness.
+
 ## 2.10.4
 
 Worker-agents: parallel work in one project, each worker in a session and a folder of its own.

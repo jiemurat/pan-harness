@@ -16,14 +16,17 @@ Without a harness, the first message to the owner is this question in three lang
 
 ```
 I am COOPER, the main agent of this project. / Men COOPER'man, bu loyihaning asosiy agentiman. / Я COOPER, главный агент этого проекта.
-Which language should we talk in? / Qaysi tilda gaplashamiz? / На каком языке будем общаться?
-a. English
-b. O'zbek
-c. Русский
-d. Other
+
+❓ **Language**: Which language should we talk in? / Qaysi tilda gaplashamiz? / На каком языке будем общаться?
+- a) English
+- b) O'zbek
+- c) Русский
+- d) Other
+
+➡️ Without an answer, I talk in English. / Javobsiz inglizcha gaplashaman. / Без ответа буду общаться по-английски.
 ```
 
-Its first line introduces the agent as COOPER, the main-agent name the harness writes into `AGENTS.md`. It has no Q number and no recommendation line and does not count toward the question limit. When "d" comes without a language, ask again in the three languages. The answer sets the chat language (S7): every later message, the plan and the report are in it (a message the owner writes in another language is answered in that one: `SKILL.md` → "Core rules", rule 14); the harness is in English. When a harness is there, the question is not asked.
+Its first line introduces the agent as COOPER, the main-agent name the harness writes into `AGENTS.md`. It has no number, its `➡️` line says what you do without an answer (it recommends no option), and it does not count toward the question limit. It follows the form of `templates/pan-harness/playbooks/questions.md.tmpl`. When "d" comes without a language, ask again in the three languages. The answer sets the chat language (S7): every later message, the plan and the report are in it (a message the owner writes in another language is answered in that one: `SKILL.md` → "Core rules", rule 14); the harness is in English. When a harness is there, the question is not asked.
 
 ## Asked
 

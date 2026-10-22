@@ -357,7 +357,7 @@ test('migrate: from 2.8.2 the handoff intro loses its heading names; a reworded 
   assert.match(run('migrate.mjs', '--root', mine).stdout, /^by hand 2\.8\.3 step 1: handoff\.md: the intro is reworded/m);
 });
 
-test('migrate 2.9.4 -> 2.10.4: AGENTS.md gets the main-agent, one task in each session, the Agent: line, the ph-workers pointer and the delegation item; the delegation playbook is made', () => {
+test('migrate 2.9.4 -> 2.10.5: AGENTS.md gets the main-agent, one task in each session, the Agent: line, the ph-workers pointer and the delegation item; the delegation playbook is made', () => {
   const dir = current();
   const old = read(dir, 'AGENTS.md')
     .replace(/^- \*\*Main-agent:\*\* .*\n/m, '')
@@ -385,7 +385,34 @@ test('migrate 2.9.4 -> 2.10.4: AGENTS.md gets the main-agent, one task in each s
   const playbook = read(dir, 'pan-harness/playbooks/delegation.md');
   assert.match(playbook, /^# Playbook: delegation$/m);
   assert.doesNotMatch(playbook, /<!--/, 'the template note is left out');
-  assert.match(read(dir, 'PAN-HARNESS.md'), /^Standard: pan-harness 2\.10\.4$/m);
+  assert.match(read(dir, 'PAN-HARNESS.md'), /^Standard: pan-harness 2\.10\.5$/m);
+  const again = run('migrate.mjs', '--root', dir);
+  assert.ok(again.stdout.includes('0 by hand'), again.stdout);
+  assert.equal(read(dir, 'AGENTS.md'), agents, 'a second run changes nothing');
+});
+
+test('migrate 2.10.4 -> 2.10.5: AGENTS.md gets the question rule, the questions playbook is made, the planning playbook and the map point to it', () => {
+  const dir = current();
+  const tmplRule = fs.readFileSync(path.join(SKILL, 'templates', 'AGENTS.md.tmpl'), 'utf8').split('\n').find((l) => l.startsWith('  - **Questions.** '));
+  assert.ok(tmplRule, 'the template has the rule');
+  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').split('\n').filter((l) => !l.startsWith('  - **Questions.** ')).join('\n'));
+  fs.rmSync(path.join(dir, 'pan-harness', 'playbooks', 'questions.md'));
+  put(dir, 'pan-harness/playbooks/large-task.md', read(dir, 'pan-harness/playbooks/large-task.md')
+    .replace(/- each question in the form of `playbooks\/questions\.md` \(the `ph-grilling` skill writes it too\): options a\), b\), c\)/, '- each question in the `ph-grilling` format: options a/b/c'));
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md')
+    .replace(/^- `playbooks\/questions\.md` — .*\n/m, '')
+    .replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 2.10.4'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  for (const step of [1, 2, 3]) assert.match(r.stdout, new RegExp(`^done +2\\.10\\.5 step ${step}: `, 'm'));
+  const agents = read(dir, 'AGENTS.md');
+  assert.ok(agents.split('\n').includes(tmplRule), 'the rule is in AGENTS.md as the template has it');
+  const rule = agents.split('\n').indexOf(tmplRule);
+  assert.match(agents.split('\n')[rule - 1], /Where a word has several meanings|Short sentences, one idea per item/, 'the rule stands in the chat rule');
+  assert.match(read(dir, 'pan-harness/playbooks/questions.md'), /^# Playbook: questions$/m);
+  assert.match(read(dir, 'pan-harness/playbooks/large-task.md'), /form of `playbooks\/questions\.md`/);
+  assert.match(read(dir, 'PAN-HARNESS.md'), /^- `playbooks\/questions\.md` — .+\(before .+\)\.$/m);
+  assert.match(read(dir, 'PAN-HARNESS.md'), /^Standard: pan-harness 2\.10\.5$/m);
   const again = run('migrate.mjs', '--root', dir);
   assert.ok(again.stdout.includes('0 by hand'), again.stdout);
   assert.equal(read(dir, 'AGENTS.md'), agents, 'a second run changes nothing');

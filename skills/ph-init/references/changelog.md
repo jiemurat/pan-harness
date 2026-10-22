@@ -4,6 +4,16 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 2.10.5
+
+The form of a question to the owner. Every question the agent puts to the owner comes in one form: `❓ **<title>**: <question>`, the options as an `a)`, `b)` list, one `➡️ <letter and option> — <why>`; several questions are numbered full blocks, never joined; a one-sentence question of up to 120 characters drops only its title; a question with no possible recommendation says after `➡️` what the agent does without an answer. A long message bolds each item's label and a few important words. `AGENTS.md` carries the short rule, the new standard playbook `pan-harness/playbooks/questions.md` carries the filled examples; `ph-grilling`, the language question of `ph-init` and the questions of `ph-init` and `ph-doctor` use the same form.
+
+1. `mechanical` — the chat rule of `AGENTS.md` gets the "Questions" item after the item on words with several meanings (`scripts/migrate.mjs`).
+2. `mechanical` — the new standard playbook `pan-harness/playbooks/questions.md` is made from the template, and the `PAN-HARNESS.md` Map gets its line after the delegation line.
+3. `mechanical` — `playbooks/large-task.md` → `Planning` points the question format item to `playbooks/questions.md`.
+
+Each step a reworded `AGENTS.md` does not fit is printed "by hand": add the template's line in the project's words, with the owner.
+
 ## 2.10.4
 
 The main-agent and its worker-agents. The agent of a session the owner opens is the main-agent, COOPER by default (`AGENTS.md` → `Project`); on the owner's word it gives tasks to worker-agents (TARS, CASE, PLEX, KIPP, WALLE, or names the owner adds), each a full agent session in a folder of its own, with the skills `ph-workers`, `ph-create-worker`, `ph-merge-work` and `ph-delete-worker`. `pan-harness/workers.md` is a standard file of a harness that uses them. Every commit message ends with the line `Agent: <name>`. `ph-init` introduces itself as COOPER in the language question and takes the project's name from the folder or the repo, shown in the plan. The start set limit is 1 KB higher for the new lines (25 KB, a small project 21 KB). A side task whose raw output is not needed again (a broad search, many files, long test or log output, a fresh review) goes to a sub-agent on a cheaper model by the new standard playbook `playbooks/delegation.md`.

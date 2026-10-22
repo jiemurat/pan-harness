@@ -102,7 +102,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const VERSION = '2.10.4';
+const VERSION = '2.10.5';
 
 // Sizes in bytes. 25 KB fits the start set of a complex project written
 // compactly; 40 KB keeps any doc readable in one go. An agent reads a doc over
@@ -119,8 +119,8 @@ const STANDARD_FILES = ['state.md', 'plan.md', 'handoff.md', 'system-map.md', 'r
 const OPTIONAL_FILES = ['workers.md'];
 const STANDARD_DIRS = new Set(['history', 'archive', 'playbooks', 'scripts', 'project']);
 const SCRIPTS = ['pan-harness-check.mjs', 'secret-check.mjs'];
-// the standard playbooks: upkeep, a large task, the end of a task, delegation to sub-agents
-const PLAYBOOKS = ['pan-harness.md', 'large-task.md', 'end-of-task.md', 'delegation.md'];
+// the standard playbooks: upkeep, a large task, the end of a task, delegation to sub-agents, the form of a question
+const PLAYBOOKS = ['pan-harness.md', 'large-task.md', 'end-of-task.md', 'delegation.md', 'questions.md'];
 const MAP_ENTRIES = [...STANDARD_FILES, 'history/', 'archive/', ...PLAYBOOKS.map((f) => `playbooks/${f}`), 'scripts/'];
 // standard places inside project/ that a young harness may not have yet
 const OPTIONAL_DIRS = new Set(['project', 'project/playbooks', 'project/scripts', 'project/references']);

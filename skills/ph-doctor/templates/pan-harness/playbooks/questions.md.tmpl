@@ -1,0 +1,84 @@
+# Playbook: questions
+
+The form of every question you put to the owner (`AGENTS.md` → `Communication`), also a question a skill prescribes, and of a long message. Read it before you ask the owner a question and before a message of several items.
+
+## One question
+
+```text
+❓ **Folder**: Where should the note go?
+- a) `projects/course`
+- b) `resources/prompt-engineering`
+
+➡️ b) `resources/prompt-engineering` — the article is general, not for the course.
+```
+
+- The first line is `❓`, a bold title, a colon and the question; a long question may take several paragraphs.
+- Two or more options are always an `a)`, `b)`, `c)` list, never inline with "or".
+- Exactly one `➡️` line: the letter and the text of the option, then the reason in a few words. Word the question so that "yes" accepts the recommendation.
+- A question with no options (an open answer): the `➡️` line holds your proposal and its reason.
+
+## Several questions
+
+```text
+❓ **1. Folder**: Where should the note go?
+- a) `projects/course`
+- b) `resources/prompt-engineering`
+
+➡️ b) `resources/prompt-engineering` — the article is general, not for the course.
+
+❓ **2. Tag**: Which tag should the note get?
+- a) the existing `topic/prompt-engineering`
+- b) a new `topic/llm-evaluation`
+
+➡️ a) `topic/prompt-engineering` — an existing tag of the same meaning beats a new one.
+```
+
+- Each question is the full block above: the question, its option list, its `➡️` line. A blank line stands between blocks and a number before each title. The questions, their options and their recommendations are never joined into one line or one block.
+- A message with one question has no number. In a planning interview the numbers of the questions run on across rounds to the end of the task; the owner answers "1. b 2. a".
+
+Done when each question of the message is its own block with a number, an option list and one `➡️` line.
+
+## A short question
+
+A question of one sentence, up to 120 characters, whose options need no context, drops only its title. Its options, its `➡️` line and, among several questions, its number stay:
+
+```text
+❓ Why do you save this?
+
+➡️ Without an answer, I save it with no reason (—).
+```
+
+Among several questions the first line is `❓ **2.** Why do you save this?`. A longer question, or one whose options need context, keeps its title.
+
+## A question with no recommendation
+
+When no option can be recommended (a name, a reason only the owner knows), the `➡️` line says what you do without an answer:
+
+```text
+❓ **Project name**: What should the project be called?
+
+➡️ Without an answer, I use the folder's name, `my-notes`.
+```
+
+An approval of a plan is a short question with no recommended option: the yes is the owner's alone.
+
+```text
+❓ Do you approve this plan?
+- a) yes
+- b) change it (tell me what)
+
+➡️ Without an answer, I change nothing.
+```
+
+## A long message
+
+In a message of several items, bold each item's label and the few words that matter. Bold no whole sentence:
+
+```text
+- **Note:** the article on prompt evaluation, saved to `resources/prompt-engineering`.
+- **Source:** the author's blog, read last week.
+- **Status:** the commit is **not pushed** and **needs your approval**.
+- **Tag:** **missing**; the existing `topic/prompt-engineering` fits.
+```
+
+Done when each item of a long message starts with a bold label and no sentence is bold as a whole.

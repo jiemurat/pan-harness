@@ -22,7 +22,7 @@ The result of each row is `ok`, `fail` (what was found and file:line), `not chec
 - Version: A38
 - Writing: A39–A50
 - Principles: A51–A57
-- Continuity and checks: A58–A74
+- Continuity and checks: A58–A75
 
 ## Root files
 
@@ -159,3 +159,4 @@ The P26 items (the keyword order and trigger in A20, A43, A44–A48) and the tex
 | A72 | Each lesson from the number in `check.json` → `fields_from` (key `Layer`) on has `Layer:`; at each `ph-doctor` the agent counts by layer the lessons written since the last `ph-doctor` entry of `history/` (all lessons at the first) and names the most frequent layer in the report (each one on a tie), with a proposed fix in that layer (P16) | Unrouted fix | script (the field), manual: count by layer | structural: the fix of the most frequent layer, with the owner's approval |
 | A73 | `AGENTS.md` has the worker-agent lines of the template: `Project` names the main-agent (`- **Main-agent:**`), the one-task rule says "in each session", the commit rule asks for the `Agent: <your name>` line right above any `Co-Authored-By` line, and `Workflow` sets the type before any skill runs and sends worker-agent requests to `ph-workers`; a `pan-harness/workers.md` holds the table `ph-workers` keeps | Lost authorship, a worker taking the main-agent's name, a large task done without the owner's plan through a skill or a worker | manual: `grep -n 'Main-agent\|Agent: <your name>\|ph-workers\|in each session\|Set the type first' AGENTS.md` | mechanical (`scripts/migrate.mjs`, 2.10.4) |
 | A74 | `AGENTS.md` → `Working style` has the "Delegate reading" item and `pan-harness/playbooks/delegation.md` is there: when a sub-agent takes a side task, its model and effort by kind of work, the brief and the check of the result | Spend on raw reading in the main context, or a sub-agent briefed too thinly to keep the quality | manual: `grep -n 'Delegate reading' AGENTS.md` and the playbook against the template | mechanical (`scripts/migrate.mjs`, 2.10.4) |
+| A75 | `AGENTS.md` → `Communication` has the "Questions" item of the template (the form of a question to the owner, one line) and `pan-harness/playbooks/questions.md` is there with the filled examples; `playbooks/large-task.md` and the `PAN-HARNESS.md` map point to it | Questions in many forms, joined options, a recommendation without a reason | manual: `grep -n 'playbooks/questions.md' AGENTS.md pan-harness/playbooks/large-task.md PAN-HARNESS.md` and the playbook against the template | mechanical (`scripts/migrate.mjs`, 2.10.5) |

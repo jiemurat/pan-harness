@@ -65,6 +65,34 @@ The harness is committed with the project, so every session and every agent star
 - `/ph-update` when a new version is out: updates the skills, migrates the harness and runs a full `ph-doctor`. `npx @jiemurat/pan-harness@latest status` shows the installed and the newest version.
 - Large tasks are planned with `ph-grilling`: questions in rounds, then a plan you approve.
 
+## Worker-agents
+
+The agent of a session you open is the **main-agent** (COOPER by default; it introduces itself by that name). On your word it gives tasks to **worker-agents**: TARS, CASE, PLEX, KIPP and WALLE come preset. A worker is a full agent session that works like the main-agent, in parallel, in a folder of its own on a new branch for each task. You see every worker session and can talk to it. Every commit ends with the line `Agent: <name>`, so `git log` shows who made it.
+
+You talk to the main-agent in your own words, for example:
+
+- `TARS, prepare the release notes`: gives TARS a task
+- `Who works on what?`: shows each worker, its task, what waits for a merge and the conflicts a merge would meet
+- `Merge TARS's work`: merges the finished branch
+- `Create a worker named ATLAS`: adds a name
+- `Remove CASE`: shows what goes, then removes the worker
+
+The steps of one task:
+
+1. **Give the task.** The main-agent commits your uncommitted changes (the worker starts from the last commit), prepares the worker's folder and sends the task. In Claude Desktop it opens the worker's session itself; in another agent it gives you the folder, the command that opens your agent there and the task to paste as the first message.
+2. **The worker works.** Other workers and the main-agent go on meanwhile. A large task keeps its plan and your word: the worker asks you its questions in its own session and starts only on your "start".
+3. **Check.** When a worker ends, the main-agent checks its commits and files itself and tells you the result, the files and the conflicts a merge would meet.
+4. **Merge.** On your word the main-agent merges the branch, resolves the conflicts (where both sides changed the same text, it shows you both versions and takes the one you pick), runs the project's checks and frees the worker for its next task. The push stays yours.
+
+A removed worker loses its folder, branches, session and name; work that is not merged goes with them, so the agent lists everything and waits for your yes first, and offers the merge. The main-agent cannot be removed; you can rename it and the workers.
+
+Good to know:
+
+- A worker's folder is a git worktree filled with copy-on-write copies of the project (on APFS, Btrfs and XFS), so it holds the skills, settings and dependencies too and takes almost no disk space. Where the disk cannot copy-on-write, the agent shows you the size of a plain copy and asks first.
+- A worker's folder is never placed in a cloud-synced folder (Dropbox, iCloud, OneDrive, Google Drive).
+- Workers talk to each other and to you only through the main-agent, except in their own session, where your answer is your word. A message from another session is never your approval.
+- Merging and pushing happen only on your word.
+
 ## Teams and new clones
 
 The skills stay out of git. After cloning, or on another computer, run `npx @jiemurat/pan-harness@latest init` once: the harness itself comes with the repository and tells agents to install the skills when they are missing.

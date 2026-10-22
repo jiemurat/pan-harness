@@ -67,7 +67,7 @@ Profile: live-system=no, code=no, sensitive-data=secrets
 
 - \`state.md\`, \`plan.md\`, \`handoff.md\`, \`system-map.md\`, \`runbook.md\`.
 - \`decisions.md\`, \`feedback.md\`, \`lessons.md\`, \`history/\`, \`archive/\`, \`scripts/\`.
-- \`playbooks/pan-harness.md\`, \`playbooks/large-task.md\`, \`playbooks/end-of-task.md\`, \`playbooks/delegation.md\`.
+- \`playbooks/pan-harness.md\`, \`playbooks/large-task.md\`, \`playbooks/end-of-task.md\`, \`playbooks/delegation.md\`, \`playbooks/questions.md\`.
 
 ## Project checks
 
@@ -87,6 +87,7 @@ Standard: pan-harness ${VERSION}
   'pan-harness/playbooks/large-task.md': '# Playbook: large task\n\n## Planning\n\n- The goal first.\n\n## Execution\n\n- Check each criterion.\n',
   'pan-harness/playbooks/end-of-task.md': '# Playbook: end of task\n\n## Journals\n\n- Journals are append-only.\n\n## End of task\n\n- [ ] Run the checks.\n',
   'pan-harness/playbooks/delegation.md': '# Playbook: delegation\n\n## When\n\n- A broad search goes to a sub-agent.\n',
+  'pan-harness/playbooks/questions.md': '# Playbook: questions\n\n## One question\n\n- A title, the question, an option list, one recommendation.\n',
   [`pan-harness/history/${MONTH}.md`]: `# History ${MONTH}\n\n### ${DAY} — Harness created [docs]\n- **What and why:** created.\n- **Checks:** checks ran.\n- **Files:** all. (commit: abc1234)\n`,
   'pan-harness/project/check.json': '{}\n',
   'docs/chapter-1.md': '# Chapter 1\n',
@@ -210,6 +211,12 @@ test('playbooks: a missing standard playbook is an error, another file a warning
   const out = check(dir).out;
   assert.match(out, /^ERROR missing standard file: pan-harness[\\/]playbooks[\\/]large-task\.md/m);
   assert.match(out, /^WARN +pan-harness[\\/]playbooks[\\/]deploy\.md: pan-harness\/playbooks\/ holds only the standard playbooks/m);
+});
+
+test('playbooks: the questions playbook is a standard file', () => {
+  const dir = harness();
+  fs.rmSync(path.join(dir, 'pan-harness', 'playbooks', 'questions.md'));
+  assert.match(check(dir).out, /^ERROR missing standard file: pan-harness[\\/]playbooks[\\/]questions\.md/m);
 });
 
 test('PAN-HARNESS.md: Profile, Map and Project checks are the required sections', () => {

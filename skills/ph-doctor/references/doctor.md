@@ -65,7 +65,7 @@ Done when: as step 5 of the `ph-doctor` skill says (its `SKILL.md`).
 | `mechanical` (at once) | A broken path or link; a stale fact checked on the live system (updating `state.md` from a status check result); archiving the rules define (a superseded or done decision, a journal over 40 KB); the current month's history file; a commit number; adding an existing file to the map; replacing the standard scripts; the `mechanical` steps of `changelog.md` | Fix at once, give the list in the report |
 | `structural` (with a plan) | Adding, changing or moving a rule; moving or renaming a file or section between the standard part and `project/`; a new playbook or file; trimming that touches the meaning; changing the size limit; a profile change; fixing an error in a project script (it is project code); the `structural` steps of `changelog.md` | Give numbered questions and a plan, the first question the goal, the outcome and the criteria (P21). Do it after the owner's approval. Until the owner answers, each proposal stands as one line in `plan.md` → `Awaiting owner decision`, its details in the history entry |
 
-When in doubt, treat the fix as structural. An unneeded rule moves to a playbook with its number; the numbers do not change.
+Put each question to the owner in the form of `templates/pan-harness/playbooks/questions.md.tmpl`, an approval too. When in doubt, treat the fix as structural. An unneeded rule moves to a playbook with its number; the numbers do not change.
 
 **When a name or a place changes**, find every link with grep: docs, scripts, other skills, comments, cron descriptions. A relative path inside a script (`../..`) breaks when the folder depth changes: check it separately.
 

@@ -48,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -384,6 +384,53 @@ function step5StartLimit() {
   done.push('2.10.4 step 5: project/check.json: start_limit_bytes one KB higher for the worker-agent lines');
 }
 
+// ---------------------------------------------------------------- 2.10.5 (the form of a question to the owner)
+// the Communication item of the template, the standard playbook it points to, and the pointers to the
+// playbook in the planning playbook and in the PAN-HARNESS.md map
+const QUESTION_ITEM = AGENTS_TMPL.find((l) => l.startsWith('  - **Questions.** ')) || '';
+const QUESTIONS = 'pan-harness/playbooks/questions.md';
+const LARGE_TASK = 'pan-harness/playbooks/large-task.md';
+const GRILLING_OLD = '- each question in the `ph-grilling` format: options a/b/c, the recommendation and its reason. The numbers run on to the end of the task;';
+const GRILLING_NEW = tmplLines('pan-harness/playbooks/large-task.md.tmpl').find((l) => l.includes('playbooks/questions.md')) || '';
+const MAP_LINE = tmplLines('PAN-HARNESS.md.tmpl').find((l) => l.startsWith('- `playbooks/questions.md` — ')) || '';
+
+function step1QuestionItem() {
+  const f = file(AGENTS);
+  if (f.lines.some((l) => l.startsWith('  - **Questions.** '))) { done.push('2.10.5 step 1: AGENTS.md already has the Questions item'); return; }
+  const at = f.lines.findIndex((l) => l.startsWith('  - Where a word has several meanings'));
+  if (at < 0) { byHand.push(`2.10.5 step 1: AGENTS.md: no "Where a word has several meanings" item in the chat rule; add "${QUESTION_ITEM}" under the chat rule`); return; }
+  f.lines.splice(at + 1, 0, QUESTION_ITEM);
+  f.changed = true;
+  done.push('2.10.5 step 1: AGENTS.md: the chat rule gets the form of a question to the owner');
+}
+
+function step2QuestionsPlaybook() {
+  if (file(QUESTIONS)) done.push(`2.10.5 step 2: ${QUESTIONS} is there`);
+  else {
+    const text = fs.readFileSync(path.join(TEMPLATES, 'pan-harness', 'playbooks', 'questions.md.tmpl'), 'utf8').replace(/^<!--[\s\S]*?-->\r?\n/, '');
+    cache.set(QUESTIONS, { eol: '\n', lines: text.split(/\r?\n/), changed: true });
+    done.push(`2.10.5 step 2: ${QUESTIONS} made from the template`);
+  }
+  if (pan.lines.some((l) => l.startsWith('- `playbooks/questions.md` — '))) return;
+  const at = pan.lines.findIndex((l) => l.startsWith('- `playbooks/delegation.md` — ')) >= 0
+    ? pan.lines.findIndex((l) => l.startsWith('- `playbooks/delegation.md` — '))
+    : pan.lines.findIndex((l) => l.startsWith('- `playbooks/large-task.md` — '));
+  if (at < 0) { byHand.push(`2.10.5 step 2: PAN-HARNESS.md: no playbook line in the Map; add "${MAP_LINE}" there`); return; }
+  pan.lines.splice(at + 1, 0, MAP_LINE);
+  pan.changed = true;
+}
+
+function step3PlanningPointer() {
+  const f = file(LARGE_TASK);
+  if (!f) return;
+  if (f.lines.some((l) => l.includes('playbooks/questions.md'))) { done.push('2.10.5 step 3: playbooks/large-task.md already points to the questions playbook'); return; }
+  const at = f.lines.indexOf(GRILLING_OLD);
+  if (at < 0) { byHand.push(`2.10.5 step 3: playbooks/large-task.md: the question format item is reworded; make it point to playbooks/questions.md, as "${GRILLING_NEW}"`); return; }
+  f.lines[at] = GRILLING_NEW;
+  f.changed = true;
+  done.push('2.10.5 step 3: playbooks/large-task.md: the planning questions follow the questions playbook');
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
@@ -394,6 +441,7 @@ const STEPS = {
   '2.8.3': [step1PlainIntro],
   '2.8.4': [step2SubfolderHook],
   '2.10.4': [step1MainAgent, step2TaskPerSession, step3Trailer, step4WorkerPointer, step5StartLimit, step6Delegation],
+  '2.10.5': [step1QuestionItem, step2QuestionsPlaybook, step3PlanningPointer],
 };
 
 // ---------------------------------------------------------------- run

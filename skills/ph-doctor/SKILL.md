@@ -3,7 +3,7 @@ name: ph-doctor
 description: Checks and fixes the pan-harness (Panoramic Harness) of a project against the standard: a conformance table, mechanical fixes, structural proposals, migration. Use it when asked to check the harness, AGENTS.md or the agent rules, and for the monthly upkeep.
 license: MIT
 metadata:
-  version: "2.10.4"
+  version: "2.10.5"
   package: "@jiemurat/pan-harness"
 ---
 

@@ -44,12 +44,13 @@ test('style-questions.md asks four things and keeps every other choice as a stan
 });
 
 test('the language question: the first message, in three languages, four options, outside the count', () => {
-  const lines = ['Which language should we talk in? / Qaysi tilda gaplashamiz? / На каком языке будем общаться?',
-    'a. English', "b. O'zbek", 'c. Русский', 'd. Other'].join('\n');
+  const lines = ['❓ **Language**: Which language should we talk in? / Qaysi tilda gaplashamiz? / На каком языке будем общаться?',
+    '- a) English', "- b) O'zbek", '- c) Русский', '- d) Other', '',
+    '➡️ Without an answer, I talk in English. / Javobsiz inglizcha gaplashaman. / Без ответа буду общаться по-английски.'].join('\n');
   const style = read(CORE, 'references', 'style-questions.md');
   const question = section(style, 'Language question');
   assert.ok(question.includes(lines), 'the question as it is, in style-questions.md');
-  for (const part of ['no Q number and no recommendation line', 'does not count toward the question limit',
+  for (const part of ['no number, its `➡️` line says what you do without an answer', 'does not count toward the question limit',
     'ask again in the three languages', 'the harness is in English', 'When a harness is there, the question is not asked']) {
     assert.ok(question.includes(part), `language question: ${part}`);
   }
@@ -81,7 +82,7 @@ test('init.md interview: two rounds, an own suggestion in every open question, "
   for (const part of ['`style-questions.md` → `Asked`', 'standard choice', 'at most 5', 'in two rounds', 'write your proposal', "I don't know", 'Awaiting owner decision',
     'no answer is waited for', 'as information', "the plan's list of open issues", 'do not ask the owner for the criteria', 'no proposal is written',
     'counts as an answer (the question is not left open)', 'find the goal in the README', 'with a reason of 1–2 sentences',
-    'Before writing Q1, read `templates/pan-harness/playbooks/large-task.md.tmpl` → `Planning`', 'In an existing project (a repo is there)',
+    'Before writing question 1, read `templates/pan-harness/playbooks/large-task.md.tmpl` → `Planning`', 'In an existing project (a repo is there)',
     "neither the language question nor the plan's approval counts", 'that part becomes an open issue', 'usually 3', "agreed in each task's plan"]) {
     assert.ok(interview.includes(part), `interview: ${part}`);
   }
