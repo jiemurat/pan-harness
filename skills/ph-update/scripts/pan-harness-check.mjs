@@ -38,7 +38,9 @@ Errors (exit 1):
   - dated task rows ("| YYYY-MM-DD") appear only in plan.md;
   - backticked paths under the known prefixes exist (in handoff.md, lines
     marked "(new)" name files still to be made and are skipped; the artifact-folder AGENTS.md
-    names may be missing: git keeps no empty folder, an agreed move may wait);
+    names may be missing: git keeps no empty folder, an agreed move may wait; so may
+    pan-harness/workers.md, made when the worker-agents are first used);
+  - handoff.md has no Status line;
   - a "`file.md` -> "Section"" link in a current doc leads to a heading or bold
     label that file does not have.
 Warnings:
@@ -49,7 +51,8 @@ Warnings:
     under the chat rule, or the two outside content rules (instructions come
     from the owner and the harness; third-party skills, MCP servers and agent
     plugins with the owner's permission);
-  - a lesson from check.json "fields_from" "Layer" on without Layer:;
+  - a lesson from check.json "fields_from" "Layer" on without Layer:, or with a Layer: value
+    other than task, context, environment, verification or state;
   - code=yes: no **Fast check:**, **See the result:** or **Logs:** line in PAN-HARNESS.md
     Project checks, or no fast check item in AGENTS.md Session start or
     "Check while you work" item in Working style;
@@ -64,9 +67,10 @@ Warnings:
     journal or history entry that leads nowhere;
   - a history entry other than the last with "pending" in its Files line;
   - the newest history entry: a criterion marked done without evidence, or an
-    open criterion whose decision has no open item in plan.md;
+    open criterion (an item that starts with the hourglass) whose decision has no
+    open item in plan.md;
   - plan.md: a dated Scheduled row whose date has passed;
-  - handoff.md: no Status line; an active task over 8 KB, without its
+  - handoff.md: an active task over 8 KB, without its
     sections, with steps that have no state, several active steps, or done
     steps without evidence;
   - co_change (check.json): a watched file changed but none of the docs that
@@ -85,8 +89,8 @@ Warnings:
     not ignored;
   - growth: the start set over the limit, another doc over the doc limit
     (history/ and archive/ are exempt), a finished item left in plan.md;
-  - no Standard line in PAN-HARNESS.md, or its version differs from this
-    script's.
+  - no Standard line in PAN-HARNESS.md, more than one, or its version differs
+    from this script's.
 Notes (not counted): open criteria in plan.md, untracked files that are not
 ignored (commit them or add them to .gitignore), a git command that failed.
 Extensions: every pan-harness/project/scripts/check-* (.mjs, .js with node,
@@ -102,7 +106,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const VERSION = '2.10.5';
+const VERSION = '2.10.6';
 
 // Sizes in bytes. 25 KB fits the start set of a complex project written
 // compactly; 40 KB keeps any doc readable in one go. An agent reads a doc over
@@ -690,6 +694,20 @@ require(path.join(H, 'lessons.md'),
 require(path.join(H, 'lessons.md'), // the layer of a lesson: checked from fields_from.Layer on
   entriesOf(read(path.join(H, 'lessons.md')), /^- \*\*L\d+ /, /^#/),
   [['Layer:', bw('Layer')]], /^- \*\*(L\d+)/, 'Layer');
+// the layer is one of five words: the fix goes to that layer, and ph-doctor counts lessons by it
+const LAYERS = ['task', 'context', 'environment', 'verification', 'state'];
+const badLayers = [];
+for (const block of entriesOf(read(path.join(H, 'lessons.md')), /^- \*\*L\d+ /, /^#/)) {
+  const name = /^- \*\*(L\d+)/.exec(block);
+  if (FIELDS_FROM.Layer && name && Number(name[1].slice(1)) < Number(FIELDS_FROM.Layer)) continue;
+  const value = new RegExp(`${B0}Layer:\\**\\s*([^.;\\n]+)`, 'u').exec(block);
+  const word = value ? value[1].replace(/[`*]/g, '').trim().toLowerCase() : null;
+  if (name && word && !LAYERS.includes(word)) badLayers.push(`${name[1]}: ${word}`);
+}
+if (badLayers.length) {
+  warnings.push(`pan-harness/lessons.md: Layer not one of ${LAYERS.join(', ')} (${badLayers.slice(0, 5).join(', ')}`
+    + `${badLayers.length > 5 ? ' …' : ''}) - write the one word the failure came from in new lessons; an older entry keeps its words`);
+}
 const historyFields = [['What and why:', /\*\*What and why:\*\*/],
   ['Checks:', /\*\*Checks:\*\*/], ['Files:', /\*\*Files:\*\*/]];
 if (liveOn) historyFields.push(['Downtime:', /\*\*Downtime:\*\*/]);
@@ -752,7 +770,8 @@ for (const p of docs) {
   for (const found of [...new Set([...body.matchAll(PATH_RE)].map((m) => m[1]))].sort()) {
     if (['*', '<', 'YYYY', '…', '{{'].some((mark) => found.includes(mark)) || found.startsWith('archive/')) continue;
     const bare = found.replace(/\/+$/, '');
-    if (OPTIONAL_DIRS.has(bare.startsWith('pan-harness/') ? bare.slice('pan-harness/'.length) : bare) || bare === ARTIFACT_DIR) continue;
+    const inHarness = bare.startsWith('pan-harness/') ? bare.slice('pan-harness/'.length) : bare;
+    if (OPTIONAL_DIRS.has(inHarness) || (bare !== inHarness && OPTIONAL_FILES.includes(inHarness)) || bare === ARTIFACT_DIR) continue;
     if (!bases.some((b) => exists(path.join(b, found)))) {
       errors.push(`${rel(p)}: path \`${found}\` does not exist - an agent will look for it in vain; fix the `
         + 'path (in handoff.md, mark a file still to be made with (new))');
@@ -855,8 +874,12 @@ if (blocks.length) {
         + 'as met only with evidence (P21): add what showed it (number, command, file)');
     }
   }
-  if (checks.includes('⏳')) {
-    const ds = [...new Set([...block.matchAll(new RegExp(`${B0}D(\\d+)${B1}`, 'gu'))].map((m) => m[1]))].sort((a, b) => a - b);
+  // an open criterion is an item that starts with ⏳ (after a list mark or a K label); a closed one or a
+  // mention in a sentence ("closed ⏳ …") is not, and only the open items' D numbers count
+  const open = checks.split(/[;\n]/).map((part) => part.replace(/^\s*(?:[-*]\s+)?(?:K\d+\s*[:—-]?\s*)?/u, ''))
+    .filter((part) => part.startsWith('⏳')).join('\n');
+  if (open) {
+    const ds = [...new Set([...open.matchAll(new RegExp(`${B0}D(\\d+)${B1}`, 'gu'))].map((m) => m[1]))].sort((a, b) => a - b);
     if (ds.length && !openItems.some((item) => new RegExp(`${B0}D(?:${ds.join('|')})${B1}`, 'u').test(item))) {
       warnings.push(`${name}: newest entry has ⏳ criteria, but plan.md has no ⏳ item naming `
         + `D${ds.join('/D')} - an open criterion is forgotten unless it is tracked; add it to `
@@ -912,8 +935,8 @@ if (isFile(HANDOFF)) {
     }
   }
   if (!st) {
-    warnings.push("pan-harness/handoff.md: no '**Status:** none' or '**Status:** active' line - the next "
-      + 'session cannot tell whether a task is in progress; add it (template handoff.md.tmpl)');
+    errors.push("pan-harness/handoff.md: no '**Status:** none' or '**Status:** active' line - the next "
+      + `session cannot tell whether a task is in progress; ${rebuild}, or add the line (template handoff.md.tmpl)`);
   } else if (st[1] === 'active') {
     const size = Buffer.byteLength(ht, 'utf8');
     if (size > HANDOFF_LIMIT) {
@@ -1211,6 +1234,11 @@ if (hasGit) {
 }
 
 // 22. standard version
+const stdLines = outsideCode(panText).filter((line) => /^Standard: pan-harness \S+/.test(line));
+if (stdLines.length > 1) {
+  warnings.push(`PAN-HARNESS.md: ${stdLines.length} 'Standard:' lines - only the first is read; keep the newest `
+    + `(${stdLines[0].slice('Standard: pan-harness '.length)}) and delete the others`);
+}
 if (!stdVersion) {
   warnings.push("PAN-HARNESS.md: no 'Standard: pan-harness <version>' line - the harness standard is unknown, "
     + 'so no update steps apply; run ph-doctor: it compares the harness with the standard and adds the line');

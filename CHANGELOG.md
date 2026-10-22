@@ -2,6 +2,16 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 2.10.6
+
+Fixes for `/ph-update` and the harness check, and a session title that follows the work.
+
+- Each large task's plan starts with a step that renames the session to that task (in Claude Desktop, with `ph-rename-claude-session`); the agent says the new title in one line. Say "don't rename the session" once, and the step is left out; a worker-agent's session keeps its name.
+- After `/ph-update` from 2.10.4 or older, `PAN-HARNESS.md` no longer ends with two `Standard:` lines; the check now warns when a harness has two, so you keep the first and delete the other.
+- A harness that does not use worker-agents no longer gets a check error for `pan-harness/workers.md`: the file appears when `ph-workers` is first used.
+- `/ph-update` adds the Map line of the delegation playbook, raises the start set limit by the bytes the worker-agent lines and the question form add, leaves a question rule you wrote yourself (with ❓ or ➡️) for the agent to merge by hand, and prints the start set size before and after.
+- The check no longer takes a closed ⏳ mentioned in the newest history entry as an open criterion, stops a commit when `handoff.md` has lost its status line, and warns when a lesson's `Layer:` is not one of the five words.
+
 ## 2.10.5
 
 Questions to you come in one form, and long messages are easy to scan.

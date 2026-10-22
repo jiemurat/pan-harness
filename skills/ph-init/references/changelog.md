@@ -4,13 +4,20 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 2.10.6
+
+Fixes of the 2.10.4 and 2.10.5 migration and of the check. The `Standard:` line is written once, in its place (a harness migrated by 2.10.5 from an older version could end with two); the delegation playbook gets its Map line; `pan-harness/workers.md` is a file of a harness that uses worker-agents, and a path to it is no error until `ph-workers` makes it; the 2.10.4 and 2.10.5 steps raise the start set limit by the bytes they add (2.10.4 by a flat 1 KB before), and `migrate.mjs` prints the start set before and after and names a start set over the limit "by hand". The check warns on a second `Standard:` line, takes as an open criterion only an item that starts with ⏳, makes a missing `handoff.md` status line an error and warns on a `Layer:` value outside the five words. Step 1 of every large task's plan retitles the session to the task with `ph-rename-claude-session` in its short form, unless the owner said not to; a worker-agent leaves the step out. A harness with two `Standard:` lines keeps the first and deletes the others by hand.
+
+1. `mechanical` — `playbooks/large-task.md` → `Planning` gets the session-title item after the plan item (`scripts/migrate.mjs`).
+
 ## 2.10.5
 
 The form of a question to the owner. Every question the agent puts to the owner comes in one form: `❓ **<title>**: <question>`, the options as an `a)`, `b)` list, one `➡️ <letter and option> — <why>`; several questions are numbered full blocks, never joined; a one-sentence question of up to 120 characters drops only its title; a question with no possible recommendation says after `➡️` what the agent does without an answer. A long message bolds each item's label and a few important words. `AGENTS.md` carries the short rule, the new standard playbook `pan-harness/playbooks/questions.md` carries the filled examples; `ph-grilling`, the language question of `ph-init` and the questions of `ph-init` and `ph-doctor` use the same form.
 
-1. `mechanical` — the chat rule of `AGENTS.md` gets the "Questions" item after the item on words with several meanings (`scripts/migrate.mjs`).
+1. `mechanical` — the chat rule of `AGENTS.md` gets the "Questions" item after the item on words with several meanings (`scripts/migrate.mjs`); a chat rule that already asks for the ❓/➡️ form in the project's words is left "by hand": that sentence is replaced with the item.
 2. `mechanical` — the new standard playbook `pan-harness/playbooks/questions.md` is made from the template, and the `PAN-HARNESS.md` Map gets its line after the delegation line.
 3. `mechanical` — `playbooks/large-task.md` → `Planning` points the question format item to `playbooks/questions.md`.
+4. `mechanical` — `project/check.json` → `start_limit_bytes` is raised by the bytes steps 1 and 2 add to the start set.
 
 Each step a reworded `AGENTS.md` does not fit is printed "by hand": add the template's line in the project's words, with the owner.
 
@@ -22,8 +29,8 @@ The main-agent and its worker-agents. The agent of a session the owner opens is 
 2. `mechanical` — the one-task rule and its `Boundaries` item read "one task at a time in each session".
 3. `mechanical` — the commit rule asks for the `Agent: <your name>` line right above any `Co-Authored-By` line.
 4. `mechanical` — `Workflow` ends with two lines: the type is set before any skill runs, and worker-agent requests go to `ph-workers`, where a worker runs its task by `Workflow`.
-5. `mechanical` — `project/check.json` → `start_limit_bytes` is 1024 higher.
-6. `mechanical` — `AGENTS.md` → `Working style` gets the "Delegate reading" item after "Keep the scope", and the new standard playbook `pan-harness/playbooks/delegation.md` is made from the template.
+5. `mechanical` — `project/check.json` → `start_limit_bytes` is raised by the bytes the steps of this version add to the start set, and by the bytes of the step 3 line when it is left by hand; it runs after step 6.
+6. `mechanical` — `AGENTS.md` → `Working style` gets the "Delegate reading" item after "Keep the scope", and the new standard playbook `pan-harness/playbooks/delegation.md` is made from the template; the `PAN-HARNESS.md` Map gets its line after the large-task line.
 
 Each step a reworded `AGENTS.md` does not fit is printed "by hand": add the template's line in the project's words, with the owner.
 

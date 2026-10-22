@@ -36,7 +36,7 @@ const WORDS = joined([
 ]);
 // word starts: a stem with any ending
 const STEMS = joined([
-  'l_oyiha', 'h_ujjat', 'f_ayl', 'q_oida', 's_avol', 'j_avob', 'n_atija', 'q_adam', 'b_osqich', 't_ekshir',
+  'b_oshla', 'l_oyiha', 'h_ujjat', 'f_ayl', 'q_oida', 's_avol', 'j_avob', 'n_atija', 'q_adam', 'b_osqich', 't_ekshir',
   'k_riteriya', 'v_ersiya', 'y_ozuv', 'y_ozil', 'y_ozish', 'b_ajar', 't_ushun', 't_aklif', 'x_abar', 's_ozla',
   'y_arat', 'h_isobot', 't_artib', 'h_avola', 'b_uyruq', 's_essiya', 'a_tama', 't_avsiya', 's_uhbat', 'm_urojaat',
   'j_urnal', 's_hablon', 'i_shla', 'b_oshla', 'y_angila', 's_aqla', 'q_aror', 'h_ajm', 'a_niqla', 'e_slat',

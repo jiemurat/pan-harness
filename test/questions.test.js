@@ -132,9 +132,9 @@ test('the structure, the audit and the changelogs name the question form', () =>
   const row = audit.split('\n').find((l) => l.startsWith('| A75 |')) || '';
   assert.ok(row.includes('playbooks/questions.md') && row.includes('migrate.mjs'), 'an audit row A75');
   const changelog = read(ROOT, 'core', 'references', 'changelog.md');
-  const section = changelog.slice(changelog.indexOf('## 2.10.5'), changelog.indexOf('## 2.10.4\n'));
+  const section = changelog.slice(changelog.indexOf('## 2.10.5\n'), changelog.indexOf('## 2.10.4\n'));
   assert.ok(section.startsWith('## 2.10.5'), 'a changelog section for the next version');
-  assert.equal((section.match(/^\d+\. `mechanical`/gm) || []).length, 3, 'three mechanical steps');
+  assert.equal((section.match(/^\d+\. `mechanical`/gm) || []).length, 4, 'four mechanical steps');
   assert.match(read(ROOT, 'CHANGELOG.md'), /^## 2\.10\.5$/m);
 });
 

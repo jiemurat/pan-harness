@@ -21,6 +21,7 @@ Ask the questions with the `ph-grilling` skill. If it is not installed (a new cl
 - each question in the form of `playbooks/questions.md` (the `ph-grilling` skill writes it too): options a), b), c), the recommendation and its reason. The numbers run on to the end of the task;
 - the answer comes as "1. a 2. c …";
 - at the end, a short plan: the final list of criteria, which files of the project change (the harness files every task updates are not listed), the exceptions, the budget (time, tokens or the number of sub-agents, paid API cost), where the owner's hand is needed. Work that does not fit one session is split into stages, each ending with its own check and report. [profile: live-system=yes] Restarts and outages are named too. The approval covers the criteria as well: after it, the goal, the criteria and the exceptions go into the task's item in `plan.md`, the stages and steps into `pan-harness/handoff.md` (`**Status:** active`). Before the approval, only reading is allowed.
+- step 1 of every plan retitles the session to the task with the `ph-rename-claude-session` skill (its short form), unless the owner said not to (`feedback.md`); with no session tools, the step is marked done as "no session tools". A worker-agent leaves this step out.
 
 ## Execution
 

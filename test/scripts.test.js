@@ -31,6 +31,7 @@ function repo() {
 }
 const run = (script, ...args) => spawnSync(process.execPath, [path.join(SKILL, 'scripts', script), ...args], { encoding: 'utf8' });
 const read = (dir, rel) => fs.readFileSync(path.join(dir, ...rel.split('/')), 'utf8');
+const startSet = (dir) => ['AGENTS.md', 'PAN-HARNESS.md', 'pan-harness/state.md', 'pan-harness/plan.md'].reduce((n, rel) => n + Buffer.byteLength(read(dir, rel)), 0);
 function put(dir, rel, body) {
   fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
   fs.writeFileSync(path.join(dir, rel), body);
@@ -369,11 +370,14 @@ test('migrate 2.9.4 -> 2.10.5: AGENTS.md gets the main-agent, one task in each s
     .replace(/\n- \*\*Delegate reading\.\*\*[^\n]*/, '');
   put(dir, 'AGENTS.md', old);
   fs.rmSync(path.join(dir, 'pan-harness', 'playbooks', 'delegation.md'));
-  put(dir, 'pan-harness/project/check.json', read(dir, 'pan-harness/project/check.json').replace(/"start_limit_bytes": \d+/, '"start_limit_bytes": 20480'));
+  put(dir, 'pan-harness/project/check.json', read(dir, 'pan-harness/project/check.json').replace(/"start_limit_bytes": \d+/, '"start_limit_bytes": 24576'));
   put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 2.9.4'));
+  const before = startSet(dir);
   const r = run('migrate.mjs', '--root', dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
   for (const step of [1, 2, 3, 4, 5, 6]) assert.match(r.stdout, new RegExp(`^done +2\\.10\\.4 step ${step}: `, 'm'));
+  const added = startSet(dir) - before - (Buffer.byteLength(VERSION) - Buffer.byteLength('2.9.4')); // the Standard line is written after the steps
+  assert.match(r.stdout, new RegExp(`^done +2\\.10\\.4 step 5: project/check\\.json: start_limit_bytes ${added} bytes higher for the worker-agent lines$`, 'm'));
   const agents = read(dir, 'AGENTS.md');
   const tmpl = fs.readFileSync(path.join(SKILL, 'templates', 'AGENTS.md.tmpl'), 'utf8');
   for (const line of ['- **Main-agent:** COOPER.', '**R1. One task at a time in each session.**', 'one task at a time in each session (R1)',
@@ -381,11 +385,11 @@ test('migrate 2.9.4 -> 2.10.5: AGENTS.md gets the main-agent, one task in each s
     assert.ok(agents.includes(line), line);
     assert.ok(tmpl.includes(line), `the template has ${line}`);
   }
-  assert.match(read(dir, 'pan-harness/project/check.json'), /"start_limit_bytes": 21504/);
+  assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${24576 + added}`));
   const playbook = read(dir, 'pan-harness/playbooks/delegation.md');
   assert.match(playbook, /^# Playbook: delegation$/m);
   assert.doesNotMatch(playbook, /<!--/, 'the template note is left out');
-  assert.match(read(dir, 'PAN-HARNESS.md'), /^Standard: pan-harness 2\.10\.5$/m);
+  assert.match(read(dir, 'PAN-HARNESS.md'), new RegExp(`^Standard: pan-harness ${VERSION.replace(/\./g, '\\.')}$`, 'm'));
   const again = run('migrate.mjs', '--root', dir);
   assert.ok(again.stdout.includes('0 by hand'), again.stdout);
   assert.equal(read(dir, 'AGENTS.md'), agents, 'a second run changes nothing');
@@ -412,8 +416,96 @@ test('migrate 2.10.4 -> 2.10.5: AGENTS.md gets the question rule, the questions 
   assert.match(read(dir, 'pan-harness/playbooks/questions.md'), /^# Playbook: questions$/m);
   assert.match(read(dir, 'pan-harness/playbooks/large-task.md'), /form of `playbooks\/questions\.md`/);
   assert.match(read(dir, 'PAN-HARNESS.md'), /^- `playbooks\/questions\.md` — .+\(before .+\)\.$/m);
-  assert.match(read(dir, 'PAN-HARNESS.md'), /^Standard: pan-harness 2\.10\.5$/m);
+  assert.match(read(dir, 'PAN-HARNESS.md'), new RegExp(`^Standard: pan-harness ${VERSION.replace(/\./g, '\\.')}$`, 'm'));
   const again = run('migrate.mjs', '--root', dir);
   assert.ok(again.stdout.includes('0 by hand'), again.stdout);
   assert.equal(read(dir, 'AGENTS.md'), agents, 'a second run changes nothing');
+});
+
+const STANDARD_LINES = (text) => text.split('\n').filter((l) => l.startsWith('Standard: pan-harness ')).length;
+
+test('migrate 2.9.4 -> current: one Standard line with its blank line, the delegation and questions map lines', () => {
+  const dir = current();
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md')
+    .replace(/^- `playbooks\/(delegation|questions)\.md` — .*\n/gm, '')
+    .replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 2.9.4'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const pan = read(dir, 'PAN-HARNESS.md');
+  assert.equal(STANDARD_LINES(pan), 1, pan);
+  assert.match(pan, new RegExp(`\\n\\nStandard: pan-harness ${VERSION.replace(/\./g, '\\.')}\\n?$`));
+  assert.match(pan, /^- `playbooks\/delegation\.md` — /m);
+  assert.match(pan, /^- `playbooks\/questions\.md` — /m);
+});
+
+test('migrate 2.10.4 -> 2.10.5: a chat rule that already has the ❓/➡️ form gets no second rule', () => {
+  const dir = current();
+  const own = '  - Ask in the ❓/➡️ form: several questions numbered, ➡️ one recommendation with its reason.';
+  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').split('\n').map((l) => (l.startsWith('  - **Questions.** ') ? own : l)).join('\n'));
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 2.10.4'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^by hand 2\.10\.5 step 1: AGENTS\.md: the chat rule already asks for the ❓\/➡️ form/m);
+  assert.doesNotMatch(read(dir, 'AGENTS.md'), /^ {2}- \*\*Questions\.\*\* /m);
+});
+
+test('migrate 2.10.4 -> 2.10.5: the start set limit grows by the bytes the steps add, the size is printed', () => {
+  const dir = current();
+  const rule = read(dir, 'AGENTS.md').split('\n').find((l) => l.startsWith('  - **Questions.** '));
+  const mapLine = read(dir, 'PAN-HARNESS.md').split('\n').find((l) => l.startsWith('- `playbooks/questions.md` — '));
+  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').split('\n').filter((l) => l !== rule).join('\n'));
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(`${mapLine}\n`, '').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 2.10.4'));
+  put(dir, 'pan-harness/project/check.json', read(dir, 'pan-harness/project/check.json').replace(/"start_limit_bytes": \d+/, '"start_limit_bytes": 20480'));
+  const before = startSet(dir);
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const added = Buffer.byteLength(`${rule}\n${mapLine}\n`);
+  assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${20480 + added}`));
+  assert.match(r.stdout, /^done +2\.10\.5 step 4: project\/check\.json: start_limit_bytes \d+ bytes higher for the question form$/m);
+  assert.ok(r.stdout.includes(`start set: ${before} -> ${startSet(dir)} bytes (limit ${20480 + added})`), r.stdout);
+
+  const over = current();
+  put(over, 'pan-harness/project/check.json', read(over, 'pan-harness/project/check.json').replace(/"start_limit_bytes": \d+/, '"start_limit_bytes": 1000'));
+  assert.match(run('migrate.mjs', '--root', over).stdout, /^by hand start set: \d+ bytes, over the limit 1000: /m);
+});
+
+test('migrate 2.10.5 -> current: the planning playbook makes the session title step 1 of every plan, once', () => {
+  const dir = current();
+  const tmpl = fs.readFileSync(path.join(SKILL, 'templates', 'pan-harness', 'playbooks', 'large-task.md.tmpl'), 'utf8').split('\n');
+  const item = tmpl.find((l) => l.includes('`ph-rename-claude-session`'));
+  assert.ok(item && tmpl[tmpl.indexOf(item) - 1].startsWith('- at the end, a short plan'), 'the item follows the plan item of Planning');
+  assert.ok(!item.includes('"boshl') && !fs.readFileSync(path.join(SKILL, 'templates', 'AGENTS.md.tmpl'), 'utf8').includes('ph-rename-claude-session'), 'only the playbook names the step');
+  const rel = 'pan-harness/playbooks/large-task.md';
+  put(dir, rel, read(dir, rel).replace(`${item}\n`, ''));
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 2.10.5'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^done +2\.10\.6 step 1: playbooks\/large-task\.md: step 1 of every plan retitles the session$/m);
+  const lines = read(dir, rel).split('\n');
+  assert.equal(lines.filter((l) => l === item).length, 1);
+  assert.ok(lines[lines.indexOf(item) - 1].startsWith('- at the end, a short plan'));
+  const again = run('migrate.mjs', '--root', dir);
+  assert.ok(again.stdout.includes('0 by hand'), again.stdout);
+  assert.equal(read(dir, rel), lines.join('\n'), 'a second run changes nothing');
+
+  const own = current();
+  put(own, rel, read(own, rel).replace(`${item}\n`, '').replace('- at the end, a short plan', '- finally, a short plan'));
+  put(own, 'PAN-HARNESS.md', read(own, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 2.10.5'));
+  assert.match(run('migrate.mjs', '--root', own).stdout, /^by hand 2\.10\.6 step 1: playbooks\/large-task\.md: no "at the end, a short plan" item in Planning/m);
+});
+test('ph-rename-claude-session has a short form for the session-title rule', () => {
+  const text = fs.readFileSync(path.join(ROOT, 'skills', 'ph-rename-claude-session', 'SKILL.md'), 'utf8');
+  assert.match(text, /^\*\*Short form\.\*\* When step 1 of a large task's plan runs this skill/m);
+  assert.match(text.split('\n').find((l) => l.startsWith('description:')), /short form as step 1 of a large task's plan/);
+});
+
+test('migrate 2.9.4 -> current: a commit rule the step cannot place still gets the limit for its Agent: line', () => {
+  const dir = current();
+  const trailer = / End each commit message with the line `Agent: <your name>`[^.]*\./.exec(fs.readFileSync(path.join(SKILL, 'templates', 'AGENTS.md.tmpl'), 'utf8'))[0];
+  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').replace(trailer, '').replace('only when files changed.', 'only when a file changed.'));
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 2.9.4'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^by hand 2\.10\.4 step 3: AGENTS\.md: the commit rule is reworded/m);
+  assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${25600 + Buffer.byteLength(trailer)}`));
 });

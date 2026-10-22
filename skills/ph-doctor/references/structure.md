@@ -89,12 +89,14 @@ Each concept is written with one term, with no gloss in brackets and no synonym 
     ├── decisions.md           D… current decisions
     ├── feedback.md            F… the owner's words about the way of working
     ├── lessons.md             L… mistakes and lessons
+    ├── workers.md             worker-agents (`ph-workers`)
     ├── history/YYYY-MM.md     history of the work, month by month
     ├── archive/               superseded decisions, old parts of the journals, originals of old agent files
     ├── playbooks/
     │   ├── large-task.md      planning and carrying out a large task
     │   ├── end-of-task.md     the end-of-task checklist, journal rules
     │   ├── delegation.md      sub-agent work
+    │   ├── questions.md       question form
     │   └── pan-harness.md     `ph-doctor`, growth limits and the project steps
     ├── scripts/               copies from the skill only, not edited in the project
     │   ├── pan-harness-check.mjs   mandatory
@@ -107,7 +109,7 @@ Each concept is written with one term, with no gloss in brackets and no synonym 
         └── references/        reference material
 ```
 
-The files of the standard part are mandatory, `secret-check.mjs` depends on the profile. When the project has nothing for a file, the file stays with one line (for example, `state.md`: "No live system"). This way the agent knows in every project where to look for what. The standard part holds no file or folder outside this list: what is specific to the project goes into `project/`. `pan-harness-check.mjs` checks this.
+The standard part's files are mandatory; `secret-check.mjs` follows the profile, `workers.md` the worker-agents. A file with nothing to hold keeps one line (`state.md`: "No live system"), so the agent knows where to look in every project. Anything else specific to the project goes into `project/`; `pan-harness-check.mjs` checks this.
 
 **Names.** File and folder names are in English, lowercase, with hyphens (`status-check.sh`, `check-backup.mjs`). `AGENTS.md`, `PAN-HARNESS.md` and `CLAUDE.md` in the root are the exception: agent tools and convention set these names.
 
@@ -193,7 +195,7 @@ Only what this project has: domain files (for example, a list of agents, cost me
 | `decisions.md` | D1… | One paragraph: `- **D<n>** (YYYY-MM-DD) [tag] Decision. Why: … Rejected: … Where: …` |
 | `feedback.md` | F1… | `### F<n> — YYYY-MM-DD — <title> [tag]`, then `- **Quote:**` (the owner's words, verbatim where possible), `- **Context:**`, `- **Result:**` (which rule it became: `→ R<n>`) |
 | `lessons.md` | L1… | `- **L<n> (YYYY-MM-DD) — <title>.** [tag]`, then what happened, `Layer: …` (task, context, environment, verification or state), `Rule: …`, `Check: …` |
-| `history/YYYY-MM.md` | date | `### YYYY-MM-DD — <task name> [tag]`, then `- **What and why:**`, `- **Checks:**` (in a large task it starts with the results of the criteria: ✅, ❌, ⏳), `- **Downtime:**` (only with `live-system=yes`), `- **Files:**` (ending with `(commit: <hash>)` or `(commit: pending)`: `settings.md` → "History and archive") |
+| `history/YYYY-MM.md` | date | `### YYYY-MM-DD — <task name> [tag]`, then `- **What and why:**`, `- **Checks:**` (in a large task it starts with the results of the criteria: ✅, ❌, ⏳; open: starts with ⏳, closed: `✅ (was ⏳)`), `- **Downtime:**` (only with `live-system=yes`), `- **Files:**` (ending with `(commit: <hash>)` or `(commit: pending)`: `settings.md` → "History and archive") |
 
 - **`Where:`** — the file or setting where the decision is carried out. The agent checks that place before relying on the decision (P6).
 - **Numbers** run from 1 in each journal together with its archive and never change. R — the rules in `AGENTS.md` and in the playbooks, one sequence. Q — planning questions: they stay in the chat, the result goes into a D or an F.

@@ -544,3 +544,40 @@ test('pan-harness/workers.md is a standard file; another file in pan-harness/ is
   assert.doesNotMatch(out, /pan-harness\/workers\.md: not part of the standard/);
   assert.match(out, /pan-harness\/notes\.md: not part of the standard/);
 });
+
+test('pan-harness/workers.md may be missing: a path to it is no error until ph-workers makes it', () => {
+  const dir = harness();
+  edit(dir, 'AGENTS.md', '1. **Question** — answer with read-only commands.\n',
+    '1. **Question** — answer with read-only commands.\n\nA request that names a worker-agent (`pan-harness/workers.md`) goes through `ph-workers`.\n');
+  const { out } = check(dir);
+  assert.doesNotMatch(out, /path `pan-harness\/workers\.md` does not exist/, out);
+});
+
+test('PAN-HARNESS.md: a second Standard line is a warning', () => {
+  const dir = harness();
+  edit(dir, 'PAN-HARNESS.md', `Standard: pan-harness ${VERSION}\n`, `Standard: pan-harness ${VERSION}\nStandard: pan-harness 2.10.4\n`);
+  assert.match(check(dir).out, /^WARN +PAN-HARNESS\.md: 2 'Standard:' lines - /m);
+});
+
+test('newest entry: only an item that starts with ⏳ is an open criterion, with its own D numbers', () => {
+  const dir = harness();
+  const history = `pan-harness/history/${MONTH}.md`;
+  edit(dir, history, '- **Checks:** checks ran.\n', '- **Checks:** ✅ K1: 3 tests passed; closed ⏳ index size (D1); K2 without a ⏳ pair.\n');
+  assert.doesNotMatch(check(dir).out, /newest entry has ⏳ criteria/);
+  put(dir, 'pan-harness/decisions.md', `${FILES['pan-harness/decisions.md']}- **D2** (${DAY}) [docs] More. Why: a test. Where: here.\n`);
+  edit(dir, history, '- **What and why:** created.\n', '- **What and why:** created by D2.\n');
+  edit(dir, history, 'K2 without a ⏳ pair.', '⏳ K2: the size, at the next run (D1).');
+  assert.match(check(dir).out, /^WARN .*newest entry has ⏳ criteria, but plan\.md has no ⏳ item naming D1 - /m);
+});
+
+test('handoff.md without a status line is an error', () => {
+  const dir = harness();
+  put(dir, 'pan-harness/handoff.md', '# Handoff\n\nThe state of the active large task.\n');
+  assert.match(check(dir).out, /^ERROR pan-harness\/handoff\.md: no '\*\*Status:\*\* none' or '\*\*Status:\*\* active' line/m);
+});
+
+test('lessons: a Layer value outside the five words is a warning', () => {
+  const dir = harness();
+  edit(dir, 'pan-harness/lessons.md', '  - Layer: context\n', '  - Layer: test design\n');
+  assert.match(check(dir).out, /^WARN +pan-harness\/lessons\.md: Layer not one of task, context, environment, verification, state \(L1: test design\)/m);
+});

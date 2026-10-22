@@ -1,6 +1,6 @@
 ---
 name: ph-rename-claude-session
-description: Retitles this Claude Desktop session to its current topic and gives a short session summary. Use it when the user asks to rename or update the session title.
+description: Retitles this Claude Desktop session to its current topic and gives a short session summary. Use it when the user asks to rename or update the session title; a pan-harness runs it in short form as step 1 of a large task's plan.
 compatibility: Claude Desktop (its session tools); in another agent the skill says so and stops
 license: MIT
 metadata:
@@ -11,6 +11,8 @@ metadata:
 # Session title
 
 Give this session a title that names what it is about now, in the user's language.
+
+**Short form.** When step 1 of a large task's plan runs this skill: the topic is the approved task (step 3 asks nothing); go through steps 1–6 and report one line, `<old title> → <new title>`, in the user's language, with no summary; a kept title gets no line. When step 1 finds no session tools, mark the plan step done as "no session tools" and go on with the next step.
 
 ## Steps
 
@@ -33,6 +35,7 @@ Give this session a title that names what it is about now, in the user's languag
    ```
 
    For a kept title, the first line is the note alone, in bold, without the title: `**<the title already fits the topic, kept>**`. Translate the heading and the labels into the user's language. Each item is one or two sentences, written for a reader who opens the chat cold, with its few key words in bold (the system, the file, the blocker). Done when that reader could take over without scrolling up.
+
 
 ## Title rules
 

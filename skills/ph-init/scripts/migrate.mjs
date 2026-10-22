@@ -48,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -302,7 +302,7 @@ function step2SubfolderHook() {
 
 // ---------------------------------------------------------------- 2.10.4 (the main-agent and its worker-agents)
 // the template's lines: the main-agent's name, one task in each session, the Agent: commit line, the
-// type-first line and the pointer to ph-workers; and the start set limit one KB higher for them
+// type-first line and the pointer to ph-workers; and the start set limit higher by the bytes the version's steps add
 const MAIN_AGENT_LINE = AGENTS_TMPL.find((l) => l.startsWith('- **Main-agent:** ')) || '';
 const TYPE_FIRST = AGENTS_TMPL.find((l) => l.startsWith('Set the type first, before any skill runs')) || '';
 const WORKER_POINTER = AGENTS_TMPL.find((l) => l.startsWith('A request that names a worker-agent')) || '';
@@ -331,11 +331,17 @@ function step2TaskPerSession() {
   else if (!f.lines.some((l) => l.includes('One task at a time in each session'))) byHand.push('2.10.4 step 2: AGENTS.md: no "One task at a time." rule in the template form; make it "One task at a time in each session."');
 }
 
+let byHandBytes = 0; // a line the owner adds by hand later still gets its room in the limit
+
 function step3Trailer() {
   const f = file(AGENTS);
   if (f.lines.some((l) => l.includes('`Agent: <your name>`'))) { done.push('2.10.4 step 3: AGENTS.md already asks for the Agent: commit line'); return; }
   const at = f.lines.findIndex((l) => l.includes('The agent commits, the owner pushes.**') && l.includes('only when files changed.'));
-  if (at < 0) { byHand.push(`2.10.4 step 3: AGENTS.md: the commit rule is reworded; add to it "${TRAILER.trim()}"`); return; }
+  if (at < 0) {
+    byHand.push(`2.10.4 step 3: AGENTS.md: the commit rule is reworded; add to it "${TRAILER.trim()}"`);
+    byHandBytes += Buffer.byteLength(TRAILER);
+    return;
+  }
   f.lines[at] = f.lines[at].replace('only when files changed.', `only when files changed.${TRAILER}`);
   f.changed = true;
   done.push('2.10.4 step 3: AGENTS.md: each commit message ends with the Agent: line');
@@ -352,9 +358,10 @@ function step4WorkerPointer() {
   done.push('2.10.4 step 4: AGENTS.md: Workflow sets the type before any skill and points worker-agent requests to ph-workers');
 }
 
-// the delegation rule: the Working style item and the standard playbook it points to
+// the delegation rule: the Working style item, the standard playbook it points to and its map line
 const DELEGATE_ITEM = AGENTS_TMPL.find((l) => l.startsWith('- **Delegate reading.** ')) || '';
 const DELEGATION = 'pan-harness/playbooks/delegation.md';
+const DELEGATION_MAP_LINE = tmplLines('PAN-HARNESS.md.tmpl').find((l) => l.startsWith('- `playbooks/delegation.md` — ')) || '';
 
 function step6Delegation() {
   const f = file(AGENTS);
@@ -368,25 +375,36 @@ function step6Delegation() {
       done.push('2.10.4 step 6: AGENTS.md: Working style hands reading work to sub-agents');
     }
   }
-  if (file(DELEGATION)) return;
-  const text = fs.readFileSync(path.join(TEMPLATES, 'pan-harness', 'playbooks', 'delegation.md.tmpl'), 'utf8').replace(/^<!--[\s\S]*?-->\r?\n/, '');
-  cache.set(DELEGATION, { eol: '\n', lines: text.split(/\r?\n/), changed: true });
-  done.push(`2.10.4 step 6: ${DELEGATION} made from the template`);
+  if (!file(DELEGATION)) {
+    const text = fs.readFileSync(path.join(TEMPLATES, 'pan-harness', 'playbooks', 'delegation.md.tmpl'), 'utf8').replace(/^<!--[\s\S]*?-->\r?\n/, '');
+    cache.set(DELEGATION, { eol: '\n', lines: text.split(/\r?\n/), changed: true });
+    done.push(`2.10.4 step 6: ${DELEGATION} made from the template`);
+  }
+  if (pan.lines.some((l) => l.startsWith('- `playbooks/delegation.md` — '))) return;
+  const at = pan.lines.findIndex((l) => l.startsWith('- `playbooks/large-task.md` — '));
+  if (at < 0) { byHand.push(`2.10.4 step 6: PAN-HARNESS.md: no large-task line in the Map; add "${DELEGATION_MAP_LINE}" there`); return; }
+  pan.lines.splice(at + 1, 0, DELEGATION_MAP_LINE);
+  pan.changed = true;
+  done.push('2.10.4 step 6: PAN-HARNESS.md: the Map names the delegation playbook');
 }
 
+// runs last of the version: it measures what the other steps added, and the line left by hand
 function step5StartLimit() {
   const f = file('pan-harness/project/check.json');
-  if (!f) return;
+  const added = startBytes() - versionStart + byHandBytes;
+  if (!f || added <= 0) return;
   const at = f.lines.findIndex((l) => /"start_limit_bytes":\s*\d+/.test(l));
   if (at < 0) return;
-  f.lines[at] = f.lines[at].replace(/("start_limit_bytes":\s*)(\d+)/, (_, k, v) => `${k}${Number(v) + 1024}`);
+  f.lines[at] = f.lines[at].replace(/("start_limit_bytes":\s*)(\d+)/, (_, k, v) => `${k}${Number(v) + added}`);
   f.changed = true;
-  done.push('2.10.4 step 5: project/check.json: start_limit_bytes one KB higher for the worker-agent lines');
+  done.push(`2.10.4 step 5: project/check.json: start_limit_bytes ${added} bytes higher for the worker-agent lines`);
 }
 
 // ---------------------------------------------------------------- 2.10.5 (the form of a question to the owner)
-// the Communication item of the template, the standard playbook it points to, and the pointers to the
-// playbook in the planning playbook and in the PAN-HARNESS.md map
+// the Communication item of the template, the standard playbook it points to, the pointers to the
+// playbook in the planning playbook and in the PAN-HARNESS.md map, and the start set limit higher
+// by the bytes these lines add
+let questionBytes = 0;
 const QUESTION_ITEM = AGENTS_TMPL.find((l) => l.startsWith('  - **Questions.** ')) || '';
 const QUESTIONS = 'pan-harness/playbooks/questions.md';
 const LARGE_TASK = 'pan-harness/playbooks/large-task.md';
@@ -397,10 +415,15 @@ const MAP_LINE = tmplLines('PAN-HARNESS.md.tmpl').find((l) => l.startsWith('- `p
 function step1QuestionItem() {
   const f = file(AGENTS);
   if (f.lines.some((l) => l.startsWith('  - **Questions.** '))) { done.push('2.10.5 step 1: AGENTS.md already has the Questions item'); return; }
+  if (f.lines.some((l) => l.includes('❓') || l.includes('➡️'))) {
+    byHand.push(`2.10.5 step 1: AGENTS.md: the chat rule already asks for the ❓/➡️ form in the project's words; replace that sentence with "${QUESTION_ITEM}"`);
+    return;
+  }
   const at = f.lines.findIndex((l) => l.startsWith('  - Where a word has several meanings'));
   if (at < 0) { byHand.push(`2.10.5 step 1: AGENTS.md: no "Where a word has several meanings" item in the chat rule; add "${QUESTION_ITEM}" under the chat rule`); return; }
   f.lines.splice(at + 1, 0, QUESTION_ITEM);
   f.changed = true;
+  questionBytes += Buffer.byteLength(QUESTION_ITEM + f.eol);
   done.push('2.10.5 step 1: AGENTS.md: the chat rule gets the form of a question to the owner');
 }
 
@@ -418,6 +441,7 @@ function step2QuestionsPlaybook() {
   if (at < 0) { byHand.push(`2.10.5 step 2: PAN-HARNESS.md: no playbook line in the Map; add "${MAP_LINE}" there`); return; }
   pan.lines.splice(at + 1, 0, MAP_LINE);
   pan.changed = true;
+  questionBytes += Buffer.byteLength(MAP_LINE + pan.eol);
 }
 
 function step3PlanningPointer() {
@@ -431,6 +455,31 @@ function step3PlanningPointer() {
   done.push('2.10.5 step 3: playbooks/large-task.md: the planning questions follow the questions playbook');
 }
 
+function step4QuestionLimit() {
+  const f = file('pan-harness/project/check.json');
+  if (!f || !questionBytes) return;
+  const at = f.lines.findIndex((l) => /"start_limit_bytes":\s*\d+/.test(l));
+  if (at < 0) return;
+  f.lines[at] = f.lines[at].replace(/("start_limit_bytes":\s*)(\d+)/, (_, k, v) => `${k}${Number(v) + questionBytes}`);
+  f.changed = true;
+  done.push(`2.10.5 step 4: project/check.json: start_limit_bytes ${questionBytes} bytes higher for the question form`);
+}
+
+// ---------------------------------------------------------------- 2.10.6 (the session title of a large task)
+// the template's Planning item after the plan item: step 1 of every plan retitles the session
+const TITLE_ITEM = tmplLines('pan-harness/playbooks/large-task.md.tmpl').find((l) => l.includes('`ph-rename-claude-session`')) || '';
+
+function step1SessionTitle() {
+  const f = file(LARGE_TASK);
+  if (!f) return;
+  if (f.lines.some((l) => l.includes('`ph-rename-claude-session`'))) { done.push('2.10.6 step 1: playbooks/large-task.md already makes the session title step 1'); return; }
+  const at = f.lines.findIndex((l) => l.startsWith('- at the end, a short plan'));
+  if (at < 0) { byHand.push(`2.10.6 step 1: playbooks/large-task.md: no "at the end, a short plan" item in Planning; add "${TITLE_ITEM}" after the item that lists the plan`); return; }
+  f.lines.splice(at + 1, 0, TITLE_ITEM);
+  f.changed = true;
+  done.push('2.10.6 step 1: playbooks/large-task.md: step 1 of every plan retitles the session');
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
@@ -440,25 +489,43 @@ const STEPS = {
     step9CheckCommand, step10HandoffIntro, step11Readiness, step12PackageName],
   '2.8.3': [step1PlainIntro],
   '2.8.4': [step2SubfolderHook],
-  '2.10.4': [step1MainAgent, step2TaskPerSession, step3Trailer, step4WorkerPointer, step5StartLimit, step6Delegation],
-  '2.10.5': [step1QuestionItem, step2QuestionsPlaybook, step3PlanningPointer],
+  '2.10.4': [step1MainAgent, step2TaskPerSession, step3Trailer, step4WorkerPointer, step6Delegation, step5StartLimit],
+  '2.10.5': [step1QuestionItem, step2QuestionsPlaybook, step3PlanningPointer, step4QuestionLimit],
+  '2.10.6': [step1SessionTitle],
 };
 
 // ---------------------------------------------------------------- run
 
+// the start set: the four files every session reads whole, measured before and after the steps
+const START_FILES = ['AGENTS.md', 'PAN-HARNESS.md', 'pan-harness/state.md', 'pan-harness/plan.md'];
+const startBytes = () => START_FILES.reduce((n, rel) => { const f = file(rel); return n + (f ? Buffer.byteLength(f.lines.join(f.eol)) : 0); }, 0);
+const startBefore = startBytes();
+let versionStart = startBefore; // the start set before the steps of the version being run
+
 const pan = file('PAN-HARNESS.md');
-const stdLine = pan.lines.findIndex((l) => /^Standard: pan-harness \S+/.test(l));
-const from = stdLine >= 0 ? /^Standard: pan-harness (\S+)/.exec(pan.lines[stdLine])[1] : null;
+const STANDARD_RE = /^Standard: pan-harness (\S+)/;
+const stdLine = pan.lines.findIndex((l) => STANDARD_RE.test(l));
+const from = stdLine >= 0 ? STANDARD_RE.exec(pan.lines[stdLine])[1] : null;
 if (!from || !KNOWN.includes(from)) {
   console.log(`migrate: unknown standard (${from ? `version ${from}` : 'no Standard line'}): compare the harness with structure.md and templates/ by hand (references/doctor.md -> "3. Migration")`);
   process.exit(3);
 }
 const order = (v) => KNOWN.indexOf(v);
 for (const v of KNOWN.filter((k) => order(k) > order(from) && order(k) <= order(SKILL_VERSION))) {
+  versionStart = startBytes();
   for (const step of STEPS[v] || []) step();
-  pan.lines[stdLine] = `Standard: pan-harness ${v}`;
+  // found again: a step may have put a line above it
+  pan.lines[pan.lines.findIndex((l) => STANDARD_RE.test(l))] = `Standard: pan-harness ${v}`;
   pan.changed = true;
   done.push(`Standard: pan-harness ${v}`);
+}
+
+const limitFile = file('pan-harness/project/check.json');
+const limitMatch = limitFile ? /"start_limit_bytes":\s*(\d+)/.exec(limitFile.lines.join('\n')) : null;
+const startLimit = limitMatch ? Number(limitMatch[1]) : 25 * 1024;
+const startAfter = startBytes();
+if (startAfter > startLimit) {
+  byHand.push(`start set: ${startAfter} bytes, over the limit ${startLimit}: drop duplicates and finished items, or raise start_limit_bytes with the owner (playbooks/pan-harness.md -> "Growth limits")`);
 }
 
 // standard scripts: the skill's copy, always
@@ -501,4 +568,5 @@ if (!dryRun) {
 }
 for (const d of done) console.log(`done    ${d}`);
 for (const b of byHand) console.log(`by hand ${b}`);
+console.log(`start set: ${startBefore} -> ${startAfter} bytes (limit ${startLimit})`);
 console.log(`migrate${dryRun ? ' (dry run)' : ''}: ${from} -> ${order(SKILL_VERSION) > order(from) ? SKILL_VERSION : from}; ${done.length} done, ${byHand.length} by hand`);
