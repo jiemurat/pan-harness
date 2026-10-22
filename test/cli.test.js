@@ -1,6 +1,7 @@
 // CLI tests: init, update, remove and status in throwaway project-folders.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -41,21 +42,45 @@ test('init installs into .agents/skills and .claude/skills, writes commands, man
   for (const s of SKILLS) {
     assert.ok(exists(dir, `.agents/skills/${s}/SKILL.md`), s);
     assert.ok(exists(dir, `.claude/skills/${s}/SKILL.md`), s);
-    assert.ok(exists(dir, `.gemini/commands/${s}.toml`), s);
     assert.ok(exists(dir, `.opencode/commands/${s}.md`), s);
   }
+  assert.ok(!exists(dir, '.gemini'), 'Gemini CLI moved into Antigravity CLI, which reads .agents/skills');
   assert.ok(exists(dir, '.agents/skills/ph-init/references/init.md'));
   const m = manifest(dir);
   assert.equal(m.version, VERSION);
   assert.deepEqual(m.targets, ['agents', 'claude']);
+  assert.deepEqual(m.commands, ['opencode']);
   const ignore = read(dir, '.gitignore');
-  for (const line of ['.agents/skills/ph-*/', '.claude/skills/ph-*/', '.agents/skills/.pan-harness.json', '.gemini/commands/ph-*.toml', '.opencode/commands/ph-*.md']) {
+  for (const line of ['.agents/skills/ph-*/', '.claude/skills/ph-*/', '.agents/skills/.pan-harness.json', '.opencode/commands/ph-*.md']) {
     assert.ok(ignore.includes(line), line);
   }
+  assert.ok(!ignore.includes('.gemini'));
   assert.match(r.out, /\/ph-init/);
   assert.match(r.out, /\$ph-init/);
-  assert.match(read(dir, '.gemini/commands/ph-init.toml'), /\{\{args\}\}/);
+  assert.doesNotMatch(r.out, /Gemini/);
   assert.match(read(dir, '.opencode/commands/ph-init.md'), /\$ARGUMENTS/);
+});
+
+test('update removes the Gemini CLI command files of an older installation', () => {
+  const dir = project();
+  assert.equal(run(dir, 'init').code, 0);
+  // the layout of an installation by 2.10.6 and older: Gemini CLI command files next to OpenCode's
+  const toml = 'description = "old"\nprompt = """\nold\n"""\n';
+  fs.mkdirSync(path.join(dir, '.gemini', 'commands'), { recursive: true });
+  fs.writeFileSync(path.join(dir, '.gemini', 'commands', 'ph-init.toml'), toml);
+  const m = manifest(dir);
+  m.version = '2.10.6';
+  m.commands = ['gemini', 'opencode'];
+  m.files['.gemini/commands/ph-init.toml'] = crypto.createHash('sha256').update(toml).digest('hex');
+  fs.writeFileSync(path.join(dir, '.agents/skills/.pan-harness.json'), JSON.stringify(m, null, 2) + '\n');
+  fs.writeFileSync(path.join(dir, '.gitignore'), read(dir, '.gitignore').replace('.opencode/commands/ph-*.md', '.gemini/commands/ph-*.toml\n.opencode/commands/ph-*.md'));
+  const r = run(dir, 'update');
+  assert.equal(r.code, 0, r.out);
+  assert.ok(!exists(dir, '.gemini'), r.out);
+  assert.ok(!read(dir, '.gitignore').includes('.gemini'));
+  assert.deepEqual(manifest(dir).commands, ['opencode']);
+  assert.ok(exists(dir, '.opencode/commands/ph-init.md'));
+  assert.equal(run(dir, 'remove', '--yes').code, 0);
 });
 
 test('init again says the skills are already there and changes nothing', () => {

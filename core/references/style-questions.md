@@ -80,5 +80,5 @@ Its first line introduces the agent as COOPER, the main-agent name the harness w
 | S26 | The mechanical fixes of `ph-doctor` | a) a mechanical fix the rules define at once, a structural change with a plan; b) everything with a plan | a | |
 | S27 | Research on a structure question | a) before options, the practice on the internet is studied, with sources; b) the agent's own knowledge is enough | a | |
 | S28 | Make a read-only status script (such as `project/scripts/status-check.sh`) | a) yes; b) no, the status is checked by hand | a | `live-system=yes` |
-| S29 | Does the project have `AGENTS.md` files with another purpose (the application's own agents, documents) | Found from the repo, the plan says they are there | A rule in the root: "they are objects of editing" | Such a file is there |
+| S29 | Does the project have `AGENTS.md` files in subfolders | Found from the repo, the plan says they are there | A rule in the root: each is the instruction for the work in its folder, the file nearest to the edited file wins | Such a file is there |
 | S30 | An existing `CLAUDE.md` | Found from the repo | `CLAUDE.md` keeps only the `@AGENTS.md` import, its content moves into the pan-harness | There is a `CLAUDE.md` |

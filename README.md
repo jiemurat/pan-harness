@@ -28,11 +28,11 @@ In the project-folder (your project's folder):
 npx @jiemurat/pan-harness@latest init
 ```
 
-It copies the skills to `.agents/skills/` (Codex, Gemini CLI, Antigravity, GitHub Copilot, Cursor, OpenCode, Amp, Cline) and `.claude/skills/` (Claude Code), writes `/ph-*` command files for Gemini CLI and OpenCode, and adds these tool files to `.gitignore`: the skills are tools, the project's knowledge lives in the harness. Then open your agent in the folder and run:
+It copies the skills to `.agents/skills/` (Codex, Antigravity, GitHub Copilot, Cursor, OpenCode, Amp, Cline) and `.claude/skills/` (Claude Code), writes `/ph-*` command files for OpenCode, and adds these tool files to `.gitignore`: the skills are tools, the project's knowledge lives in the harness. Then open your agent in the folder and run:
 
 | Agent | Command |
 |---|---|
-| Claude Code, Antigravity, Cursor, GitHub Copilot, Gemini CLI, OpenCode | `/ph-init` |
+| Claude Code, Antigravity, Cursor, GitHub Copilot, OpenCode | `/ph-init` |
 | Codex | `$ph-init` |
 
 Other agents: `--agents windsurf,kiro,qwen,goose` (or `--agents all`).
@@ -110,7 +110,7 @@ status    installed version, newest version on npm, files changed by hand
 
 --dir <path>     project-folder (default: the current folder)
 --agents <list>  agents,claude (default), windsurf, kiro, qwen, goose, all
---no-commands    no /ph-* command files for Gemini CLI and OpenCode
+--no-commands    no /ph-* command files for OpenCode
 --yes            overwrite or delete files changed by hand without asking
 --dry-run        show what would change, write nothing
 ```

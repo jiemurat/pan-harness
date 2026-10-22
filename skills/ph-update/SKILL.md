@@ -3,7 +3,7 @@ name: ph-update
 description: Updates the pan-harness package (@jiemurat/pan-harness), migrates the harness to the new standard and ends with a full ph-doctor run. Use it when asked to update the pan-harness package or its ph-* skills, when a new version is out, or when PAN-HARNESS.md names an older standard.
 license: MIT
 metadata:
-  version: "2.10.6"
+  version: "2.10.7"
   package: "@jiemurat/pan-harness"
 ---
 
@@ -21,7 +21,7 @@ The pan-harness works with these five skills of the pan-harness package (`@jiemu
 | `ph-grilling` | The planning talk of a large task | Questions round by round, agreed decisions |
 | `ph-writing-for-agents` | Writing or editing a skill, `AGENTS.md`, `CLAUDE.md` or another text an agent reads | A text strong and small models follow the same way |
 
-The skills are installed into the project-folder with `npx @jiemurat/pan-harness@latest init` and stay out of git: they are tools, while the project knowledge is in the harness. The owner calls a skill in the agent: `/ph-init` in Claude Code, Antigravity, Cursor, GitHub Copilot, Gemini CLI and OpenCode, `$ph-init` in Codex. The agent works in the project-folder. When a term is unclear, read `references/structure.md` → "Glossary".
+The skills are installed into the project-folder with `npx @jiemurat/pan-harness@latest init` and stay out of git: they are tools, while the project knowledge is in the harness. The owner calls a skill in the agent: `/ph-init` in Claude Code, Antigravity, Cursor, GitHub Copilot and OpenCode, `$ph-init` in Codex. The agent works in the project-folder. When a term is unclear, read `references/structure.md` → "Glossary".
 
 ## Core rules
 

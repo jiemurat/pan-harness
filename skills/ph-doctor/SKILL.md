@@ -3,7 +3,7 @@ name: ph-doctor
 description: Checks and fixes the pan-harness (Panoramic Harness) of a project against the standard: a conformance table, mechanical fixes, structural proposals, migration. Use it when asked to check the harness, AGENTS.md or the agent rules, and for the monthly upkeep.
 license: MIT
 metadata:
-  version: "2.10.6"
+  version: "2.10.7"
   package: "@jiemurat/pan-harness"
 ---
 
@@ -21,7 +21,7 @@ The pan-harness works with these five skills of the pan-harness package (`@jiemu
 | `ph-grilling` | The planning talk of a large task | Questions round by round, agreed decisions |
 | `ph-writing-for-agents` | Writing or editing a skill, `AGENTS.md`, `CLAUDE.md` or another text an agent reads | A text strong and small models follow the same way |
 
-The skills are installed into the project-folder with `npx @jiemurat/pan-harness@latest init` and stay out of git: they are tools, while the project knowledge is in the harness. The owner calls a skill in the agent: `/ph-init` in Claude Code, Antigravity, Cursor, GitHub Copilot, Gemini CLI and OpenCode, `$ph-init` in Codex. The agent works in the project-folder. When a term is unclear, read `references/structure.md` → "Glossary".
+The skills are installed into the project-folder with `npx @jiemurat/pan-harness@latest init` and stay out of git: they are tools, while the project knowledge is in the harness. The owner calls a skill in the agent: `/ph-init` in Claude Code, Antigravity, Cursor, GitHub Copilot and OpenCode, `$ph-init` in Codex. The agent works in the project-folder. When a term is unclear, read `references/structure.md` → "Glossary".
 
 ## Core rules
 

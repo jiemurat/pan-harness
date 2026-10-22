@@ -493,6 +493,30 @@ test('migrate 2.10.5 -> current: the planning playbook makes the session title s
   put(own, 'PAN-HARNESS.md', read(own, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 2.10.5'));
   assert.match(run('migrate.mjs', '--root', own).stdout, /^by hand 2\.10\.6 step 1: playbooks\/large-task\.md: no "at the end, a short plan" item in Planning/m);
 });
+test('migrate 2.10.6 -> current: the rule on AGENTS.md files in subfolders follows the agents.md standard, the file list kept', () => {
+  const tmpl = fs.readFileSync(path.join(SKILL, 'templates', 'AGENTS.md.tmpl'), 'utf8').split('\n').find((l) => l.startsWith('- **R17. '));
+  assert.ok(tmpl && !/objects of editing/.test(tmpl) && /the file nearest to the edited file wins/.test(tmpl), tmpl);
+  const OLD = '- **R17. `AGENTS.md` files outside the root are objects of editing:** `apps/api/AGENTS.md`, `apps/web/AGENTS.md`. Read them only to edit them; the instructions are here. ← D3';
+  const dir = current();
+  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').replace(/^- \*\*R17\. .*$/m, OLD));
+  const upkeep = 'pan-harness/playbooks/pan-harness.md';
+  put(dir, upkeep, read(dir, upkeep).replace('Cursor, GitHub Copilot and OpenCode,', 'Cursor, GitHub Copilot, Gemini CLI and OpenCode,'));
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 2.10.6'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^done +\S+ step 1: AGENTS\.md: the rule on AGENTS\.md files in subfolders follows the agents\.md standard$/m);
+  assert.match(r.stdout, /^done +\S+ step 2: playbooks\/pan-harness\.md: Gemini CLI is no longer named$/m);
+  assert.ok(!read(dir, upkeep).includes('Gemini'));
+  const want = tmpl.replace('{{which ones}}', '`apps/api/AGENTS.md`, `apps/web/AGENTS.md`').replace(/ ← D\{\{…\}\}$/, ' ← D3');
+  assert.ok(read(dir, 'AGENTS.md').split('\n').includes(want), read(dir, 'AGENTS.md'));
+  const again = run('migrate.mjs', '--root', dir);
+  assert.ok(again.stdout.includes('0 by hand'), again.stdout);
+
+  const own = current();
+  put(own, 'AGENTS.md', read(own, 'AGENTS.md').replace(/^- \*\*R17\. .*$/m, '- **R17. Nested agent files are prompts of the bot:** read them only to edit them. ← D3'));
+  put(own, 'PAN-HARNESS.md', read(own, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 2.10.6'));
+  assert.doesNotMatch(run('migrate.mjs', '--root', own).stdout, /AGENTS\.md files in subfolders/);
+});
 test('ph-rename-claude-session has a short form for the session-title rule', () => {
   const text = fs.readFileSync(path.join(ROOT, 'skills', 'ph-rename-claude-session', 'SKILL.md'), 'utf8');
   assert.match(text, /^\*\*Short form\.\*\* When step 1 of a large task's plan runs this skill/m);

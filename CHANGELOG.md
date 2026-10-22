@@ -2,6 +2,13 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 2.10.7
+
+`AGENTS.md` files in subfolders work by the agents.md standard, and Gemini CLI command files are gone.
+
+- An `AGENTS.md` in a subfolder is the instruction for the work in that folder, and the file nearest to the edited file wins, as in Codex, GitHub Copilot, Cursor and Claude Code. `ph-init` no longer tells the agent to ignore these files, and in a monorepo each package keeps its own rules in its own `AGENTS.md`. `/ph-update` rewrites the old rule in place, with your list of files kept.
+- Gemini CLI has moved into Antigravity CLI, which reads the skills from `.agents/skills/`. `init` no longer writes `.gemini/commands/ph-*.toml`, and `update` deletes the old ones with their `.gitignore` line. `--no-commands` now concerns only OpenCode.
+
 ## 2.10.6
 
 Fixes for `/ph-update` and the harness check, and a session title that follows the work.

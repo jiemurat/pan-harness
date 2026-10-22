@@ -48,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -480,6 +480,35 @@ function step1SessionTitle() {
   done.push('2.10.6 step 1: playbooks/large-task.md: step 1 of every plan retitles the session');
 }
 
+// ---------------------------------------------------------------- 2.10.7 (AGENTS.md files in subfolders, no Gemini CLI)
+// the rule that made them objects of editing becomes the template's agents.md standard rule;
+// the project's list of files and the rule's number and source stay
+const NESTED_OLD = /^(- \*\*R\d+\. )`AGENTS\.md` files outside the root are objects of editing:\*\* (.*)\. Read them only to edit them; the instructions are here\.(.*)$/;
+const NESTED_TMPL = AGENTS_TMPL.find((l) => l.startsWith('- **R17. ')) || '';
+const [NESTED_HEAD, NESTED_TAIL] = NESTED_TMPL.replace(/^- \*\*R17\. /, '').replace(/ ← D\{\{…\}\}$/, '').split('{{which ones}}');
+
+function step1NestedAgents() {
+  const f = file(AGENTS);
+  const at = f.lines.findIndex((l) => NESTED_OLD.test(l));
+  if (at < 0) return;
+  const [, num, which, source] = NESTED_OLD.exec(f.lines[at]);
+  f.lines[at] = `${num}${NESTED_HEAD}${which}${NESTED_TAIL}${source}`;
+  f.changed = true;
+  done.push('2.10.7 step 1: AGENTS.md: the rule on AGENTS.md files in subfolders follows the agents.md standard');
+}
+
+// Gemini CLI moved into Antigravity CLI: the upkeep playbook stops naming it
+function step2NoGemini() {
+  const f = file('pan-harness/playbooks/pan-harness.md');
+  if (!f) return;
+  // the standard step names ph-doctor, a project may have made it ph-update
+  const at = f.lines.findIndex((l) => /^1\. Run `ph-(doctor|update)` in the agent: /.test(l) && l.includes(', Gemini CLI and OpenCode,'));
+  if (at < 0) return;
+  f.lines[at] = f.lines[at].replace(', Gemini CLI and OpenCode,', ' and OpenCode,');
+  f.changed = true;
+  done.push('2.10.7 step 2: playbooks/pan-harness.md: Gemini CLI is no longer named');
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
@@ -492,6 +521,7 @@ const STEPS = {
   '2.10.4': [step1MainAgent, step2TaskPerSession, step3Trailer, step4WorkerPointer, step6Delegation, step5StartLimit],
   '2.10.5': [step1QuestionItem, step2QuestionsPlaybook, step3PlanningPointer, step4QuestionLimit],
   '2.10.6': [step1SessionTitle],
+  '2.10.7': [step1NestedAgents, step2NoGemini],
 };
 
 // ---------------------------------------------------------------- run

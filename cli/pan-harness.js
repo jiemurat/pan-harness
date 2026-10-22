@@ -8,7 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import readline from 'node:readline';
 import { spawnSync } from 'node:child_process';
-import { TARGETS, DEFAULT_COMMANDS, parseAgents } from '../lib/agents.js';
+import { TARGETS, COMMANDS, DEFAULT_COMMANDS, parseAgents } from '../lib/agents.js';
 import { PKG, install, update, remove, status, changelogSince, LocalChanges } from '../lib/install.js';
 import { latestVersion, compareVersions } from '../lib/registry.js';
 
@@ -27,7 +27,7 @@ Options:
   --dir <path>       project-folder (default: the current folder)
   --agents <list>    where to install, comma separated (default: agents,claude):
                      ${Object.keys(TARGETS).join(', ')}, all; agent names work too (codex, cursor, ...)
-  --no-commands      do not write /ph-* command files for Gemini CLI and OpenCode
+  --no-commands      do not write /ph-* command files for OpenCode
   --yes              overwrite or delete files changed by hand without asking
   --dry-run          show what would be written, change nothing
   -v, --version      print the version
@@ -102,13 +102,13 @@ async function guarded(op, opts, verb) {
 
 function where(targets, commands) {
   const lines = targets.map((k) => `  ${TARGETS[k].dir}/  (${TARGETS[k].label})`);
-  if (targets.includes('agents') && commands.length) lines.push(`  commands: ${commands.map((c) => (c === 'gemini' ? '.gemini/commands/' : '.opencode/commands/')).join(', ')}`);
+  if (targets.includes('agents') && commands.length) lines.push(`  commands: ${commands.map((c) => `${COMMANDS[c].dir}/`).join(', ')}`);
   return lines.join('\n');
 }
 
 function nextSteps(skill) {
   return `Next: open your agent in this folder and run
-  Claude Code, Antigravity, Cursor, GitHub Copilot, Gemini CLI, OpenCode:  /${skill}
+  Claude Code, Antigravity, Cursor, GitHub Copilot, OpenCode:  /${skill}
   Codex:  $${skill}`;
 }
 

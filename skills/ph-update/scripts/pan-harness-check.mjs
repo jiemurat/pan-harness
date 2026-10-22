@@ -106,7 +106,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const VERSION = '2.10.6';
+const VERSION = '2.10.7';
 
 // Sizes in bytes. 25 KB fits the start set of a complex project written
 // compactly; 40 KB keeps any doc readable in one go. An agent reads a doc over

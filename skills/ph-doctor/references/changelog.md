@@ -4,6 +4,13 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 2.10.7
+
+`AGENTS.md` files in subfolders follow the agents.md standard, and Gemini CLI is no longer named. Each is the instruction for the work in its folder, and the file nearest to the edited file wins. The agent tools load such a file by themselves, so the rule that made these files objects of editing set two contradicting instructions side by side. In a monorepo the packages' own rules stay in an `AGENTS.md` in each package folder, the root pan-harness keeps the knowledge common to all parts, and the map lists these files.
+
+1. `mechanical` — the `AGENTS.md` rule "`AGENTS.md` files outside the root are objects of editing" becomes the template's R17 text, the project's list of files, the rule's number and its source kept (`scripts/migrate.mjs`). A reworded rule is left as it is: rewrite it as the template's R17 with the owner.
+2. `mechanical` — Gemini CLI moved into Antigravity CLI, which reads `.agents/skills/`: the `ph-doctor` step of `playbooks/pan-harness.md` no longer names Gemini CLI (`scripts/migrate.mjs`).
+
 ## 2.10.6
 
 Fixes of the 2.10.4 and 2.10.5 migration and of the check. The `Standard:` line is written once, in its place (a harness migrated by 2.10.5 from an older version could end with two); the delegation playbook gets its Map line; `pan-harness/workers.md` is a file of a harness that uses worker-agents, and a path to it is no error until `ph-workers` makes it; the 2.10.4 and 2.10.5 steps raise the start set limit by the bytes they add (2.10.4 by a flat 1 KB before), and `migrate.mjs` prints the start set before and after and names a start set over the limit "by hand". The check warns on a second `Standard:` line, takes as an open criterion only an item that starts with ⏳, makes a missing `handoff.md` status line an error and warns on a `Layer:` value outside the five words. Step 1 of every large task's plan retitles the session to the task with `ph-rename-claude-session` in its short form, unless the owner said not to; a worker-agent leaves the step out. A harness with two `Standard:` lines keeps the first and deletes the others by hand.
