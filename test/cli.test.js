@@ -12,6 +12,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CLI = path.join(ROOT, 'cli', 'pan-harness.js');
 const VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
 const SKILLS = fs.readdirSync(path.join(ROOT, 'skills')).filter((n) => n.startsWith('ph-')).sort();
+// skills whose metadata.agents names only the claude target
+const CLAUDE_ONLY = ['ph-archived-claude-sessions'];
 
 function project() {
   return tmpDir('ph-cli-');
@@ -30,8 +32,8 @@ const exists = (dir, rel) => fs.existsSync(path.join(dir, rel));
 const read = (dir, rel) => fs.readFileSync(path.join(dir, rel), 'utf8');
 const manifest = (dir, base = '.agents/skills') => JSON.parse(read(dir, `${base}/.pan-harness.json`));
 
-test('the package ships the thirteen ph-* skills', () => {
-  assert.deepEqual(SKILLS, ['ph-create-worker', 'ph-delete-worker', 'ph-doctor', 'ph-excel-to-md', 'ph-grilling', 'ph-init', 'ph-merge-work',
+test('the package ships the fourteen ph-* skills', () => {
+  assert.deepEqual(SKILLS, ['ph-archived-claude-sessions', 'ph-create-worker', 'ph-delete-worker', 'ph-doctor', 'ph-excel-to-md', 'ph-grilling', 'ph-init', 'ph-merge-work',
     'ph-pdf-to-md', 'ph-rename-claude-session', 'ph-update', 'ph-word-to-md', 'ph-workers', 'ph-writing-for-agents']);
 });
 
@@ -40,8 +42,9 @@ test('init installs into .agents/skills and .claude/skills, writes commands, man
   const r = run(dir, 'init');
   assert.equal(r.code, 0, r.out);
   for (const s of SKILLS) {
-    assert.ok(exists(dir, `.agents/skills/${s}/SKILL.md`), s);
     assert.ok(exists(dir, `.claude/skills/${s}/SKILL.md`), s);
+    if (CLAUDE_ONLY.includes(s)) continue;
+    assert.ok(exists(dir, `.agents/skills/${s}/SKILL.md`), s);
     assert.ok(exists(dir, `.opencode/commands/${s}.md`), s);
   }
   assert.ok(!exists(dir, '.gemini'), 'Gemini CLI moved into Antigravity CLI, which reads .agents/skills');
@@ -59,6 +62,23 @@ test('init installs into .agents/skills and .claude/skills, writes commands, man
   assert.match(r.out, /\$ph-init/);
   assert.doesNotMatch(r.out, /Gemini/);
   assert.match(read(dir, '.opencode/commands/ph-init.md'), /\$ARGUMENTS/);
+});
+
+test('a skill whose metadata.agents names claude is installed only into .claude/skills, with no command file', () => {
+  const marked = SKILLS.filter((s) => /^\s+agents: "claude"$/m.test(read(ROOT, `skills/${s}/SKILL.md`)));
+  assert.deepEqual(marked, CLAUDE_ONLY);
+  const dir = project();
+  assert.equal(run(dir, 'init', '--agents', 'all').code, 0);
+  for (const s of CLAUDE_ONLY) {
+    assert.ok(exists(dir, `.claude/skills/${s}/SKILL.md`), s);
+    for (const rel of ['.agents/skills', '.windsurf/skills', '.kiro/skills', '.qwen/skills', '.goose/skills']) assert.ok(!exists(dir, `${rel}/${s}`), `${rel}/${s}`);
+    assert.ok(!exists(dir, `.opencode/commands/${s}.md`), s);
+    assert.ok(!Object.keys(manifest(dir).files).some((f) => f.includes(s) && !f.startsWith('.claude/')), s);
+  }
+  const other = project();
+  assert.equal(run(other, 'init', '--agents', 'codex').code, 0);
+  for (const s of CLAUDE_ONLY) assert.ok(!exists(other, `.agents/skills/${s}`), s);
+  assert.ok(exists(other, '.agents/skills/ph-init/SKILL.md'));
 });
 
 test('update removes the Gemini CLI command files of an older installation', () => {

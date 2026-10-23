@@ -175,6 +175,9 @@ Done when: as step 7 of the `ph-init` skill says (its `SKILL.md`).
 | No `CLAUDE.md` | `structure.md` → "Root files" → `CLAUDE.md` |
 | `CLAUDE.md` is there, `AGENTS.md` is not | The content moves into the pan-harness, the original into `archive/`, `CLAUDE.md` keeps only `@AGENTS.md` |
 | An `AGENTS.md` in a subfolder | It stays in its folder as the instruction for the work there (step 5, item 7) |
+| A folder below with its own harness (`PAN-HARNESS.md`; `node <skill>/scripts/pan-harness-check.mjs --root . --harnesses` lists them) | It stays as it is: the work there goes by its harness (the template's R26) |
+| A part without its own harness (an app, a process the owner names as a part) | Its knowledge goes into the ordinary files of this harness; a `project/<folder>.md` of its own only when that knowledge grows, and then the owner may be offered a harness for it |
+| The harness above has a `project/<folder>.md` for this folder | Offer the owner to move it into this harness; the harness above keeps no copy, and its `Map` line goes with it |
 | An `AGENTS.md` in the root, but for the application's own agents | Ask the owner |
 | A small project (fewer than ~50 files in git) | The standard part is still full, the files are short. The size limit may be 21 KB (S24) |
 | A document project (no code) | `code=no` in the profile: `runbook.md` gets the document formats and the tools that read them, the code rules go. The full check — lint, links, assembly or export; `co_change` ties the document folders to the plan or the terms file; `markers` searches for draft marks (`TODO`, `TK`, "[source needed]"). `.gitignore` gets the office lock files (`~$*`, `.~lock.*#`) and the export results |

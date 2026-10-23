@@ -348,6 +348,62 @@ test('the pre-commit hook of a harness in a subfolder of the repository runs fro
   assert.match(r.stderr, /secret-check is not clean/);
 });
 
+/** A root harness with child folders: frontend (a harness in the same repository), backend (a
+ * harness in its own repository), mobile-app (no harness) and a harness inside node_modules. */
+function nested() {
+  const dir = harness();
+  const child = (rel) => {
+    for (const [f, body] of Object.entries(FILES)) put(dir, `${rel}/${f}`, body);
+    fs.mkdirSync(path.join(dir, rel, 'pan-harness', 'scripts'), { recursive: true });
+    for (const sc of ['pan-harness-check.mjs', 'secret-check.mjs']) {
+      fs.copyFileSync(path.join(CORE, 'scripts', sc), path.join(dir, rel, 'pan-harness', 'scripts', sc));
+    }
+  };
+  child('frontend');
+  child('backend');
+  git(path.join(dir, 'backend'), 'init', '-q', '-b', 'main');
+  put(dir, 'mobile-app/README.md', '# Mobile app\n');
+  put(dir, 'node_modules/pkg/PAN-HARNESS.md', 'Standard: pan-harness 1.0.0\n');
+  put(dir, '.gitignore', 'node_modules/\nbackend/\n');
+  git(dir, 'add', '-A');
+  git(dir, 'commit', '-q', '-m', 'children');
+  return dir;
+}
+
+test('--harnesses lists the harnesses below the project: folder, standard, same or own repository', () => {
+  const dir = nested();
+  const r = check(dir, '--harnesses');
+  assert.equal(r.code, 0, r.out);
+  assert.deepEqual(r.out.trim().split('\n'), [`backend\t${VERSION}\town repo`, `frontend\t${VERSION}\tsame repo`]);
+  put(dir, 'frontend/docs/inner/PAN-HARNESS.md', 'Standard: pan-harness 1.0.0\n'); // a harness inside a child is the child's
+  assert.doesNotMatch(check(dir, '--harnesses').out, /inner/);
+});
+
+test('a clean root harness with child harnesses below it: no error, no warning', () => {
+  const r = check(nested());
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /0 error\(s\), 0 warning\(s\)/, r.out);
+});
+
+test('the pre-commit hook also runs the check of each child harness in the same repository with staged files', { skip: process.platform === 'win32' && 'needs sh' }, () => {
+  const dir = nested();
+  fs.mkdirSync(path.join(dir, '.githooks'));
+  fs.copyFileSync(path.join(CORE, 'templates', 'githooks', 'pre-commit.tmpl'), path.join(dir, '.githooks', 'pre-commit'));
+  fs.chmodSync(path.join(dir, '.githooks', 'pre-commit'), 0o755);
+  git(dir, 'config', 'core.hooksPath', '.githooks');
+  const env = { ...process.env, PATH: `${path.dirname(process.execPath)}${path.delimiter}${process.env.PATH}` };
+  put(dir, 'frontend/docs/chapter-2.md', '# Chapter 2\n');
+  git(dir, 'add', '-A');
+  let r = spawnSync('git', ['commit', '-q', '-m', 'clean'], { cwd: dir, encoding: 'utf8', env });
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stderr, /frontend: pan-harness checks passed/);
+  put(dir, 'frontend/PAN-HARNESS.md', FILES['PAN-HARNESS.md'].replace('code=no', 'code=maybe'));
+  git(dir, 'add', '-A');
+  r = spawnSync('git', ['commit', '-q', '-m', 'broken child'], { cwd: dir, encoding: 'utf8', env });
+  assert.notEqual(r.status, 0);
+  assert.match(r.stderr, /frontend: pan-harness-check found errors/);
+});
+
 test('terms: a glossed term in a new or changed line is a warning, old text is not', () => {
   const dir = harness();
   put(dir, 'pan-harness/system-map.md', '# System map\n\n- Chapters in `docs/`: the layout (structure), old.\n', true);

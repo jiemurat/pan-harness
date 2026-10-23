@@ -21,6 +21,23 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# a harness below this one in the same repository runs its own check when the commit has
+# its files: the repository has one hooksPath, so its own hook does not run
+staged=$(git diff --cached --name-only --relative)
+tab=$(printf '\t')
+node pan-harness/scripts/pan-harness-check.mjs --harnesses | while IFS="$tab" read -r dir ver kind; do
+    [ "$kind" = "same repo" ] || continue
+    printf '%s\n' "$staged" | awk -v d="$dir/" 'index($0, d) == 1 { f = 1 } END { exit !f }' || continue
+    [ -f "$dir/pan-harness/scripts/pan-harness-check.mjs" ] || continue
+    out=$(node "$dir/pan-harness/scripts/pan-harness-check.mjs" 2>&1)
+    if [ $? -ne 0 ]; then
+        printf '%s\n' "$out" | grep -E '^ERROR' >&2
+        echo "pre-commit: $dir: pan-harness-check found errors - fix them by the end-of-task playbook of that harness and commit again" >&2
+        exit 1
+    fi
+    echo "pre-commit: $dir: pan-harness checks passed" >&2
+done || exit 1
+
 # secret-check.mjs is there when the profile lists sensitive-data=secrets; the
 # project's staged files are scanned on top of its default paths
 if [ -f pan-harness/scripts/secret-check.mjs ]; then

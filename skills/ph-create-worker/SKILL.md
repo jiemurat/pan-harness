@@ -4,7 +4,7 @@ description: Adds a new worker-agent name to the project's list (pan-harness/wor
 compatibility: git and Node 18 or newer
 license: MIT
 metadata:
-  version: "2.10.7"
+  version: "3.10.7"
   package: "@jiemurat/pan-harness"
 ---
 

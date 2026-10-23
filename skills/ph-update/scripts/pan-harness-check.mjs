@@ -8,7 +8,13 @@ dependencies. Project-specific checks go to pan-harness/project/scripts/check-*
 
 Usage:
   node pan-harness/scripts/pan-harness-check.mjs [--root DIR] [--live] [--since COMMIT]
+  node pan-harness/scripts/pan-harness-check.mjs --harnesses
   node <skill>/scripts/pan-harness-check.mjs --root <project>
+
+--harnesses: prints the harnesses below the project, one line each, tab-separated:
+the folder, its Standard version and "same repo" or "own repo"; the search skips
+hidden folders and node_modules and stops at a folder with its own PAN-HARNESS.md
+(a harness inside it is that harness's business). Nothing is checked.
 
 --since COMMIT: the terms check reads the lines changed since COMMIT, committed or
 not, instead of the uncommitted ones, and every such line is listed as REVIEW
@@ -106,7 +112,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const VERSION = '2.10.7';
+const VERSION = '3.10.7';
 
 // Sizes in bytes. 25 KB fits the start set of a complex project written
 // compactly; 40 KB keeps any doc readable in one go. An agent reads a doc over
@@ -163,16 +169,17 @@ const PAN_SECTIONS = ['## Profile', '## Map', '## Project checks'];
 // ---------------------------------------------------------------- helpers
 
 function parseArgs(argv) {
-  const out = { root: null, live: false, since: null };
+  const out = { root: null, live: false, since: null, harnesses: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--live') out.live = true;
+    else if (a === '--harnesses') out.harnesses = true;
     else if (a === '--root') out.root = argv[++i];
     else if (a.startsWith('--root=')) out.root = a.slice(7);
     else if (a === '--since') out.since = argv[++i];
     else if (a.startsWith('--since=')) out.since = a.slice(8);
     else if (a === '-h' || a === '--help') {
-      console.log('usage: pan-harness-check.mjs [--root DIR] [--live] [--since COMMIT]');
+      console.log('usage: pan-harness-check.mjs [--root DIR] [--live] [--since COMMIT] | --harnesses');
       process.exit(0);
     } else {
       console.error(`pan-harness-check: unknown argument ${a}`);
@@ -276,6 +283,36 @@ if (!exists(path.join(ROOT, 'AGENTS.md')) && !isDir(path.join(ROOT, 'pan-harness
   console.error(`pan-harness-check: ${ROOT} has neither AGENTS.md nor pan-harness/; pass --root <project>`);
   process.exit(1);
 }
+
+/** The harnesses below ROOT: [{rel, version, own}], nearest first on each path. */
+function harnessesBelow() {
+  const found = [];
+  const rec = (d) => {
+    let entries = [];
+    try { entries = fs.readdirSync(d, { withFileTypes: true }); } catch { return; }
+    for (const e of entries) {
+      if (!e.isDirectory() || e.name.startsWith('.') || e.name === 'node_modules') continue;
+      if (d === ROOT && e.name === 'pan-harness') continue;
+      const p = path.join(d, e.name);
+      const pan = path.join(p, 'PAN-HARNESS.md');
+      // the exact name: on a case-insensitive disk pan-harness.md would match too
+      if (listDir(p).some((f) => path.basename(f) === 'PAN-HARNESS.md')) {
+        const m = /^Standard: pan-harness (\S+)/m.exec(fs.readFileSync(pan, 'utf8'));
+        found.push({ rel: path.relative(ROOT, p).split(path.sep).join('/'), version: m ? m[1] : '?', own: exists(path.join(p, '.git')) });
+      } else {
+        rec(p);
+      }
+    }
+  };
+  rec(ROOT);
+  return found.sort((a, b) => (a.rel < b.rel ? -1 : a.rel > b.rel ? 1 : 0));
+}
+
+if (args.harnesses) {
+  for (const h of harnessesBelow()) console.log(`${h.rel}\t${h.version}\t${h.own ? 'own repo' : 'same repo'}`);
+  process.exit(0);
+}
+
 const H = path.join(ROOT, 'pan-harness');
 const P = path.join(H, 'project');
 const errors = [];

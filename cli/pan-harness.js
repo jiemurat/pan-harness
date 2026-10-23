@@ -2,7 +2,7 @@
 // pan-harness CLI: installs the ph-* agent skills into a project and keeps them current.
 // The skills do the real work inside the agent (ph-init, ph-doctor, ph-update, ph-grilling, ph-writing-for-agents,
 // the worker-agent skills ph-workers, ph-create-worker, ph-merge-work and ph-delete-worker, the ph-pdf-to-md,
-// ph-word-to-md and ph-excel-to-md converters, and ph-rename-claude-session).
+// ph-word-to-md and ph-excel-to-md converters, ph-rename-claude-session and ph-archived-claude-sessions).
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -26,7 +26,8 @@ Commands:
 Options:
   --dir <path>       project-folder (default: the current folder)
   --agents <list>    where to install, comma separated (default: agents,claude):
-                     ${Object.keys(TARGETS).join(', ')}, all; agent names work too (codex, cursor, ...)
+                     ${Object.keys(TARGETS).join(', ')}, all; agent names work too (codex, cursor, ...);
+                     a skill for Claude only (metadata.agents: "claude") is left out without claude
   --no-commands      do not write /ph-* command files for OpenCode
   --yes              overwrite or delete files changed by hand without asking
   --dry-run          show what would be written, change nothing

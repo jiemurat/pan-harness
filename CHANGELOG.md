@@ -2,6 +2,18 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 3.10.7
+
+A new skill, `ph-archived-claude-sessions`, and harnesses inside a harness.
+
+- In Claude Desktop, `/ph-archived-claude-sessions` lists the archived sessions of this folder as a tree, each sub-session under the session that started it, with a link to open each one; `all` lists every folder, any other word filters by folder or sidebar group. A session that is not archived but is the parent or a child of an archived one is shown beside it, marked.
+- A skill can name the agents it is for in `metadata.agents`; `init` and `update` install it only there. `ph-archived-claude-sessions` names `claude`: it goes to `.claude/skills/` only, and an install without `claude` leaves it out.
+- A folder of the project can have a harness of its own (a `frontend/` of an app, a process folder of a team). Work there is done as well from the root as in that folder: the agent in the root hands a change there to a new agent session opened in that folder (a worker-agent for parallel work), answers a question from its files, and where it cannot start a session, runs that harness's session start, rules and end of task itself. A folder without its own harness stays in the root harness.
+- `node pan-harness/scripts/pan-harness-check.mjs --harnesses` lists those folders with their standard and whether each is its own repository. The pre-commit hook also runs the check of each one in the same repository whose files the commit has, and `ph-init` in such a folder leaves the repository's hook as it is.
+- `ph-doctor` reports the harnesses below, and `ph-update` offers to update them first, each in its own folder with its own report.
+- The session start of `AGENTS.md` lists those folders once (`--harnesses`), so a small change there goes by their harness too; `/ph-update` adds the item.
+- `/ph-update` adds the new rule to `AGENTS.md` with your approval.
+
 ## 2.10.7
 
 `AGENTS.md` files in subfolders work by the agents.md standard, and Gemini CLI command files are gone.

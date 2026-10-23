@@ -48,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -97,6 +97,7 @@ const tmplLines = (rel) => fs.readFileSync(path.join(TEMPLATES, ...rel.split('/'
 const AGENTS_TMPL = tmplLines('AGENTS.md.tmpl');
 const LOOP_ITEM = (AGENTS_TMPL.find((l) => l.includes('**Check while you work.**')) || '').replace('[profile: code=yes] ', '');
 const BASELINE_TEXT = (AGENTS_TMPL.find((l) => l.includes('Before each task that changes the artifacts, a small change too, run the fast check')) || '').replace(/^\d+\. \[profile: code=yes\] /, '');
+const HARNESS_LIST_TEXT = (AGENTS_TMPL.find((l) => /^\d+\. List the folders below this one with their own harness: /.test(l)) || '').replace(/^\d+\. /, '');
 const LESSON_ITEM = tmplLines('pan-harness/playbooks/end-of-task.md.tmpl').find((l) => l.includes('Turn a repeated mistake into a rule.')) || '';
 const LESSON_ITEM_OLD = LESSON_ITEM.replace('`Layer:`, ', '').replace(/ When a lesson becomes a rule, .*$/, ''); // the 2.7.2 item
 const PAN_TMPL = tmplLines('pan-harness/playbooks/pan-harness.md.tmpl');
@@ -509,6 +510,33 @@ function step2NoGemini() {
   done.push('2.10.7 step 2: playbooks/pan-harness.md: Gemini CLI is no longer named');
 }
 
+// ---------------------------------------------------------------- 3.10.7 (a folder with its own harness)
+// a new rule needs the project's next free R number and a D of the owner's approval: by hand
+function step1OwnHarness() {
+  const f = file(AGENTS);
+  if (f && f.lines.some((l) => /^- \*\*R\d+\. A folder with its own harness is worked by its harness\.\*\*/.test(l))) return;
+  byHand.push('3.10.7 step 1: AGENTS.md: no rule on folders with their own harness; add the rule "A folder with its own harness is worked by its harness" '
+    + 'of templates/AGENTS.md.tmpl to the **Pan-harness** group with the next free R number, and a D for the owner\'s approval as its source');
+}
+
+// Session start runs --harnesses once: the item goes after the handoff item, with the rule's own number
+function step2HarnessList() {
+  const f = file(AGENTS);
+  if (!f || f.lines.some((l) => /^\d+\. List the folders below this one with their own harness: /.test(l))) return;
+  const rule = f.lines.map((l) => /^- \*\*R(\d+)\. A folder with its own harness is worked by its harness\./.exec(l)).find(Boolean);
+  const at = f.lines.findIndex((l) => /^\d+\. When `pan-harness\/handoff\.md` says/.test(l));
+  if (!rule || at < 0) {
+    byHand.push('3.10.7 step 2: AGENTS.md: Session start: add the item "List the folders below this one with their own harness" of templates/AGENTS.md.tmpl '
+      + 'after the handoff item, with the number of the rule of step 1');
+    return;
+  }
+  let n = Number(/^(\d+)\./.exec(f.lines[at])[1]) + 1;
+  f.lines.splice(at + 1, 0, `${n}. ${HARNESS_LIST_TEXT.replace('(R26)', `(R${rule[1]})`)}`);
+  for (let i = at + 2; i < f.lines.length && /^\d+\. /.test(f.lines[i]); i++) f.lines[i] = f.lines[i].replace(/^\d+/, String(++n));
+  f.changed = true;
+  done.push('3.10.7 step 2: AGENTS.md: Session start lists the folders with their own harness');
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
@@ -522,6 +550,7 @@ const STEPS = {
   '2.10.5': [step1QuestionItem, step2QuestionsPlaybook, step3PlanningPointer, step4QuestionLimit],
   '2.10.6': [step1SessionTitle],
   '2.10.7': [step1NestedAgents, step2NoGemini],
+  '3.10.7': [step1OwnHarness, step2HarnessList],
 };
 
 // ---------------------------------------------------------------- run

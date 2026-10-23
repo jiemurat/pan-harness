@@ -93,6 +93,19 @@ test('scaffold: in a subfolder of a repository the hook is left to the owner wit
   assert.match(r.stdout, /^note +the project is a subfolder \(apps\/book\/\) of the git repository .*: core\.hooksPath was not set.*`git -C .+ config core\.hooksPath apps\/book\/\.githooks`/m);
 });
 
+test('scaffold: in a child folder of a harness whose hook the repository runs, the hook stays with the parent harness', () => {
+  const top = repo();
+  assert.equal(run('scaffold.mjs', '--root', top).status, 0);
+  assert.equal(git(top, 'config', '--get', 'core.hooksPath').trim(), '.githooks');
+  const sub = path.join(top, 'frontend');
+  fs.mkdirSync(sub, { recursive: true });
+  const r = run('scaffold.mjs', '--root', sub);
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(git(top, 'config', '--get', 'core.hooksPath').trim(), '.githooks', 'the repository config is left as it is');
+  assert.match(r.stdout, /^note +the repository's pre-commit hook is the one of the harness in \.: it runs this project's check too when a commit has its files; core\.hooksPath is left as it is$/m);
+  assert.doesNotMatch(r.stdout, /merge it with/);
+});
+
 /** A harness on the current standard, made by scaffold, with an old script copy and the hook's comments edited. */
 function current() {
   const dir = repo();
@@ -493,6 +506,47 @@ test('migrate 2.10.5 -> current: the planning playbook makes the session title s
   put(own, 'PAN-HARNESS.md', read(own, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 2.10.5'));
   assert.match(run('migrate.mjs', '--root', own).stdout, /^by hand 2\.10\.6 step 1: playbooks\/large-task\.md: no "at the end, a short plan" item in Planning/m);
 });
+test('migrate 2.10.7 -> current: a harness without the rule on folders with their own harness gets it by hand', () => {
+  const tmpl = fs.readFileSync(path.join(SKILL, 'templates', 'AGENTS.md.tmpl'), 'utf8').split('\n').find((l) => l.includes('is worked by its harness'));
+  assert.ok(tmpl && tmpl.includes('--harnesses'), tmpl);
+  const dir = current();
+  assert.match(read(dir, 'AGENTS.md'), /is worked by its harness/);
+  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').split('\n').filter((l) => !l.includes('is worked by its harness')).join('\n'));
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 2.10.7'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^by hand +\S+ step 1: AGENTS\.md: no rule on folders with their own harness; add the rule "A folder with its own harness is worked by its harness" of templates\/AGENTS\.md\.tmpl/m);
+  const own = current();
+  put(own, 'PAN-HARNESS.md', read(own, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 2.10.7'));
+  assert.doesNotMatch(run('migrate.mjs', '--root', own).stdout, /folders with their own harness/);
+});
+
+test('migrate 2.10.7 -> current: Session start lists the folders with their own harness, by the rule\'s number', () => {
+  const lines = fs.readFileSync(path.join(SKILL, 'templates', 'AGENTS.md.tmpl'), 'utf8').split('\n');
+  const item = lines.find((l) => /^\d+\. List the folders below this one with their own harness: /.test(l));
+  assert.ok(item && item.includes('--harnesses') && item.includes('(R26)'), item);
+  assert.ok(lines[lines.indexOf(item) - 1].includes('When `pan-harness/handoff.md` says'), 'the item stands after the handoff item');
+  const dir = current();
+  const rule = /^- \*\*R(\d+)\. A folder with its own harness is worked by its harness\./m.exec(read(dir, 'AGENTS.md'))[1];
+  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').split('\n').filter((l) => !/^\d+\. List the folders below this one/.test(l)).join('\n')
+    .replace(/^(\d+)\. (?=\[profile|Before each task|Read other files)/gm, (all, n) => `${Number(n) - 1}. `));
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 2.10.7'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^done +\S+ step 2: AGENTS\.md: Session start lists the folders with their own harness$/m);
+  const got = read(dir, 'AGENTS.md').split('\n');
+  const at = got.findIndex((l) => /^\d+\. List the folders below this one/.test(l));
+  assert.ok(at > 0 && got[at].includes(`(R${rule})`), got[at]);
+  const nums = got.slice(got.indexOf('## Session start')).filter((l) => /^\d+\. /.test(l)).map((l) => Number(/^(\d+)/.exec(l)[1]));
+  assert.deepEqual(nums.slice(0, 5), [1, 2, 3, 4, 5], 'the items are numbered on');
+  const again = run('migrate.mjs', '--root', dir);
+  assert.equal(read(dir, 'AGENTS.md'), got.join('\n'), `a second run changes nothing: ${again.stdout}`);
+  const bare = current();
+  put(bare, 'AGENTS.md', read(bare, 'AGENTS.md').split('\n').filter((l) => !l.includes('is worked by its harness') && !/^\d+\. List the folders below this one/.test(l)).join('\n'));
+  put(bare, 'PAN-HARNESS.md', read(bare, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 2.10.7'));
+  assert.match(run('migrate.mjs', '--root', bare).stdout, /^by hand +\S+ step 2: AGENTS\.md: Session start: add the item "List the folders below this one/m);
+});
+
 test('migrate 2.10.6 -> current: the rule on AGENTS.md files in subfolders follows the agents.md standard, the file list kept', () => {
   const tmpl = fs.readFileSync(path.join(SKILL, 'templates', 'AGENTS.md.tmpl'), 'utf8').split('\n').find((l) => l.startsWith('- **R17. '));
   assert.ok(tmpl && !/objects of editing/.test(tmpl) && /the file nearest to the edited file wins/.test(tmpl), tmpl);

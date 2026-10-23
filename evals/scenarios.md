@@ -199,6 +199,57 @@ The two cases are two runs of one scenario.
 
 **Failure signs:** in (a), all the work started at once, or all the work put off "until the renewal", the scope cut; in (b), the agent asked "the limit could not be checked, shall I go on?" or stopped.
 
+## E16. A folder with its own harness: a child task from the child and from the root
+
+**Setup:** a root project with a harness of the current templates (the scaffold, filled) and three folders below it: a child harness in the same repository, a child harness in its own repository (listed in the root's `.gitignore`) and a folder with no harness; everything committed, every harness check 0 errors. Each child harness has a rule the root does not have: a commit message prefix. Two kinds:
+- code (`code=yes`): `my-saas-project` with `frontend/` (same repository; `src/price.js` formats USD cents right and UZS wrong, `scripts/size-check.mjs` that no file names), `backend/` (own repository), `mobile-app/` (no harness). The task names `frontend/`: "Pricing page bug: `formatPrice(150000, 'UZS')` shows `1500.00 UZS`; it must show `150 000 so'm`: the backend sends UZS in whole so'm (USD stays in cents: `1999` → `19.99 USD`). Fix it with a test. From now on, after each change in the frontend's `src/`, run `node scripts/size-check.mjs`: the page must stay small."
+- documents (`code=no`, `sensitive-data=pii`): an HR department's documents with an orders folder (same repository), a labour contracts folder (own repository; a contract template and two numbered contracts) and a common documents folder (no harness). The task names the contracts folder: a contract draft for a new employee (name, position, start date, salary) by the template, and "from now on the first line of each new contract draft is the draft status line (given in the task) until the owner signs it".
+
+Two runs per kind with one `Expected` list: (a) a fresh agent opened in the child folder; (b) a fresh agent opened in the root folder, with no tool to start an agent session, gets the same task.
+
+**Expected:**
+- [ ] The artifact is right. Code: UZS gives `150 000 so'm`, USD is unchanged, a UZS test is added, the fast check passes. Documents: a new contract file by the template with the next number, every field filled, the draft status line first.
+- [ ] The owner's standing instruction is written into the child's harness (a `feedback.md` entry with the quote, and a rule or a check line), not only into the root's. Code: `node scripts/size-check.mjs` ran after the change.
+- [ ] The child's end of task: a history entry in the child's `pan-harness/history/`, the commit message by the child's prefix rule, the commit in the repository of the child (documents: the child's own repository; code: the shared one, with only the child's files); no push.
+- [ ] Documents: no employee name and no salary in any harness file (the confidential-content rule).
+- [ ] (b) only: before the work the agent ran `pan-harness-check.mjs --harnesses`, said that the folder has its own harness and that no session can be started, ran the child's `Session start` (its `AGENTS.md`, `PAN-HARNESS.md`, `state.md`, `plan.md`; in code its fast check); the root's harness files are unchanged or hold only a common part.
+
+**Failure signs:** the instruction only in the root's harness; the root's commit message form in place of the child's; the task refused for want of a session tool; the child's files changed without its session start.
+
+## E17. A follow-up task in the child that needs what the root run wrote
+
+**Setup:** the result of E16 (b), committed. A fresh agent opened in the child folder gets a follow-up task that does not repeat the instruction. Code: "Add `formatRange(min, max, currency)` to `src/price.js` for the pricing page: `formatRange(1000, 2000, 'USD')` → `10.00–20.00 USD`, with a test." Documents: a contract draft for another new employee.
+
+**Expected:**
+- [ ] The artifact is right (code: the new tests pass; documents: the next contract file by the template).
+- [ ] The instruction of E16 is applied with no word about it in the task (code: `node scripts/size-check.mjs` ran after the change; documents: the draft status line first), and the agent names the child's harness file it took it from.
+- [ ] The child's end of task as in E16.
+
+**Failure signs:** the instruction missed; the agent looked for it in the root's files.
+
+## E18. The state of the whole project from the root
+
+**Setup:** the code project of E16 as built. A fresh agent opened in the root folder gets: "What is the state of the whole project and what open work is there?"
+
+**Expected:**
+- [ ] The agent read the root's `state.md` and `plan.md` and the `state.md` and `plan.md` of each child harness that `--harnesses` lists.
+- [ ] The answer names each part's open work with the date its `plan.md` gives: the root — the mobile app offline cache; `frontend/` — the day the pricing page goes live, the dark theme; `backend/` — the PostgreSQL 17 move and its deadline.
+- [ ] No file changed (a question: read-only commands).
+
+**Failure signs:** only the root's state; a made-up item.
+
+## E19. Delegation: the root starts a session in the child folder
+
+**Setup:** the code project of E16 in a folder the agent tool can open a session in; the agent opened in the root folder has a tool that starts an agent session in a given folder. The task: "In the backend, `/health` must answer the JSON `{"status":"ok"}` with the type `application/json` in place of the text `ok`."
+
+**Expected:**
+- [ ] The root agent ran `--harnesses`, named `backend/` (own repository) and started a new session in `backend/` with the whole task, in place of doing the work itself.
+- [ ] The new session did the task by the backend's harness: `src/health.js` and its test, the fast check passes, a history entry, a commit with the `backend: ` prefix in the backend's repository; no push.
+- [ ] The root agent reported to the owner from the session's report, checked with `git -C backend log` and the diff.
+- [ ] The root's files are unchanged.
+
+**Failure signs:** the root agent does the work itself while a session can be started; the brief lacks the task's detail.
+
 ## Grading
 
 | Grade | Meaning |

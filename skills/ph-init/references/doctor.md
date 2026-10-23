@@ -89,7 +89,7 @@ Done when: as step 7 of the `ph-doctor` skill says (its `SKILL.md`).
 
 - Add an entry to the current month's history file: what was checked (the conformance table in short), what was fixed, what was proposed, the test result. With a structural fix, `Checks:` starts with the results of the criteria.
 - Write a D entry for a structural change and an F entry for the owner's new words. An L entry only for a lesson drawn from a mistake (of the agent or of the harness); an ordinary finding stays in the report.
-- The report (`SKILL.md` → "Report"): the results of the criteria of the structural fixes, the map of changed components, the conformance count (numbers per section and the findings in plain words, the full table in the history entry), the list of mechanical fixes, the structural proposals (numbered, with options and a recommendation), the skill limitations, the changed files, the next step.
+- The report (`SKILL.md` → "Report"): the results of the criteria of the structural fixes, the map of changed components, the conformance count (numbers per section and the findings in plain words, the full table in the history entry), the list of mechanical fixes, the structural proposals (numbered, with options and a recommendation), the harnesses below (`node <skill>/scripts/pan-harness-check.mjs --root . --harnesses`) with their standards, one on an older standard than this harness with the proposal to run `/ph-update` there, the skill limitations, the changed files, the next step.
 
 Done when: as step 8 of the `ph-doctor` skill says (its `SKILL.md`).
 

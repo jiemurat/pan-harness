@@ -22,7 +22,7 @@ The result of each row is `ok`, `fail` (what was found and file:line), `not chec
 - Version: A38
 - Writing: A39–A50
 - Principles: A51–A57
-- Continuity and checks: A58–A76
+- Continuity and checks: A58–A77
 
 ## Root files
 
@@ -161,3 +161,4 @@ The P26 items (the keyword order and trigger in A20, A43, A44–A48) and the tex
 | A74 | `AGENTS.md` → `Working style` has the "Delegate reading" item and `pan-harness/playbooks/delegation.md` is there: when a sub-agent takes a side task, its model and effort by kind of work, the brief and the check of the result | Spend on raw reading in the main context, or a sub-agent briefed too thinly to keep the quality | manual: `grep -n 'Delegate reading' AGENTS.md` and the playbook against the template | mechanical (`scripts/migrate.mjs`, 2.10.4) |
 | A75 | `AGENTS.md` → `Communication` has the "Questions" item of the template (the form of a question to the owner, one line) and `pan-harness/playbooks/questions.md` is there with the filled examples; `playbooks/large-task.md` and the `PAN-HARNESS.md` map point to it | Questions in many forms, joined options, a recommendation without a reason | manual: `grep -n 'playbooks/questions.md' AGENTS.md pan-harness/playbooks/large-task.md PAN-HARNESS.md` and the playbook against the template | mechanical (`scripts/migrate.mjs`, 2.10.5) |
 | A76 | `playbooks/large-task.md` → `Planning` has the template's session-title item: step 1 of every plan retitles the session with `ph-rename-claude-session` (short form), unless the owner said not to | The session list does not tell the work apart | manual: `grep -n 'ph-rename-claude-session' pan-harness/playbooks/large-task.md` | mechanical (`scripts/migrate.mjs`, 2.10.6) |
+| A77 | `AGENTS.md` → `Rules` has the template's rule on folders with their own harness (R26): such a folder is worked by its harness, a change there goes to a session in that folder | A task in a child folder done by the root's rules, its knowledge left where the child's agent does not look | manual: `grep -n 'is worked by its harness' AGENTS.md` | by hand (`scripts/migrate.mjs`, 3.10.7) |

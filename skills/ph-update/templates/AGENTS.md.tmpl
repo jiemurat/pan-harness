@@ -36,9 +36,10 @@ The hard rules in short (details: `## Rules`): every rule whose breach can do ha
 1. Read this file, then `PAN-HARNESS.md`, `pan-harness/state.md` (current state) and `pan-harness/plan.md` (open work).
 2. Look at `git status` and `git log --oneline -5`. For committed work marked `pending` in `pan-harness/history/`, write its commit number in place of `pending`; with no other commit in the session, commit this fix alone after the check (R4).
 3. When `pan-harness/handoff.md` says `**Status:** active`, a task stopped midway: read it, compare `git status` with its `Changed files` (a change not on the list is the owner's, R15) and go on from `Next step`.
-4. [profile: live-system=yes] If the work changes the live system or diagnoses a fault, run the status check (`PAN-HARNESS.md` → `Project checks`) and compare it with `state.md`; tell the owner an unexpected difference before the work.
-5. [profile: code=yes] Before each task that changes the artifacts, a small change too, run the fast check (`PAN-HARNESS.md` → `Project checks`). When it fails, name the failing checks to the owner and ask whether to fix them first or to do the task and leave them; start after the answer. The failing checks you named to the owner are the list: a failure on it was there before the task, any other is the task's.
-6. Read other files only when needed (`PAN-HARNESS.md` → `Map`), a file over 10 KB part by part by its `## Contents`.
+4. List the folders below this one with their own harness: `node pan-harness/scripts/pan-harness-check.mjs --harnesses` (no output: none). When a task touches one of them, work it by that folder's harness (R26) and tell the owner which way: a session opened in that folder, or, where no session can be started, its harness worked by yourself.
+5. [profile: live-system=yes] If the work changes the live system or diagnoses a fault, run the status check (`PAN-HARNESS.md` → `Project checks`) and compare it with `state.md`; tell the owner an unexpected difference before the work.
+6. [profile: code=yes] Before each task that changes the artifacts, a small change too, run the fast check (`PAN-HARNESS.md` → `Project checks`). When it fails, name the failing checks to the owner and ask whether to fix them first or to do the task and leave them; start after the answer. The failing checks you named to the owner are the list: a failure on it was there before the task, any other is the task's.
+7. Read other files only when needed (`PAN-HARNESS.md` → `Map`), a file over 10 KB part by part by its `## Contents`.
 
 ## Workflow
 
@@ -102,6 +103,7 @@ A request that names a worker-agent (`pan-harness/workers.md`) or asks about wor
 **Pan-harness**
 - **R16. The pan-harness is for any agent and model.** Rules and knowledge are plain text in this file, `PAN-HARNESS.md` and `pan-harness/`; keep project knowledge only there: another agent does not see one agent's own file, memory or tool. ← D{{…}}
 - **R17. An `AGENTS.md` in a subfolder is the instruction for the work in that folder:** {{which ones}}. Follow it when you work there; where it differs from this file, the file nearest to the edited file wins (the agents.md standard). ← D{{…}}
+- **R26. A folder with its own harness is worked by its harness.** Before a task that touches files below this folder, list the harnesses below it: `node pan-harness/scripts/pan-harness-check.mjs --harnesses`. A question about such a folder: answer from its files. A change there: start a new agent session in that folder with the task (a worker-agent when the owner wants parallel or separate work); a task across several folders goes out in parts, in the order they depend on each other, this harness keeps the common part, and the parts are reported together. Where no session can be started, work by that harness yourself: run its `Session start`, follow its rules, write what the work found into its files and run its end of task; this file's `Never` items still hold. For a question about the whole project's state, read each one's `state.md` and `plan.md` too. ← D{{…}}
 
 **Caution**
 - **R18. An irreversible action** (deleting, rewriting history) only after showing the list to the owner, with their permission. ← F{{…}}

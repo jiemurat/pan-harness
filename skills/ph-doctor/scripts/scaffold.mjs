@@ -101,8 +101,16 @@ if (git('rev-parse', '--is-inside-work-tree').stdout.trim() !== 'true') {
   const gitDir = git('rev-parse', '--git-dir').stdout.trim();
   const oldHook = path.join(path.resolve(root, gitDir), 'hooks', 'pre-commit');
   const framework = fs.existsSync(path.join(top, '.pre-commit-config.yaml'));
+  // a hooksPath of a harness above this project: that hook runs this project's check too
+  const hookOwner = hooksPath ? path.resolve(top, hooksPath, '..') : null;
+  const real = (p) => { try { return fs.realpathSync.native(p); } catch { return p; } };
+  const parentHarness = hookOwner && fs.existsSync(path.join(hookOwner, 'PAN-HARNESS.md'))
+    && real(root).startsWith(real(hookOwner) + path.sep);
   if (hooksPath === want) {
     // already set
+  } else if (parentHarness) {
+    notes.push(`the repository's pre-commit hook is the one of the harness in ${path.relative(top, hookOwner).split(path.sep).join('/') || '.'}: `
+      + "it runs this project's check too when a commit has its files; core.hooksPath is left as it is");
   } else if (hooksPath || fs.existsSync(oldHook) || framework) {
     notes.push(`the project already has a pre-commit hook (${hooksPath ? `core.hooksPath=${hooksPath}` : framework ? '.pre-commit-config.yaml' : '.git/hooks/pre-commit'}): `
       + `merge it with .githooks/pre-commit together with the owner (references/init.md -> "5. Create"), then run \`${command}\``);

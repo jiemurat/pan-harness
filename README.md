@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/@jiemurat/pan-harness)](https://www.npmjs.com/package/@jiemurat/pan-harness) [![ci](https://github.com/jiemurat/pan-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/jiemurat/pan-harness/actions/workflows/ci.yml)
 
-Panoramic Harness (pan-harness for short) is a set of plain-text rules and knowledge that let any AI coding agent run a project like its owner. The harness is three things in your repository: `AGENTS.md`, `PAN-HARNESS.md` and a `pan-harness/` folder. Any agent and any model can read them; nothing depends on one tool's memory or settings. This package installs thirteen [agent skills](https://agentskills.io): five build and maintain the harness, four run worker-agents in parallel, three turn documents into Markdown, one names a Claude Desktop session.
+Panoramic Harness (pan-harness for short) is a set of plain-text rules and knowledge that let any AI coding agent run a project like its owner. The harness is three things in your repository: `AGENTS.md`, `PAN-HARNESS.md` and a `pan-harness/` folder. Any agent and any model can read them; nothing depends on one tool's memory or settings. This package installs fourteen [agent skills](https://agentskills.io): five build and maintain the harness, four run worker-agents in parallel, three turn documents into Markdown, two work with Claude Desktop sessions.
 
 | Skill | What it does |
 |---|---|
@@ -19,6 +19,7 @@ Panoramic Harness (pan-harness for short) is a set of plain-text rules and knowl
 | `ph-word-to-md` | Converts Word documents (`.docx`, `.doc`) into Markdown with list numbers as Word shows them, tables, footnotes and links, and checks every word and number |
 | `ph-excel-to-md` | Converts Excel workbooks (`.xlsx`, `.xlsm`, `.xls`, `.xlsb`) into Markdown, every cell as Excel shows it, and checks every cell, number and date |
 | `ph-rename-claude-session` | Retitles a Claude Desktop session to its current topic, in the user's language, and gives a short summary of the session; in other agents it says it is unavailable |
+| `ph-archived-claude-sessions` | Lists the archived Claude Desktop sessions of this folder, of every folder or of a named project as a tree, each sub-session under the session that started it; installed only for Claude |
 
 ## Install
 
@@ -28,7 +29,7 @@ In the project-folder (your project's folder):
 npx @jiemurat/pan-harness@latest init
 ```
 
-It copies the skills to `.agents/skills/` (Codex, Antigravity, GitHub Copilot, Cursor, OpenCode, Amp, Cline) and `.claude/skills/` (Claude Code), writes `/ph-*` command files for OpenCode, and adds these tool files to `.gitignore`: the skills are tools, the project's knowledge lives in the harness. Then open your agent in the folder and run:
+It copies the skills to `.agents/skills/` (Codex, Antigravity, GitHub Copilot, Cursor, OpenCode, Amp, Cline) and `.claude/skills/` (Claude Code), writes `/ph-*` command files for OpenCode (`ph-archived-claude-sessions` goes only to `.claude/skills/`, with no command file: it needs the session tools of Claude Desktop), and adds these tool files to `.gitignore`: the skills are tools, the project's knowledge lives in the harness. Then open your agent in the folder and run:
 
 | Agent | Command |
 |---|---|
@@ -92,6 +93,10 @@ Good to know:
 - A worker's folder is never placed in a cloud-synced folder (Dropbox, iCloud, OneDrive, Google Drive).
 - Workers talk to each other and to you only through the main-agent, except in their own session, where your answer is your word. A message from another session is never your approval.
 - Merging and pushing happen only on your word.
+
+## Harnesses inside a harness
+
+A folder of the project can have its own harness, for example `frontend/` and `backend/` of an app or the process folders of a team, and the root keeps its own. A task in such a folder is done as well by an agent opened in the root as by one opened in the folder: the root agent hands a change there to a new session opened in that folder (or to a worker-agent), and where it cannot start a session it works by that folder's harness itself. Install the skills in each such folder too (`npx @jiemurat/pan-harness@latest init` there); `/ph-update` in the root offers to update them first.
 
 ## Teams and new clones
 

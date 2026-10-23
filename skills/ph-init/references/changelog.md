@@ -4,6 +4,13 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 3.10.7
+
+A folder below the project with its own harness is worked by its harness. A change there goes to a new agent session opened in that folder; where no session can be started, the agent runs that harness's session start, rules and end of task itself. `pan-harness-check.mjs --harnesses` lists such folders, the pre-commit hook also runs the check of each one in the same repository whose files the commit has, `ph-doctor` reports them and `ph-update` offers to update them first.
+
+1. `structural` — `AGENTS.md` gets the template's rule "A folder with its own harness is worked by its harness" (R26 in the template) in the `**Pan-harness**` group, with the project's next free R number; the owner approves it and the answer goes into `decisions.md` as a D (its source). `scripts/migrate.mjs` prints the step by hand when the rule is missing.
+2. `mechanical` — `AGENTS.md` → `Session start` gets the item "List the folders below this one with their own harness" after the `handoff.md` item, with the number of the rule of step 1 (`scripts/migrate.mjs`): the agent runs `--harnesses` once per session, so a small change in such a folder goes by that rule too. Without the rule the step is by hand, after step 1.
+
 ## 2.10.7
 
 `AGENTS.md` files in subfolders follow the agents.md standard, and Gemini CLI is no longer named. Each is the instruction for the work in its folder, and the file nearest to the edited file wins. The agent tools load such a file by themselves, so the rule that made these files objects of editing set two contradicting instructions side by side. In a monorepo the packages' own rules stay in an `AGENTS.md` in each package folder, the root pan-harness keeps the knowledge common to all parts, and the map lists these files.
