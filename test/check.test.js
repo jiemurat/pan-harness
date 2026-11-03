@@ -671,3 +671,13 @@ test('handoff-<task>.md: a second active task is checked like handoff.md; a fini
   put(dir, 'pan-harness/handoff-second-task.md', '# Handoff: second task\n\nThe state of a second active large task.\n\n**Status:** none\n');
   assert.match(check(dir).out, /^WARN +pan-harness\/handoff-second-task\.md: '\*\*Status:\*\* none' - a finished task's file is removed at its end/m);
 });
+
+test('co_change: an empty map gets a note for ph-doctor, a filled one none; check.json stays off the map', () => {
+  const dir = harness();
+  const empty = check(dir);
+  assert.match(empty.out, /^NOTE +co_change is empty: ph-doctor asks the owner for the map of code and doc folders \(or records the owner's no\)/m);
+  assert.match(empty.out, /0 error\(s\), 0 warning\(s\)/, 'a note, not a warning');
+  assert.doesNotMatch(empty.out, /check\.json: not on the PAN-HARNESS\.md map/);
+  put(dir, 'pan-harness/project/check.json', '{\n  "co_change": {"docs/": ["pan-harness/system-map.md"]}\n}\n');
+  assert.doesNotMatch(check(dir).out, /co_change is empty/);
+});

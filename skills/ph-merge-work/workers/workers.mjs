@@ -22,6 +22,9 @@ Commands:
                             handoff-<task>.md files) are cleared there in one commit; prints the brief
           [--dir D]         the parent of the worker folders (default ~/pan-workers/<project>)
           [--copy]          allow a plain copy where the disk cannot copy-on-write
+          [--same-folder]   the worker works in the main folder on its current branch:
+                            no folder, no branch, the main folder's tasks and uncommitted
+                            work stay (the row's folder is `.`)
   record --name N [--status S] [--task T] [--session ID]
                             change fields of a worker row
   remove --name N [--forget] [--force]
@@ -54,7 +57,7 @@ function args(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (!a.startsWith('--')) out._.push(a);
-    else if (['--copy', '--forget', '--force'].includes(a)) out[a.slice(2)] = true;
+    else if (['--copy', '--forget', '--force', '--same-folder'].includes(a)) out[a.slice(2)] = true;
     else if (i + 1 < argv.length) out[a.slice(2)] = argv[++i];
     else fail(`${a} needs a value`, 2);
   }
@@ -292,7 +295,8 @@ function cmdStatus(root) {
     let line = `${r.Name}: ${r.Status}`;
     if (r.Task !== '—') line += `; task: ${r.Task}`;
     if (r.Session !== '—') line += `; session ${r.Session}`;
-    if (r.Folder !== '—') {
+    if (r.Folder === '.') line += `; same folder: the main folder on ${currentBranch(root)}`;
+    else if (r.Folder !== '—') {
       const folder = expand(r.Folder);
       if (!fs.existsSync(folder)) line += `; folder ${r.Folder} is missing`;
       else {
@@ -330,7 +334,7 @@ function cmdStatus(root) {
   // branches that wait for a merge may also clash with each other: the second merge would meet it
   for (const repo of repos(root)) {
     const base = currentBranch(repo.dir);
-    const waiting = rows.filter((r) => r.Branch !== '—' && git(repo.dir, 'rev-list', '--count', `${base}..${r.Branch}`).stdout.trim() > '0');
+    const waiting = rows.filter((r) => r.Branch !== '—' && r.Folder !== '.' && git(repo.dir, 'rev-list', '--count', `${base}..${r.Branch}`).stdout.trim() > '0');
     for (let i = 0; i < waiting.length; i++) {
       for (let j = i + 1; j < waiting.length; j++) {
         const m = git(repo.dir, 'merge-tree', '--write-tree', '--name-only', '--no-messages', waiting[i].Branch, waiting[j].Branch);
@@ -387,6 +391,14 @@ function cmdPrepare(root, a) {
   const row = findRow(rows, a.name);
   if (!row) fail(`${a.name} is not in the list`);
   if (!/^[a-z0-9][a-z0-9-]{0,47}$/.test(a.task || '')) fail('--task is a short slug: a-z, 0-9 and -', 2);
+  if (a['same-folder']) {
+    const here = currentBranch(root);
+    Object.assign(row, { Status: 'working', Task: a.task, Branch: here, Folder: '.' });
+    writeList(root, rows, text);
+    console.log(`${row.Name} works in the main folder on ${here} (no folder, no branch of its own)`);
+    console.log(`\nBRIEF\nYou are ${row.Name}, a worker-agent of this project; the main-agent ${mainAgent(root)} opened this session for one task, and the owner sees it.\n- Your folder: the main folder ${root}, branch ${here}, shared with the other sessions: commit only your task's files, as the "In the main folder" item of the ph-workers skill says.\n- Work as AGENTS.md says, with the worker lines there and the "Worker-agent" section of the ph-workers skill.\n- First set the task's type by the Workflow of AGENTS.md: this brief is not the owner's approval.\n- Task:`);
+    return;
+  }
   const branch = `${row.Name.toLowerCase()}/${a.task}`;
   for (const repo of repos(root)) {
     const d = dirty(repo.dir);
@@ -394,8 +406,16 @@ function cmdPrepare(root, a) {
     if (git(repo.dir, 'rev-parse', '--verify', '--quiet', `refs/heads/${branch}`).status === 0) fail(`branch ${branch} exists in ${repo.rel}`);
   }
   let folder;
-  if (row.Folder !== '—' && fs.existsSync(expand(row.Folder))) {
-    folder = expand(row.Folder);
+  // after a task in the main folder the row says `.`; the worker's own folder from before is used again
+  const own = row.Folder === '.'
+    ? path.join(path.resolve(expand(a.dir || path.join(os.homedir(), 'pan-workers', path.basename(root)))), row.Name)
+    : row.Folder !== '—' ? expand(row.Folder) : null;
+  // git prints the long form of a Windows path where Node may hold its short (8.3) form: compare the native real paths
+  const real = (p) => { try { p = fs.realpathSync.native(p); } catch { p = path.resolve(p); } return process.platform === 'win32' ? p.toLowerCase() : p; };
+  const isWorktree = (f) => git(root, 'worktree', 'list', '--porcelain').stdout.split('\n')
+    .some((l) => l.startsWith('worktree ') && real(l.slice('worktree '.length)) === real(f));
+  if (own && fs.existsSync(own) && (row.Folder !== '.' || isWorktree(own))) {
+    folder = own;
     const subs = subRepos(root).filter((sub) => fs.existsSync(path.join(folder, sub.rel, '.git')));
     for (const sub of subs) {
       const wt = path.join(folder, sub.rel);
@@ -494,7 +514,8 @@ function cmdRemove(root, a) {
   const row = findRow(rows, a.name);
   if (!row) fail(`${a.name} is not in the list`);
   const all = repos(root);
-  const folder = row.Folder !== '—' ? expand(row.Folder) : null;
+  if (row.Folder === '.') console.log(`${row.Name} works in the main folder: no folder to remove`);
+  const folder = row.Folder !== '—' && row.Folder !== '.' ? expand(row.Folder) : null;
   if (folder && path.resolve(folder) === path.resolve(root)) fail('the worker folder is the main folder; it stays');
   const unmerged = [];
   for (const repo of all) {

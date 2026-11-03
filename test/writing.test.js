@@ -399,3 +399,13 @@ test('the interview step of ph-init is a list of short items', () => {
   for (let i = at + 1; i < lines.length && /^ {3}- /.test(lines[i]); i++) items.push(lines[i]);
   assert.ok(items.length >= 5, `${items.length} items`);
 });
+
+test('the audit and the check say the same on project/check.json and an empty co_change', () => {
+  const audit = fs.readFileSync(path.join(CORE, 'references', 'audit.md'), 'utf8').split('\n');
+  const row = (id) => audit.find((l) => l.startsWith(`| ${id} |`)) || '';
+  const script = fs.readFileSync(path.join(CORE, 'scripts', 'pan-harness-check.mjs'), 'utf8');
+  assert.match(row('A20'), /`project\/check\.json` is exempt: it is the check's settings file/);
+  assert.match(script, /name === 'check\.json'\) continue/, 'the map check skips check.json');
+  assert.match(row('A63'), /an empty map is ok when a D records the owner's decision/);
+  assert.match(script, /co_change is empty: ph-doctor asks the owner/);
+});

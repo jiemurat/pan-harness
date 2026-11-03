@@ -68,7 +68,7 @@ The harness is committed with the project, so every session and every agent star
 
 ## Worker-agents
 
-The agent of a session you open is the **main-agent** (COOPER by default; it introduces itself by that name). On your word it gives tasks to **worker-agents**: TARS, CASE, PLEX, KIPP and WALLE come preset. A worker is a full agent session that works like the main-agent, in parallel, in a folder of its own on a new branch for each task. You see every worker session and can talk to it. Every commit ends with the line `Agent: <name>`, so `git log` shows who made it.
+The agent of a session you open is the **main-agent** (COOPER by default; it introduces itself by that name). On your word it gives tasks to **worker-agents**: TARS, CASE, PLEX, KIPP and WALLE come preset. A worker is a full agent session that works like the main-agent, in parallel, in a folder of its own on a new branch for each task. When its task shares no files and no checks with the other active tasks, the worker works in the main folder itself, with no folder or branch of its own: its commits land on the main branch and there is nothing to merge. When they overlap, the main-agent tells you the risk and asks: its own folder, wait, or the main folder at your risk. You see every worker session and can talk to it. Every commit ends with the line `Agent: <name>`, so `git log` shows who made it.
 
 You talk to the main-agent in your own words, for example:
 

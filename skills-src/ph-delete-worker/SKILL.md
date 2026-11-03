@@ -14,7 +14,7 @@ A worker-agent has a row in `pan-harness/workers.md` and, once it had a task, a 
 
 ## Steps
 
-1. **What is there.** Run `node <skill>/workers/workers.mjs status --root .` and `git branch --list '<name>/*'` (in a nested repo of the main folder too). Done when you know the worker's folder, its session, its branches and whether each is merged. The name is the main-agent's: tell the owner the main-agent stays, and stop.
+1. **What is there.** Run `node <skill>/workers/workers.mjs status --root .` and `git branch --list '<name>/*'` (in a nested repo of the main folder too). Done when you know the worker's folder, its session, its branches and whether each is merged. A worker whose folder is `.` works in the main folder: it has no folder or branch to remove, its commits are already on the main branch, and only its row and session go. The name is the main-agent's: tell the owner the main-agent stays, and stop.
 2. **The scope.** The owner asked to remove the worker: the folder, the branches, the session and the name go. The owner asked only to clean its folder: the name stays (no `--forget` below).
 3. **The list for the owner.** Show what goes: the folder path, each branch with "merged" or "not merged", the session, the name. Work that is not merged is lost on removal: offer `ph-merge-work` first. Wait for the owner's word. Done when the owner said yes to this list; "remove the unmerged work too" is a separate word.
 4. **Remove.** Run `remove --root . --name <NAME> --forget` (without `--forget` when the name stays; with `--force` only when the owner's word covers the unmerged work). Done when it printed the removed folder and branches. On exit 3 it found unmerged work the owner did not cover: go back to step 3.

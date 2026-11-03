@@ -103,7 +103,8 @@ Warnings:
   - no Standard line in PAN-HARNESS.md, more than one, or its version differs
     from this script's.
 Notes (not counted): open criteria in plan.md, untracked files that are not
-ignored (commit them or add them to .gitignore), a git command that failed.
+ignored (commit them or add them to .gitignore), a git command that failed, an
+empty co_change (ph-doctor asks the owner for the map or records the owner's no).
 Extensions: every pan-harness/project/scripts/check-* (.mjs, .js with node,
 .py with python3) is run with --root (and --live); its "ERROR ..." and
 "WARN ..." lines count.
@@ -117,7 +118,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const VERSION = '3.11.7';
+const VERSION = '3.11.8';
 
 // Sizes in bytes. 25 KB fits the start set of a complex project written
 // compactly; 40 KB keeps any doc readable in one go. An agent reads a doc over
@@ -1052,7 +1053,10 @@ for (const item of queueItems) {
 
 // 18. co_change: a watched file changed, the doc that describes it did not
 const coChange = config.co_change || {};
-if (Object.keys(coChange).length) {
+if (!Object.keys(coChange).length) {
+  // ph-init agrees the map with the owner; an empty one is ok only by the owner's decision (audit A63)
+  notes.push("co_change is empty: ph-doctor asks the owner for the map of code and doc folders (or records the owner's no)");
+} else {
   let changed = null;
   // ROOT's place inside the repository ('' at its top) from git itself: comparing absolute
   // paths breaks where one folder has two spellings (short names and letter case on Windows)

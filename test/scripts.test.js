@@ -619,7 +619,7 @@ test('migrate 3.10.7 -> current: the planning file rules go into the planning pl
   assert.match(r.stdout, /^done +3\.11\.7 step 3: PAN-HARNESS\.md: the Map names the planning files$/m);
   const added = Buffer.byteLength(start.slice(start.indexOf(' When several tasks are active ('))) + Buffer.byteLength(`${map}\n`)
     + Buffer.byteLength("on no active task's list") * 2 - Buffer.byteLength('not on the list') - Buffer.byteLength('not on your list');
-  assert.equal(startSet(dir) - before, added, 'the start set grows by the lines the steps add (the Standard line keeps its length)');
+  assert.equal(startSet(dir) - before, added + Buffer.byteLength(VERSION) - Buffer.byteLength('3.10.7'), 'the start set grows by the lines the steps add and the longer Standard line');
   assert.match(r.stdout, new RegExp(`^done +3\\.11\\.7 step 7: project/check\\.json: start_limit_bytes ${added} bytes higher`, 'm'));
   assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${30000 + added}`));
   assert.match(r.stdout, /^done +3\.11\.7 step 4: playbooks\/large-task\.md: the Parallel tasks section$/m);
@@ -652,4 +652,23 @@ test('migrate 3.10.7 -> current: the planning file rules go into the planning pl
   const o = run('migrate.mjs', '--root', own).stdout;
   assert.match(o, /^by hand +3\.11\.7 step 1: playbooks\/large-task\.md: no "the answer comes as" item in Planning/m);
   assert.match(o, /^by hand +3\.11\.7 step 1: playbooks\/large-task\.md: the plan item does not end with "Before the approval, only reading is allowed\."/m);
+});
+
+test('migrate 3.11.7 -> current: Parallel tasks counts the checks in an overlap and waits for a held index.lock, once', () => {
+  const tmpl = fs.readFileSync(path.join(SKILL, 'templates', 'pan-harness', 'playbooks', 'large-task.md.tmpl'), 'utf8').split('\n');
+  const lock = tmpl.find((l) => l.startsWith('- A `git commit` that fails on `index.lock: File exists`'));
+  assert.ok(lock && lock.includes('never delete the lock file'), lock);
+  const dir = current();
+  const lt = 'pan-harness/playbooks/large-task.md';
+  const newer = / Before it starts, each plan lists the files its task changes and the checks it runs\..*$/m;
+  assert.match(read(dir, lt), newer);
+  put(dir, lt, read(dir, lt).replace(newer, ' Before it starts, each plan lists the files its task changes; when the two lists share a file, this way is closed: wait, or take a worker-agent.').replace(`${lock}\n`, ''));
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 3.11.7'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^done +3\.11\.8 step 1: playbooks\/large-task\.md: an overlap of files or checks gets the risk and three choices$/m);
+  assert.match(r.stdout, /^done +3\.11\.8 step 2: playbooks\/large-task\.md: a held index\.lock is waited for, never deleted$/m);
+  assert.equal(read(dir, lt), read(current(), lt), 'the playbook equals the template');
+  const again = run('migrate.mjs', '--root', dir);
+  assert.ok(again.stdout.includes('0 by hand'), again.stdout);
 });

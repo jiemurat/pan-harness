@@ -298,3 +298,39 @@ test('prepare: the main folder\'s active tasks stay out of the worker folder, in
   assert.match(fs.readFileSync(path.join(folder, 'pan-harness', 'handoff.md'), 'utf8'), /\*\*Status:\*\* none\n$/);
   assert.equal(dirty(folder), '');
 });
+
+test('prepare --same-folder: the worker works in the main folder on the main branch, next to another session\'s work; status and remove keep the folder', () => {
+  const { root, workers } = project();
+  const active = '# Handoff\n\nThe state of the active large task.\n\n**Status:** active\n\n## Task\n\nThe main task.\n';
+  put(root, 'pan-harness/handoff.md', active);
+  git(root, 'add', '-A');
+  git(root, 'commit', '-qm', 'an active task');
+  put(root, 'docs/in-progress.md', 'the other session\'s work\n'); // uncommitted: a same-folder task does not need a clean folder
+  const out = ok('prepare', '--root', root, '--name', 'TARS', '--task', 'doc-b', '--same-folder');
+  assert.match(out, /TARS works in the main folder on main \(no folder, no branch of its own\)/);
+  assert.match(out, /^BRIEF\nYou are TARS, a worker-agent/m);
+  assert.match(out, /Your folder: the main folder .*, branch main, shared with the other sessions/);
+  assert.match(fs.readFileSync(path.join(root, 'pan-harness', 'workers.md'), 'utf8'), /^\| TARS \| working \| doc-b \| `main` \| `\.` \|/m);
+  assert.equal(git(root, 'branch', '--list', 'tars/*').trim(), '', 'no branch made');
+  assert.equal(fs.readFileSync(path.join(root, 'pan-harness', 'handoff.md'), 'utf8'), active, 'the main folder keeps its task');
+  assert.equal(fs.existsSync(path.join(workers, 'TARS')), false);
+  assert.match(ok('status', '--root', root), /^TARS: working; task: doc-b; same folder: the main folder on main$/m);
+  const r = run('remove', '--root', root, '--name', 'TARS');
+  assert.equal(r.status, 0, r.stderr + r.stdout);
+  assert.match(r.stdout, /TARS works in the main folder: no folder to remove/);
+  assert.ok(fs.existsSync(path.join(root, 'docs', 'in-progress.md')));
+  assert.match(fs.readFileSync(path.join(root, 'pan-harness', 'workers.md'), 'utf8'), /^\| TARS \| free \| — \| — \| — \|/m);
+});
+
+test('a worker that had its own folder goes back to it after a task in the main folder', () => {
+  const { root, workers } = project();
+  ok('prepare', '--root', root, '--name', 'TARS', '--task', 'doc-a', '--dir', workers, '--copy');
+  git(root, 'commit', '-qam', 'list');
+  git(root, 'merge', '-q', '--no-ff', '-m', 'merge', 'tars/doc-a');
+  ok('prepare', '--root', root, '--name', 'TARS', '--task', 'doc-b', '--same-folder');
+  ok('record', '--root', root, '--name', 'TARS', '--status', 'free');
+  git(root, 'commit', '-qam', 'list');
+  const out = ok('prepare', '--root', root, '--name', 'TARS', '--task', 'doc-c', '--dir', workers);
+  assert.match(out, /folder .*TARS is on the new branch tars\/doc-c/);
+  assert.equal(git(path.join(workers, 'TARS'), 'branch', '--show-current').trim(), 'tars/doc-c');
+});

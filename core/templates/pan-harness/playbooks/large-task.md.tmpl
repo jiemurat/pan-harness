@@ -39,11 +39,12 @@ Ask the questions with the `ph-grilling` skill. If it is not installed (a new cl
 
 A second large task runs while another is active in one of two ways; the owner picks one on the approval (`## Planning`):
 - **A worker-agent** (`ph-workers`): the task runs in the worker's own folder and branch, with its own `handoff.md` there.
-- **A second session in this folder**: the task's state goes into `pan-harness/handoff-<task>.md` (the sections of `handoff.md`), made from the planning file and kept to the task's end, also when `handoff.md` is freed; at the end it is removed. Before it starts, each plan lists the files its task changes; when the two lists share a file, this way is closed: wait, or take a worker-agent.
+- **A second session in this folder**: the task's state goes into `pan-harness/handoff-<task>.md` (the sections of `handoff.md`), made from the planning file and kept to the task's end, also when `handoff.md` is freed; at the end it is removed. Before it starts, each plan lists the files its task changes and the checks it runs. When the lists share a file, or one task's check covers the other's files (for example both change `src/` and the fast check tests all of `src/`), tell the owner the risk — one task's check fails on the other's unfinished work, and the hook stops its commits — and ask: a worker-agent in its own folder, wait for the other task, or this folder at the owner's risk.
 
 With two tasks active in one folder:
 - Commit only your task's files: `git commit -m "<message>" -- <files>` (the other session may have staged its own).
 - The `Changed files` of every active state file (`handoff.md`, `handoff-*.md`) are not the owner's changes.
 - Before you edit a shared journal (`plan.md`, `state.md`, `decisions.md`, the history), read it again and change only your task's lines; the history gets only new entries; `state.md` → `In progress` names both tasks.
 - When the hook stops your commit on the other task's file, name the file and its task to the owner, then wait or ask; `--no-verify` only on the owner's word.
+- A `git commit` that fails on `index.lock: File exists` (the other session is committing): wait 5 seconds and run it again, up to 3 times; never delete the lock file; then tell the owner.
 - [profile: live-system=yes] Each plan lists the live parts its task changes (services, config files). Before a restart or deploy, look at the other running tasks (`pan-harness/workers.md`, the active state files); when they touch the same parts, ask the owner for the time and the order. A config file both tasks change reaches the live system only after the merge.

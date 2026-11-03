@@ -2,6 +2,13 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 3.11.8
+
+- `ph-doctor` and `pan-harness-check` now agree: `project/check.json` need not be on the `PAN-HARNESS.md` map, and an empty `co_change` in it gives a note, so `ph-doctor` asks you for the map of code and doc folders, or writes down that you want none.
+- A worker-agent can work in the main folder itself, with no folder or branch of its own, when its task shares no files and no checks with the other active tasks; its commits land on the main branch, so there is nothing to merge. When the tasks overlap (the same files, or one task's tests cover the other's files), the agent tells you the risk and asks: its own folder, wait, or the main folder at your risk.
+- Two sessions committing at once: a commit that meets git's lock file waits and tries again, and never deletes the lock.
+- `/ph-update` updates the parallel task section of `playbooks/large-task.md`.
+
 ## 3.11.7
 
 Parallel large tasks.

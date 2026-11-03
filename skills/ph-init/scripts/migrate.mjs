@@ -48,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -675,6 +675,41 @@ function step7PlanningLimit() {
   done.push(`3.11.7 step 7: project/check.json: start_limit_bytes ${planningBytes} bytes higher for the planning and parallel task lines`);
 }
 
+// ---------------------------------------------------------------- 3.11.8 (a worker in the main folder)
+// the Parallel tasks section: an overlap counts the checks too and gets the risk and three choices; a held index.lock
+const OVERLAP_OLD = ' Before it starts, each plan lists the files its task changes; when the two lists share a file, this way is closed: wait, or take a worker-agent.';
+const OVERLAP_NEW = (() => {
+  const l = LARGE_TASK_TMPL.find((x) => x.includes(' Before it starts, each plan lists the files its task changes and the checks it runs.')) || '';
+  return l.slice(l.indexOf(' Before it starts, each plan lists'));
+})();
+const LOCK_ITEM = LARGE_TASK_TMPL.find((l) => l.startsWith('- A `git commit` that fails on `index.lock: File exists`')) || '';
+
+function step1OverlapChecks() {
+  const f = file(LARGE_TASK);
+  if (!f || f.lines.some((l) => l.includes(OVERLAP_NEW.trim()))) return;
+  const at = f.lines.findIndex((l) => l.endsWith(OVERLAP_OLD));
+  if (at < 0) {
+    if (f.lines.includes('## Parallel tasks')) byHand.push(`3.11.8 step 1: playbooks/large-task.md: the same-folder item of Parallel tasks is reworded; put "${OVERLAP_NEW.trim()}" in place of its sentence on the shared files`);
+    return;
+  }
+  f.lines[at] = f.lines[at].slice(0, -OVERLAP_OLD.length) + OVERLAP_NEW;
+  f.changed = true;
+  done.push('3.11.8 step 1: playbooks/large-task.md: an overlap of files or checks gets the risk and three choices');
+}
+
+function step2IndexLock() {
+  const f = file(LARGE_TASK);
+  if (!f || f.lines.includes(LOCK_ITEM)) return;
+  const at = f.lines.findIndex((l) => l.startsWith('- When the hook stops your commit on the other task'));
+  if (at < 0) {
+    if (f.lines.includes('## Parallel tasks')) byHand.push(`3.11.8 step 2: playbooks/large-task.md: add "${LOCK_ITEM}" to the list of Parallel tasks`);
+    return;
+  }
+  f.lines.splice(at + 1, 0, LOCK_ITEM);
+  f.changed = true;
+  done.push('3.11.8 step 2: playbooks/large-task.md: a held index.lock is waited for, never deleted');
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
@@ -690,6 +725,7 @@ const STEPS = {
   '2.10.7': [step1NestedAgents, step2NoGemini],
   '3.10.7': [step1OwnHarness, step2HarnessList],
   '3.11.7': [step1PlanningPlaybook, step2PlanningStart, step3PlanningMap, step4ParallelSection, step5SeveralTasks, step6EndOfTaskLists, step7PlanningLimit],
+  '3.11.8': [step1OverlapChecks, step2IndexLock],
 };
 
 // ---------------------------------------------------------------- run

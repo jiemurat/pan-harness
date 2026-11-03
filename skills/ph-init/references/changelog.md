@@ -4,6 +4,13 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 3.11.8
+
+The audit and `pan-harness-check` say the same on two settings. `project/check.json` need not stand on the `PAN-HARNESS.md` map: it is the check's settings file, named in `playbooks/pan-harness.md` → `Growth limits`. An empty `co_change` gives a `NOTE`: `ph-doctor` asks the owner for the map of code and doc folders, or records the owner's no in a D. A worker-agent can work in the main folder itself (`ph-workers`, `prepare --same-folder`) when its task shares no files and no checks with the other active tasks; an overlap of files, or a check that covers the other task's files, gets the risk and three choices (own folder, wait, this folder at the owner's risk), and a commit that meets a held `index.lock` waits.
+
+1. `mechanical` — `playbooks/large-task.md` → `Parallel tasks`: the sentence on shared files becomes the template's sentence on shared files and checks (`scripts/migrate.mjs`).
+2. `mechanical` — the same section gets the `index.lock` item after the item on a hook stopped by the other task (`scripts/migrate.mjs`).
+
 ## 3.11.7
 
 A large task still in planning keeps its rounds in its own file, `pan-harness/planning/<task>.md`, while another task may be active in `handoff.md`. The answers are written and committed after each round, the `plan.md` Queue item holds one or two lines and the link, and on the approval the file is moved into `plan.md` and `handoff.md` and removed. When the owner names the task, the session start points the agent to its file. The check warns on a planning file that `plan.md` does not link and on a Queue item over 15 lines. A second large task can also run at once: by a worker-agent in its own folder (the worker's `handoff.md` starts at `**Status:** none`, and the merge keeps the main side of the task state files), or by a second session in the same folder with its state in `pan-harness/handoff-<task>.md`, which the check holds to the `handoff.md` rules.
