@@ -4,6 +4,21 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 3.11.7
+
+A large task still in planning keeps its rounds in its own file, `pan-harness/planning/<task>.md`, while another task may be active in `handoff.md`. The answers are written and committed after each round, the `plan.md` Queue item holds one or two lines and the link, and on the approval the file is moved into `plan.md` and `handoff.md` and removed. When the owner names the task, the session start points the agent to its file. The check warns on a planning file that `plan.md` does not link and on a Queue item over 15 lines. A second large task can also run at once: by a worker-agent in its own folder (the worker's `handoff.md` starts at `**Status:** none`, and the merge keeps the main side of the task state files), or by a second session in the same folder with its state in `pan-harness/handoff-<task>.md`, which the check holds to the `handoff.md` rules.
+
+1. `mechanical` — `playbooks/large-task.md` → `Planning` gets the planning file item after the item on the form of the answers, and the plan item's last sentence "Before the approval, only reading is allowed." becomes the template's approval text with the write exception (`scripts/migrate.mjs`).
+2. `mechanical` — `AGENTS.md` → `Session start`: the item that goes on with an active `handoff.md` gets the sentence on a task still in planning (`scripts/migrate.mjs`).
+3. `mechanical` — the `PAN-HARNESS.md` map gets the `planning/<task>.md` line after the `state.md` line (`scripts/migrate.mjs`).
+4. `mechanical` — `playbooks/large-task.md` gets the template's last section `## Parallel tasks`; its live-system line only with `live-system=yes` in the profile (`scripts/migrate.mjs`).
+5. `mechanical` — `AGENTS.md`: the `Session start` item that goes on with an active task says a change on no active task's list is the owner's and goes on only with the task the session names; the commit rule's owner's changes are those on no active task's list (`scripts/migrate.mjs`).
+6. `mechanical` — `playbooks/end-of-task.md`: the item that compares the changed files names the task's own state file and leaves the files of every active task (`scripts/migrate.mjs`).
+7. `mechanical` — `project/check.json` → `start_limit_bytes` is raised by the bytes steps 2, 3 and 5 add to the start set.
+8. `structural` — planning answers already kept in a `plan.md` Queue item (the check warns on an item over 15 lines) move into a planning file on the owner's yes.
+
+Each step a reworded file does not fit is printed "by hand": add the template's text in the project's words, with the owner.
+
 ## 3.10.7
 
 A folder below the project with its own harness is worked by its harness. A change there goes to a new agent session opened in that folder; where no session can be started, the agent runs that harness's session start, rules and end of task itself. `pan-harness-check.mjs --harnesses` lists such folders, the pre-commit hook also runs the check of each one in the same repository whose files the commit has, `ph-doctor` reports them and `ph-update` offers to update them first.

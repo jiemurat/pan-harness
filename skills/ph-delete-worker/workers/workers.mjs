@@ -18,7 +18,8 @@ Commands:
                             a new one (a git worktree filled with copy-on-write copies of
                             the main folder, untracked and ignored files included; a submodule
                             gets a worktree at its commit), or the worker's folder switched to a
-                            new branch; prints the brief
+                            new branch; the main folder's active tasks (an active handoff.md,
+                            handoff-<task>.md files) are cleared there in one commit; prints the brief
           [--dir D]         the parent of the worker folders (default ~/pan-workers/<project>)
           [--copy]          allow a plain copy where the disk cannot copy-on-write
   record --name N [--status S] [--task T] [--session ID]
@@ -441,9 +442,36 @@ function cmdPrepare(root, a) {
     console.log(`${row.Name}'s folder ${shorten(folder)} on branch ${branch} (${method === 'clone' ? 'copy-on-write' : 'plain copy'}${nestedNote(made)})`);
   }
   if (cloudSynced(root)) console.log(`note: the main folder is in a cloud-synced folder; the worker folder is outside it on purpose`);
+  freeTasks(root, folder, row.Name);
   Object.assign(row, { Status: 'working', Task: a.task, Branch: branch, Folder: shorten(folder) });
   writeList(root, rows, text);
   console.log(`\nBRIEF\nYou are ${row.Name}, a worker-agent of this project; the main-agent ${mainAgent(root)} opened this session for one task, and the owner sees it.\n- Your folder: ${folder}, branch ${branch}. Work only there; the main folder ${root} and the other worker folders are not yours.\n- Work as AGENTS.md says, with the worker lines there and the "Worker-agent" section of the ph-workers skill.\n- First set the task's type by the Workflow of AGENTS.md: this brief is not the owner's approval.\n- Task:`);
+}
+
+/** The worker folder starts with no task of the main folder: its handoff.md says
+ * `**Status:** none` and the handoff-<task>.md files of a second session are gone, in one
+ * commit on the worker branch (the merge takes the main side of these files back). */
+function freeTasks(root, folder, name) {
+  const h = path.join(folder, 'pan-harness');
+  if (!fs.existsSync(h)) return;
+  const changed = [];
+  const handoff = path.join(h, 'handoff.md');
+  if (fs.existsSync(handoff)) {
+    const text = fs.readFileSync(handoff, 'utf8');
+    const at = text.search(/^\*\*Status:\*\* active\b/m);
+    if (at >= 0) {
+      fs.writeFileSync(handoff, `${text.slice(0, at)}**Status:** none\n`);
+      changed.push('pan-harness/handoff.md');
+    }
+  }
+  for (const f of fs.readdirSync(h).filter((f) => /^handoff-.+\.md$/.test(f))) {
+    fs.rmSync(path.join(h, f));
+    changed.push(`pan-harness/${f}`);
+  }
+  if (!changed.length) return;
+  gitOk(folder, 'add', '-A', '--', ...changed);
+  gitOk(folder, 'commit', '-q', '-m', `${name}: the main folder's active tasks are not this worker's\n\nAgent: ${mainAgent(root)}`);
+  console.log(`${name}'s folder starts with no active task of the main folder (${changed.join(', ')}; one commit)`);
 }
 
 function cmdRecord(root, a) {

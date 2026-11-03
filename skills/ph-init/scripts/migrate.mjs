@@ -48,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -537,6 +537,144 @@ function step2HarnessList() {
   done.push('3.10.7 step 2: AGENTS.md: Session start lists the folders with their own harness');
 }
 
+// ---------------------------------------------------------------- 3.11.7 (a large task in planning has its own file)
+// the planning playbook keeps the rounds in pan-harness/planning/<task>.md, Session start and the map point to it,
+// and the start set limit grows by the bytes the two pointers add
+let planningBytes = 0;
+const LARGE_TASK_TMPL = tmplLines('pan-harness/playbooks/large-task.md.tmpl');
+const ROUNDS_ITEM = LARGE_TASK_TMPL.find((l) => l.startsWith("- the rounds go into the task's planning file, ")) || '';
+const APPROVAL_LINE = LARGE_TASK_TMPL.find((l) => l.includes(' On the approval, move the planning file: ')) || '';
+const APPROVAL_TEXT = APPROVAL_LINE.slice(APPROVAL_LINE.indexOf(' On the approval, move the planning file: '));
+const ONLY_READING = ' Before the approval, only reading is allowed.';
+const PLANNING_START = (() => {
+  const l = AGENTS_TMPL.find((x) => x.includes(' A large task still in planning has its file in ')) || '';
+  return l.slice(l.indexOf(' A large task still in planning has its file in '));
+})();
+const PLANNING_MAP = tmplLines('PAN-HARNESS.md.tmpl').find((l) => l.startsWith('- `planning/<task>.md` — ')) || '';
+
+function step1PlanningPlaybook() {
+  const f = file(LARGE_TASK);
+  if (!f) return;
+  if (!f.lines.some((l) => l.startsWith("- the rounds go into the task's planning file, "))) {
+    const at = f.lines.findIndex((l) => l.startsWith('- the answer comes as '));
+    if (at < 0) byHand.push(`3.11.7 step 1: playbooks/large-task.md: no "the answer comes as" item in Planning; add "${ROUNDS_ITEM}" after the item on the form of the answers`);
+    else {
+      f.lines.splice(at + 1, 0, ROUNDS_ITEM);
+      f.changed = true;
+      done.push('3.11.7 step 1: playbooks/large-task.md: the rounds go into the planning file');
+    }
+  }
+  if (f.lines.some((l) => l.includes(' On the approval, move the planning file: '))) return;
+  const at = f.lines.findIndex((l) => l.endsWith(ONLY_READING));
+  if (at < 0) { byHand.push(`3.11.7 step 1: playbooks/large-task.md: the plan item does not end with "${ONLY_READING.trim()}"; put "${APPROVAL_TEXT.trim()}" in place of that sentence`); return; }
+  f.lines[at] = f.lines[at].slice(0, -ONLY_READING.length) + APPROVAL_TEXT;
+  f.changed = true;
+  done.push('3.11.7 step 1: playbooks/large-task.md: the approval moves the planning file, which is written before it');
+}
+
+function step2PlanningStart() {
+  const f = file(AGENTS);
+  if (!f || f.lines.some((l) => l.includes(PLANNING_START.trim()))) return;
+  const at = f.lines.findIndex((l) => /^\d+\. When `pan-harness\/handoff\.md` says/.test(l));
+  if (at < 0) { byHand.push(`3.11.7 step 2: AGENTS.md: Session start has no handoff item; add "${PLANNING_START.trim()}" to the item that goes on with an active task`); return; }
+  f.lines[at] += PLANNING_START;
+  f.changed = true;
+  planningBytes += Buffer.byteLength(PLANNING_START);
+  done.push('3.11.7 step 2: AGENTS.md: Session start points to the planning file of a named task');
+}
+
+function step3PlanningMap() {
+  if (pan.lines.some((l) => l.startsWith('- `planning/<task>.md` — '))) return;
+  const at = pan.lines.findIndex((l) => l.startsWith('- `state.md` — '));
+  if (at < 0) { byHand.push(`3.11.7 step 3: PAN-HARNESS.md: no state.md line in the Map; add "${PLANNING_MAP}" there`); return; }
+  pan.lines.splice(at + 1, 0, PLANNING_MAP);
+  pan.changed = true;
+  planningBytes += Buffer.byteLength(PLANNING_MAP + pan.eol);
+  done.push('3.11.7 step 3: PAN-HARNESS.md: the Map names the planning files');
+}
+
+// the template's last section on two large tasks at once; its live-system line only where the profile has one
+const PARALLEL_SECTION = (() => {
+  const at = LARGE_TASK_TMPL.indexOf('## Parallel tasks');
+  return at < 0 ? [] : LARGE_TASK_TMPL.slice(at).join('\n').replace(/\n+$/, '').split('\n');
+})();
+const liveOn = () => /\blive-system=yes\b/.test((pan.lines.find((l) => /^Profile: /.test(l)) || ''));
+
+function step4ParallelSection() {
+  const f = file(LARGE_TASK);
+  if (!f || f.lines.includes('## Parallel tasks')) return;
+  const section = PARALLEL_SECTION.flatMap((l) => (!l.startsWith('- [profile: live-system=yes] ') ? [l] : liveOn() ? [l.replace('[profile: live-system=yes] ', '')] : []));
+  while (f.lines.length && f.lines[f.lines.length - 1] === '') f.lines.pop();
+  f.lines.push('', ...section, '');
+  f.changed = true;
+  done.push('3.11.7 step 4: playbooks/large-task.md: the Parallel tasks section');
+}
+
+// a second session's files are not the owner's: Session start, the commit rule and the end of task say "on no active task's list"
+const OWNER_OLD = "(a change not on the list is the owner's,";
+const OWNER_NEW = "(a change on no active task's list is the owner's,";
+const COMMIT_OLD = '(in `git status`, not on your list)';
+const COMMIT_NEW = "(in `git status`, on no active task's list)";
+const SEVERAL = (() => {
+  const l = AGENTS_TMPL.find((x) => x.includes(' When several tasks are active (')) || '';
+  const from = l.indexOf(' When several tasks are active (');
+  return l.slice(from, l.indexOf(' A large task still in planning', from));
+})();
+
+function step5SeveralTasks() {
+  const f = file(AGENTS);
+  if (!f) return;
+  const at = f.lines.findIndex((l) => /^\d+\. When `pan-harness\/handoff\.md` says/.test(l));
+  if (at >= 0 && f.lines[at].includes(OWNER_OLD)) {
+    f.lines[at] = f.lines[at].replace(OWNER_OLD, OWNER_NEW);
+    planningBytes += Buffer.byteLength(OWNER_NEW) - Buffer.byteLength(OWNER_OLD);
+    f.changed = true;
+  }
+  if (at >= 0 && !f.lines[at].includes(SEVERAL.trim()) && f.lines[at].includes(' and go on from `Next step`.')) {
+    f.lines[at] = f.lines[at].replace(' and go on from `Next step`.', ` and go on from \`Next step\`.${SEVERAL}`);
+    planningBytes += Buffer.byteLength(SEVERAL);
+    f.changed = true;
+    done.push('3.11.7 step 5: AGENTS.md: Session start goes on only with the task the session names');
+  } else if (at < 0 || !f.lines[at].includes(SEVERAL.trim())) {
+    byHand.push(`3.11.7 step 5: AGENTS.md: Session start: add "${SEVERAL.trim()}" to the item that goes on with an active task, and say there that a change on no active task's list is the owner's`);
+  }
+  const c = f.lines.findIndex((l) => l.includes(COMMIT_OLD));
+  if (c >= 0) {
+    f.lines[c] = f.lines[c].replace(COMMIT_OLD, COMMIT_NEW);
+    planningBytes += Buffer.byteLength(COMMIT_NEW) - Buffer.byteLength(COMMIT_OLD);
+    f.changed = true;
+    done.push("3.11.7 step 5: AGENTS.md: the commit rule leaves the files of every active task");
+  } else if (!f.lines.some((l) => l.includes(COMMIT_NEW))) {
+    byHand.push("3.11.7 step 5: AGENTS.md: the commit rule: the owner's changes are those on no active task's list (templates/AGENTS.md.tmpl)");
+  }
+}
+
+const EOT_OLD = [["(the `Changed files` list of `handoff.md`)", "(the `Changed files` list of your task's `handoff.md` or `handoff-<task>.md`)"],
+  ["A change in `git status` that is not on the list is the owner's:", "A change in `git status` that is on no active task's list is the owner's:"]];
+
+function step6EndOfTaskLists() {
+  const f = file('pan-harness/playbooks/end-of-task.md');
+  if (!f) return;
+  const at = f.lines.findIndex((l) => l.includes(EOT_OLD[0][0]) || l.includes(EOT_OLD[1][0]));
+  if (at < 0) {
+    if (!f.lines.some((l) => l.includes(EOT_OLD[1][1]))) byHand.push("3.11.7 step 6: playbooks/end-of-task.md: the compare item: a change on no active task's list is the owner's (templates/pan-harness/playbooks/end-of-task.md.tmpl)");
+    return;
+  }
+  for (const [from, to] of EOT_OLD) f.lines[at] = f.lines[at].replace(from, to);
+  f.changed = true;
+  done.push("3.11.7 step 6: playbooks/end-of-task.md: the compare item leaves the files of every active task");
+}
+
+function step7PlanningLimit() {
+  const f = file('pan-harness/project/check.json');
+  if (!f || !planningBytes) return;
+  const at = f.lines.findIndex((l) => /"start_limit_bytes":\s*\d+/.test(l));
+  if (at < 0) return;
+  f.lines[at] = f.lines[at].replace(/("start_limit_bytes":\s*)(\d+)/, (_, k, v) => `${k}${Number(v) + planningBytes}`);
+  f.changed = true;
+  done.push(`3.11.7 step 7: project/check.json: start_limit_bytes ${planningBytes} bytes higher for the planning and parallel task lines`);
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
@@ -551,6 +689,7 @@ const STEPS = {
   '2.10.6': [step1SessionTitle],
   '2.10.7': [step1NestedAgents, step2NoGemini],
   '3.10.7': [step1OwnHarness, step2HarnessList],
+  '3.11.7': [step1PlanningPlaybook, step2PlanningStart, step3PlanningMap, step4ParallelSection, step5SeveralTasks, step6EndOfTaskLists, step7PlanningLimit],
 };
 
 // ---------------------------------------------------------------- run

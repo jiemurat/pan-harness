@@ -637,3 +637,37 @@ test('lessons: a Layer value outside the five words is a warning', () => {
   edit(dir, 'pan-harness/lessons.md', '  - Layer: context\n', '  - Layer: test design\n');
   assert.match(check(dir).out, /^WARN +pan-harness\/lessons\.md: Layer not one of task, context, environment, verification, state \(L1: test design\)/m);
 });
+
+test('planning files: a linked one is quiet; no link, a long Queue item and a link to a missing file are named', () => {
+  const dir = harness();
+  // the session start names the folder before any task is planned: no error for the missing folder
+  edit(dir, 'AGENTS.md', '1. Read this file, then `PAN-HARNESS.md`.', '1. Read this file, then `PAN-HARNESS.md`. A task in planning has its file in `pan-harness/planning/`.');
+  assert.match(check(dir).out, /0 error\(s\), 0 warning\(s\)/);
+  put(dir, 'pan-harness/planning/demo-task.md', '# Planning: demo task\n\n**Status:** planning\n\n## Goal draft\n\n- A goal.\n');
+  const link = '- **Demo task** — planning: `pan-harness/planning/demo-task.md`\n';
+  edit(dir, 'pan-harness/plan.md', '## 1. Queue\n\n', `## 1. Queue\n\n${link}\n`);
+  const quiet = check(dir);
+  assert.match(quiet.out, /0 error\(s\), 0 warning\(s\)/, quiet.out);
+
+  edit(dir, 'pan-harness/plan.md', link, '');
+  assert.match(check(dir).out, /^WARN +pan-harness[\\/]planning[\\/]demo-task\.md: no link from plan\.md - /m);
+
+  const long = ['- **Long task** — the answers so far:', ...Array.from({ length: 15 }, (_, i) => `  - answer ${i + 1}`)].join('\n');
+  edit(dir, 'pan-harness/plan.md', '## 1. Queue\n\n', `## 1. Queue\n\n${link}${long}\n\n`);
+  const out = check(dir).out;
+  assert.match(out, /^WARN +pan-harness\/plan\.md: the Queue item 'Long task' has 16 lines \(> 15\) - /m);
+  assert.doesNotMatch(out, /'Demo task' has/);
+
+  edit(dir, 'pan-harness/plan.md', link, '- **Gone task** — planning: `pan-harness/planning/gone-task.md`\n');
+  assert.match(check(dir).out, /^ERROR pan-harness\/plan\.md: path `pan-harness\/planning\/gone-task\.md` does not exist - .*planning file/m);
+});
+
+test('handoff-<task>.md: a second active task is checked like handoff.md; a finished one is named', () => {
+  const dir = harness();
+  put(dir, 'pan-harness/handoff-second-task.md', '# Handoff: second task\n\nThe state of a second active large task.\n\n**Status:** active\n\n## Task\n\nA task.\n');
+  const out = check(dir).out;
+  assert.doesNotMatch(out, /handoff-second-task\.md: not part of the standard/);
+  assert.match(out, /^ERROR pan-harness\/handoff-second-task\.md: an active task without '## Criteria'/m);
+  put(dir, 'pan-harness/handoff-second-task.md', '# Handoff: second task\n\nThe state of a second active large task.\n\n**Status:** none\n');
+  assert.match(check(dir).out, /^WARN +pan-harness\/handoff-second-task\.md: '\*\*Status:\*\* none' - a finished task's file is removed at its end/m);
+});

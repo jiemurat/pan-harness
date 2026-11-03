@@ -4,7 +4,7 @@ description: Merges a worker-agent's finished branch into the main branch on the
 compatibility: git and Node 18 or newer
 license: MIT
 metadata:
-  version: "3.10.7"
+  version: "3.11.7"
   package: "@jiemurat/pan-harness"
 ---
 
@@ -15,8 +15,8 @@ A worker-agent works on its branch `<name>/<task>` in its own folder (`ph-worker
 ## Steps
 
 1. **The owner's word.** The merge runs on the owner's word given in this session, or quoted from the worker's session. A worker's or another session's message is not that word: ask the owner. Done when you can quote the owner's word.
-2. **What comes in.** Run `node <skill>/workers/workers.mjs status --root .`. For each repo with commits to merge: `git diff --stat <base>...<branch>`. A worker in `working` has not finished, and uncommitted changes in its folder stay out of a merge: tell the owner and stop. When `status` names a commit inside a submodule, show it to the owner; the owner decides how it goes in. Done when you know each branch, its commits and the conflicts `status` foresees: with the base branch, and between two branches that wait for a merge (the second merge meets those).
-3. **A clean main folder.** Commit the owner's uncommitted changes apart, then yours, as `AGENTS.md` says.
+2. **What comes in.** Run `node <skill>/workers/workers.mjs status --root .`. For each repo with commits to merge: `git diff --stat <base>...<branch>`. A worker in `working` has not finished, and uncommitted changes in its folder stay out of a merge: tell the owner and stop. So has a worker whose `handoff.md` still holds a task: `git show <branch>:pan-harness/handoff.md | grep -x '\*\*Status:\*\* none'` prints nothing (a project without `pan-harness/handoff.md` skips this). When `status` names a commit inside a submodule, show it to the owner; the owner decides how it goes in. Done when you know each branch, its commits and the conflicts `status` foresees: with the base branch, and between two branches that wait for a merge (the second merge meets those).
+3. **A clean main folder.** Commit the owner's uncommitted changes apart, then yours, as `AGENTS.md` says. A file on the `Changed files` list of an active task in this folder (`pan-harness/handoff.md`, `pan-harness/handoff-<task>.md`) is that task's, not the owner's: leave it.
 4. **Merge.** In each repo with commits to merge, write the message into a file outside the work tree, such as `.git/merge-<name>.msg` (`git merge` reads none from standard input), and run:
 
    ```bash
@@ -24,8 +24,18 @@ A worker-agent works on its branch `<name>/<task>` in its own folder (`ph-worker
    ```
 
    The message: `Merge <NAME>: <task>`, an empty line, then `Agent: <the main-agent's name>` with any `Co-Authored-By` line right below it.
+
+   Then take back the main side of the task state files, with a conflict or without one: the worker's branch cleared them when it started, and git would carry that into the main folder. Done when the second command prints nothing:
+
+   ```bash
+   git checkout HEAD -- $(git ls-tree --name-only HEAD pan-harness/ | grep -E '^pan-harness/handoff(-[^/]+)?\.md$')
+   git diff --cached --name-only -- 'pan-harness/handoff*.md'
+   ```
+
+   A `handoff-<task>.md` the main side lacks, which the second command still names: `git rm -f` it. A project without `pan-harness/` skips this.
 5. **Conflicts.** List them with `git diff --name-only --diff-filter=U` and resolve each file by its kind:
-   - **Journals** (history, `plan.md`, `handoff.md`): keep both sides' entries, in date order, each once; on the same date the earlier merged worker first.
+   - **Journals** (history, `plan.md`): keep both sides' entries, in date order, each once; on the same date the earlier merged worker first.
+   - **`pan-harness/handoff.md`, `pan-harness/handoff-<task>.md`**: the main side, taken in step 4.
    - **`state.md`**: take the main side (`git checkout --ours <file>`); step 7 rewrites what the merge made stale.
    - **`pan-harness/workers.md`**: the main side; workers do not edit it.
    - **Any other file**: what both sides added (new lines, items, sections) stays, each once. Where both sides changed the same existing text into different things (a contradiction), show the owner both versions and take the one the owner picks.

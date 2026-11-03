@@ -273,3 +273,28 @@ test('on APFS (macOS) the worker folder is a copy-on-write copy', { skip: proces
   assert.match(r.stdout, /\(copy-on-write, 1 nested repo\(s\)\)/);
   assert.equal(dirty(path.join(workers, 'TARS')), '');
 });
+
+test('prepare: the main folder\'s active tasks stay out of the worker folder, in one commit on the worker branch', () => {
+  const { root, workers } = project();
+  const intro = '# Handoff\n\nThe state of the active large task.\n\n';
+  const active = `${intro}**Status:** active\n\n## Task\n\nThe main task.\n`;
+  put(root, 'pan-harness/handoff.md', active);
+  put(root, 'pan-harness/handoff-second-task.md', active);
+  git(root, 'add', '-A');
+  git(root, 'commit', '-qm', 'two active tasks');
+  ok('prepare', '--root', root, '--name', 'TARS', '--task', 'doc-a', '--dir', workers, '--copy');
+  const folder = path.join(workers, 'TARS');
+  assert.equal(fs.readFileSync(path.join(folder, 'pan-harness', 'handoff.md'), 'utf8'), `${intro}**Status:** none\n`);
+  assert.equal(fs.existsSync(path.join(folder, 'pan-harness', 'handoff-second-task.md')), false);
+  assert.equal(dirty(folder), '');
+  assert.match(git(folder, 'log', '-1', '--format=%B'), /^TARS: the main folder's active tasks are not this worker's\n\nAgent: COOPER\n/);
+  assert.equal(fs.readFileSync(path.join(root, 'pan-harness', 'handoff.md'), 'utf8'), active, 'the main folder keeps its task');
+  // the next task in the same folder starts free again
+  git(root, 'commit', '-qam', 'list');
+  git(root, 'merge', '-q', '--no-ff', '-m', 'merge', 'tars/doc-a');
+  git(root, 'checkout', '-q', 'HEAD~1', '--', 'pan-harness');
+  git(root, 'commit', '-qam', 'the main side of the handoff files');
+  ok('prepare', '--root', root, '--name', 'TARS', '--task', 'doc-b');
+  assert.match(fs.readFileSync(path.join(folder, 'pan-harness', 'handoff.md'), 'utf8'), /\*\*Status:\*\* none\n$/);
+  assert.equal(dirty(folder), '');
+});

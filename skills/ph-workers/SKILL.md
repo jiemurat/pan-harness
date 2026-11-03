@@ -4,7 +4,7 @@ description: Gives tasks to the project's worker-agents, each in its own visible
 compatibility: git and Node 18 or newer; Claude Desktop opens the sessions itself (its session tools), in another agent the owner opens them
 license: MIT
 metadata:
-  version: "3.10.7"
+  version: "3.11.7"
   package: "@jiemurat/pan-harness"
 ---
 
@@ -53,6 +53,6 @@ When you are the worker:
 - **A submodule** in your folder is detached at its commit: before a change inside it, ask the owner.
 - **The task's size.** The brief is the main-agent's retelling of the owner's words, not an approved plan. Set the task's type by `Workflow` in `AGENTS.md`; a large task goes by its playbook (the questions with `ph-grilling`, the plan) and waits for the owner's word in your session.
 - **The rules.** Work by `AGENTS.md` as the main agent would, with two differences: skip the journal fixes of `Session start` (the `pending` commit numbers), the main-agent makes them; stay on your branch: the main-agent moves your folder to the next task's branch.
-- **The end of the task.** Do the end of task of `AGENTS.md` in your branch: the history entry, the checks, the commit whose last lines are `Agent: <your name>` and, right below it with no empty line between, any `Co-Authored-By` line: git reads them as one block of trailers. The merge, the push and every other branch belong to the main-agent and the owner.
+- **The end of the task.** Do the end of task of `AGENTS.md` in your branch: the history entry, `pan-harness/handoff.md` back at `**Status:** none` before the final message (the merge waits for it), the checks, the commit whose last lines are `Agent: <your name>` and, right below it with no empty line between, any `Co-Authored-By` line: git reads them as one block of trailers. The merge, the push and every other branch belong to the main-agent and the owner.
 - **Questions.** Ask the owner in your own session; the owner's answer there is the owner's word. For another worker, write to the main-agent (Claude Desktop: `SendMessage` to `parent`).
 - **The final message**, in the owner's language (the owner reads your session too): the commits, the changed files, the check results and anything that worked unlike the main folder. Done when that message is sent.

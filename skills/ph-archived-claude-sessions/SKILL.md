@@ -4,7 +4,7 @@ description: Lists archived Claude Desktop sessions as a tree, each sub-session 
 compatibility: Claude Desktop (its session tools); in another agent the skill says so and stops
 license: MIT
 metadata:
-  version: "3.10.7"
+  version: "3.11.7"
   package: "@jiemurat/pan-harness"
   agents: "claude"
 ---

@@ -45,8 +45,10 @@ Errors (exit 1):
   - backticked paths under the known prefixes exist (in handoff.md, lines
     marked "(new)" name files still to be made and are skipped; the artifact-folder AGENTS.md
     names may be missing: git keeps no empty folder, an agreed move may wait; so may
-    pan-harness/workers.md, made when the worker-agents are first used);
-  - handoff.md has no Status line;
+    pan-harness/workers.md, made when the worker-agents are first used, and
+    pan-harness/planning/, made when a large task is first planned; a missing
+    planning file says it is removed on the approval);
+  - handoff.md (or a handoff-<task>.md of a second session) has no Status line;
   - a "`file.md` -> "Section"" link in a current doc leads to a heading or bold
     label that file does not have.
 Warnings:
@@ -76,9 +78,12 @@ Warnings:
     open criterion (an item that starts with the hourglass) whose decision has no
     open item in plan.md;
   - plan.md: a dated Scheduled row whose date has passed;
-  - handoff.md: an active task over 8 KB, without its
+  - planning: a file in pan-harness/planning/ that plan.md does not link, a
+    plan.md Queue item over 15 lines (its planning answers belong in a planning file);
+  - handoff.md and handoff-<task>.md: an active task over 8 KB, without its
     sections, with steps that have no state, several active steps, or done
-    steps without evidence;
+    steps without evidence; a handoff-<task>.md left at Status none (removed at
+    its task's end);
   - co_change (check.json): a watched file changed but none of the docs that
     describe it did (changes come from git status);
   - terms: a term glossed in brackets ("the inspection (check)") in a new or
@@ -112,7 +117,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const VERSION = '3.10.7';
+const VERSION = '3.11.7';
 
 // Sizes in bytes. 25 KB fits the start set of a complex project written
 // compactly; 40 KB keeps any doc readable in one go. An agent reads a doc over
@@ -127,13 +132,15 @@ const STANDARD_FILES = ['state.md', 'plan.md', 'handoff.md', 'system-map.md', 'r
   'decisions.md', 'feedback.md', 'lessons.md'];
 // standard files a harness has only when it uses them: workers.md (the worker-agents, ph-workers)
 const OPTIONAL_FILES = ['workers.md'];
-const STANDARD_DIRS = new Set(['history', 'archive', 'playbooks', 'scripts', 'project']);
+// the state of a second large task run by a second session in the same folder (playbooks/large-task.md)
+const HANDOFF_TASK = /^handoff-[^/\\]+\.md$/;
+const STANDARD_DIRS = new Set(['history', 'archive', 'playbooks', 'scripts', 'project', 'planning']);
 const SCRIPTS = ['pan-harness-check.mjs', 'secret-check.mjs'];
 // the standard playbooks: upkeep, a large task, the end of a task, delegation to sub-agents, the form of a question
 const PLAYBOOKS = ['pan-harness.md', 'large-task.md', 'end-of-task.md', 'delegation.md', 'questions.md'];
 const MAP_ENTRIES = [...STANDARD_FILES, 'history/', 'archive/', ...PLAYBOOKS.map((f) => `playbooks/${f}`), 'scripts/'];
 // standard places inside project/ that a young harness may not have yet
-const OPTIONAL_DIRS = new Set(['project', 'project/playbooks', 'project/scripts', 'project/references']);
+const OPTIONAL_DIRS = new Set(['project', 'project/playbooks', 'project/scripts', 'project/references', 'planning']);
 const PATH_PREFIXES = ['pan-harness', 'project', 'playbooks', 'scripts', 'references',
   'history', 'archive', 'tests', 'docs', 'src'];
 // Unicode-aware word characters and boundaries (JS \w and \b are ASCII-only; used with the u flag)
@@ -449,7 +456,7 @@ if (isDir(H)) {
   for (const entry of sortPaths(listDir(H))) {
     const name = path.basename(entry);
     if (name.startsWith('.') || name === '__pycache__') continue;
-    if ((isDir(entry) && !STANDARD_DIRS.has(name)) || (isFile(entry) && !STANDARD_FILES.includes(name) && !OPTIONAL_FILES.includes(name))) {
+    if ((isDir(entry) && !STANDARD_DIRS.has(name)) || (isFile(entry) && !STANDARD_FILES.includes(name) && !OPTIONAL_FILES.includes(name) && !HANDOFF_TASK.test(name))) {
       warnings.push(`${rel(entry)}: not part of the standard - agents look here only for standard names; `
         + 'move project-specific things to pan-harness/project/');
     }
@@ -803,7 +810,7 @@ const artifactLine = /^- \*\*Artifact-folder:\*\* `([^`]+)`/m.exec(read(path.joi
 const ARTIFACT_DIR = artifactLine ? artifactLine[1].replace(/\/+$/, '') : null;
 for (const p of docs) {
   const bases = [path.dirname(p), H, P, ROOT, ...extraBases];
-  const body = p !== HANDOFF ? text.get(p) : splitlines(text.get(p)).filter((line) => !line.includes('(new)')).join('\n');
+  const body = path.dirname(p) !== H || !/^handoff(-.+)?\.md$/.test(path.basename(p)) ? text.get(p) : splitlines(text.get(p)).filter((line) => !line.includes('(new)')).join('\n');
   for (const found of [...new Set([...body.matchAll(PATH_RE)].map((m) => m[1]))].sort()) {
     if (['*', '<', 'YYYY', '…', '{{'].some((mark) => found.includes(mark)) || found.startsWith('archive/')) continue;
     const bare = found.replace(/\/+$/, '');
@@ -811,7 +818,8 @@ for (const p of docs) {
     if (OPTIONAL_DIRS.has(inHarness) || (bare !== inHarness && OPTIONAL_FILES.includes(inHarness)) || bare === ARTIFACT_DIR) continue;
     if (!bases.some((b) => exists(path.join(b, found)))) {
       errors.push(`${rel(p)}: path \`${found}\` does not exist - an agent will look for it in vain; fix the `
-        + 'path (in handoff.md, mark a file still to be made with (new))');
+        + (inHarness.startsWith('planning/') ? 'link: a planning file is removed on the approval, so remove the link too, '
+          + 'or take the file back from git (git log -- pan-harness/planning/)' : 'path (in handoff.md, mark a file still to be made with (new))'));
     }
   }
 }
@@ -946,20 +954,22 @@ if (openItems.length) {
     + 'close those this task can check (playbooks/end-of-task.md)');
 }
 
-// 17. handoff.md: the state of an active large task
-if (isFile(HANDOFF)) {
-  const ht = text.has(HANDOFF) ? text.get(HANDOFF) : read(HANDOFF);
+// 17. handoff.md and handoff-<task>.md: the state of an active large task
+for (const HF of [HANDOFF, ...glob(H, 'handoff-*.md').filter((f) => HANDOFF_TASK.test(path.basename(f)))]) {
+  if (!isFile(HF)) continue;
+  const hn = rel(HF).split(path.sep).join('/');
+  const ht = text.has(HF) ? text.get(HF) : read(HF);
   const st = /^\*\*Status:\*\*\s*(\w+)/m.exec(ht);
   // the shape: a script edit that took the first match of a name (an older intro names each heading)
   // lands outside its section and leaves a heading twice or text in the intro; errors, so the hook stops it
   const hl = outsideCode(ht);
-  const rebuild = 'a script edit landed outside its section; take the file from git (`git show HEAD:pan-harness/handoff.md`) '
+  const rebuild = `a script edit landed outside its section; take the file from git (\`git show HEAD:${hn}\`) `
     + 'and redo the edit on the whole heading line';
   const statusLines = hl.filter((line) => line.startsWith('**Status:**'));
-  if (statusLines.length > 1) errors.push(`pan-harness/handoff.md: ${statusLines.length} status lines - ${rebuild}`);
+  if (statusLines.length > 1) errors.push(`${hn}: ${statusLines.length} status lines - ${rebuild}`);
   for (const sec of HANDOFF_SECTIONS) {
     const n = hl.filter((line) => starts(line, sec)).length;
-    if (n > 1) errors.push(`pan-harness/handoff.md: '${sec}' stands ${n} times - ${rebuild}`);
+    if (n > 1) errors.push(`${hn}: '${sec}' stands ${n} times - ${rebuild}`);
   }
   const statusAt = hl.findIndex((line) => line.startsWith('**Status:**'));
   if (statusAt >= 0) {
@@ -967,50 +977,77 @@ if (isFile(HANDOFF)) {
     const stray = intro.find((line) => line.startsWith('#'));
     const paragraphs = intro.filter((line, i) => line.trim() && !(intro[i - 1] || '').trim()).length;
     if (stray || paragraphs > 2) {
-      errors.push(`pan-harness/handoff.md: the intro before the status line has ${paragraphs} paragraphs`
+      errors.push(`${hn}: the intro before the status line has ${paragraphs} paragraphs`
         + `${stray ? ` and the line '${stray.slice(0, 40)}'` : ''} (template: 2, no heading) - ${rebuild}`);
     }
   }
   if (!st) {
-    errors.push("pan-harness/handoff.md: no '**Status:** none' or '**Status:** active' line - the next "
+    errors.push(`${hn}: no '**Status:** none' or '**Status:** active' line - the next `
       + `session cannot tell whether a task is in progress; ${rebuild}, or add the line (template handoff.md.tmpl)`);
   } else if (st[1] === 'active') {
     const size = Buffer.byteLength(ht, 'utf8');
     if (size > HANDOFF_LIMIT) {
-      warnings.push(`pan-harness/handoff.md: ${size} bytes (> ${HANDOFF_LIMIT}) - an active handoff is read at `
+      warnings.push(`${hn}: ${size} bytes (> ${HANDOFF_LIMIT}) - an active handoff is read at `
         + 'every session start with the start set; move finished stages to the history entry');
     }
     for (const sec of HANDOFF_SECTIONS) {
       if (!hl.some((line) => starts(line, sec))) {
-        errors.push(`pan-harness/handoff.md: an active task without '${sec}' - a new session resumes `
+        errors.push(`${hn}: an active task without '${sec}' - a new session resumes `
           + 'the task from this file; add the section (template handoff.md.tmpl)');
       }
     }
     const steps = section(ht, '## Steps').filter((line) => line.startsWith('- ')); // nested lines are details
     const actives = steps.filter((line) => line.includes('`active`'));
     if (actives.length > 1) {
-      warnings.push(`pan-harness/handoff.md: ${actives.length} steps are \`active\` - one step at a time keeps `
+      warnings.push(`${hn}: ${actives.length} steps are \`active\` - one step at a time keeps `
         + 'work finishable (WIP=1); mark the others `todo` or `blocked`');
     }
     for (const line of steps) {
       if (!STEP_STATE.test(line)) {
-        warnings.push(`pan-harness/handoff.md: step without a state: '${line.trim().slice(0, 50)}' - a new `
+        warnings.push(`${hn}: step without a state: '${line.trim().slice(0, 50)}' - a new `
           + 'session cannot tell what is done; add `todo`, `active`, `blocked` or `done`');
       } else if (line.includes('`done`') && line.replace(/`done`|[^\p{L}\p{N}]|_/gu, '').length < 15) {
-        warnings.push(`pan-harness/handoff.md: '${line.trim().slice(0, 50)}' - \`done\` without evidence; `
+        warnings.push(`${hn}: '${line.trim().slice(0, 50)}' - \`done\` without evidence; `
           + 'say what showed it (P21)');
       }
     }
   } else if (st[1] === 'none') {
+    if (HF !== HANDOFF) {
+      warnings.push(`${hn}: '**Status:** none' - a finished task's file is removed at its end; move its decisions into `
+        + 'decisions.md and the rest into the history entry, then git rm it (playbooks/large-task.md)');
+    }
     const left = HANDOFF_SECTIONS.filter((sec) => hl.some((line) => starts(line, sec)));
     if (left.length) {
-      errors.push(`pan-harness/handoff.md: '**Status:** none' with ${left.join(', ')} - a finished task leaves `
+      errors.push(`${hn}: '**Status:** none' with ${left.join(', ')} - a finished task leaves `
         + 'only the heading, the two paragraphs and the status line; move the rest into the history entry');
     }
   } else {
-    warnings.push(`pan-harness/handoff.md: unknown status '${st[1]}' - the next session reads only `
+    warnings.push(`${hn}: unknown status '${st[1]}' - the next session reads only `
       + 'none or active; use one of them');
   }
+}
+
+// 17b. planning: a large task in planning keeps its rounds in its own file, linked from plan.md
+const planBody = read(path.join(H, 'plan.md'));
+for (const entry of glob(path.join(H, 'planning'), '*.md')) {
+  if (!planBody.includes(`planning/${path.basename(entry)}`)) {
+    warnings.push(`${rel(entry)}: no link from plan.md - the next session will not find this task; add it to `
+      + 'its Queue item ("planning: `pan-harness/planning/<task>.md`", playbooks/large-task.md)');
+  }
+}
+const QUEUE_ITEM_LINES = 15;
+let queueItem = null;
+const queueItems = [];
+for (const line of section(planBody, '## 1. Queue')) {
+  if (line.startsWith('- ')) queueItems.push(queueItem = [line]);
+  else if (queueItem && line.trim()) queueItem.push(line);
+}
+for (const item of queueItems) {
+  if (item.length <= QUEUE_ITEM_LINES) continue;
+  const title = (/\*\*([^*]+)\*\*/.exec(item[0]) || [null, item[0].slice(2, 42)])[1];
+  warnings.push(`pan-harness/plan.md: the Queue item '${title}' has ${item.length} lines (> ${QUEUE_ITEM_LINES}) - `
+    + 'planning answers belong in its planning file; move them to pan-harness/planning/<task>.md on the owner\'s yes '
+    + '(playbooks/large-task.md)');
 }
 
 // 18. co_change: a watched file changed, the doc that describes it did not

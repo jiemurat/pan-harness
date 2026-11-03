@@ -2,6 +2,17 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 3.11.7
+
+Parallel large tasks.
+
+- A large task still in planning keeps its question rounds and answers in its own file, `pan-harness/planning/<task>.md`, while another large task is active. The answers are committed after each round; the task's `plan.md` item holds only its line and the link. On "start" the file moves into `plan.md` and `handoff.md` and is removed; when another task is still active, the agent asks first whether to wait or run the two at once.
+- When you name a task in planning or say to go on with it, a new session reads its planning file and goes on from the next question.
+- `pan-harness-check` warns on a planning file that `plan.md` does not link and on a `plan.md` Queue item over 15 lines (planning answers kept there), and names a link to a removed planning file.
+- A second large task can run at the same time, in one of two ways you pick on "start": a worker-agent in its own folder, or a second session in the same folder. A worker's folder starts without the main folder's active tasks, and merging its work keeps the main folder's task state as it is. A second session in the same folder keeps its state in `pan-harness/handoff-<task>.md`, commits only its own files and leaves the other task's files alone; when the two tasks change the same files, they do not run in one folder.
+- With a live system, each task's plan lists the live parts it changes, and before a restart or deploy the agent asks you for the time and order when another running task touches the same parts.
+- `/ph-update` adds the new text to `playbooks/large-task.md`, `playbooks/end-of-task.md`, `AGENTS.md` and the `PAN-HARNESS.md` map.
+
 ## 3.10.7
 
 A new skill, `ph-archived-claude-sessions`, and harnesses inside a harness.

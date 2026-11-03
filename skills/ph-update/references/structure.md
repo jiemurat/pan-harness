@@ -84,6 +84,7 @@ Each concept is written with one term, with no gloss in brackets and no synonym 
     ├── state.md               current state
     ├── plan.md                all open work and dates
     ├── handoff.md             state of the active large task (if none: Status none)
+    ├── planning/              large tasks in planning
     ├── system-map.md          components, outside services, secret names, repo map
     ├── runbook.md             commands, scripts, writing harness text, topic tags
     ├── decisions.md           D… current decisions
