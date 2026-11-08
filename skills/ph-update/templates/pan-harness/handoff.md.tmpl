@@ -7,15 +7,16 @@ pan-harness template. Saved in the project as `pan-harness/handoff.md`.
 -->
 # Handoff
 
-The state of the active large task. The agent updates it with each status message, before stopping to ask the owner a question and near the end of the context; the checks run in full even when the context is running out. A new session goes on with the work from this file.
+The state of the active large task. The agent updates it with each status message, before each stop (a question, a wait for the owner's word, a report) and near the end of the context; the checks run in full even when the context is running out. When the owner's answer comes, the first file change, before any other (a Session start fix too), moves it from `Open questions` into `Decisions` here, in one edit. A new session goes on with the work from this file: it asks again only an open question.
 
-When a large task is approved, set the status line below to `active` and fill the sections: Task (task, goal, not done, budget), Criteria (K1…: what is observed, the threshold, how and when it is checked, status), Steps (each step with its outcome, completion criterion and check command when one exists; status — `todo`, `active`, `blocked` or `done`, one `active` at a time), Changed files (the files this task has changed so far), Checks, Decisions, Open questions, Next step, Work files (the planned and the temporary files). When the task ends, move the decisions into `decisions.md` and the rest into the history entry, and set the status line to `none`.
+When a large task is approved, set the status line below to `active` and fill the sections: Task (task, the request line of the planning file, goal, not done, budget), Criteria (K1…: what is observed, the threshold, how and when it is checked, status), Steps (each step with its outcome, completion criterion and check command when one exists; status — `todo`, `active`, `blocked` or `done`, one `active` at a time), Changed files (the files this task has changed so far), Checks, Decisions, Open questions, Next step, Work files (the planned and the temporary files). When the task ends, move the decisions into `decisions.md` and the rest into the history entry, and set the status line to `none`.
 
 **Status:** {{none or active}}
 
 ## Task
 
 - **Task:** {{name, start date, its item in `plan.md`}}
+- **Request:** {{"the owner's first words, as they are" (for the why; the approved goal and criteria win where they differ)}}
 - **Goal:** {{2–3 sentences}}
 - **Not done:** {{the agreed exceptions}}
 - **Budget:** {{time, tokens or the number of sub-agents, paid API cost; if it doubles, stop and ask the owner}}

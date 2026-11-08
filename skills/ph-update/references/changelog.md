@@ -4,6 +4,19 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 3.12.8
+
+A large task stopped anywhere goes on from its files after `/clear` or a new session and a bare "go on", and nothing the owner sent is asked again. A planning round is written into the planning file before it is sent and the owner's answers are the first file change when they come; the plan waits in the planning file's `## Plan` with `**Status:** awaiting approval`, and the approval is written first as `**Status:** approved`; in the work, `handoff.md` is updated before each stop and an answer goes into it first. The resume rules stand in the files a new session reads: a planning file starts with a paragraph copied from the playbook, and the `handoff.md` intro holds the answer-first rule. Where nothing waits in the chat alone (after a finished task, at a large-task stop), an agent that can see its context size offers to clear the conversation past 400 thousand tokens and each next 100 thousand; an agent that cannot gives one sentence of advice at each stage end. Session start goes on with the one open planning file on a bare "go on".
+
+1. `mechanical` — `playbooks/large-task.md` → `Planning`, the planning-file item: the `## Plan` section and the order of writing a round and its answers (`scripts/migrate.mjs`).
+2. `mechanical` — the same section, the plan item: the plan is written before it is given, the approval first (`scripts/migrate.mjs`).
+3. `mechanical` — `playbooks/large-task.md` → `Execution`: the item on updating `handoff.md` before each stop, after the item on a `done` step (`scripts/migrate.mjs`).
+4. `mechanical` — `handoff.md`: the intro names each stop, and the owner's answer is its first file change (`scripts/migrate.mjs`).
+5. `mechanical` — `AGENTS.md` → `Session start`: the planning-file sentence goes on with the one open planning file on a bare "go on"; `project/check.json` → `start_limit_bytes` grows by the added bytes (`scripts/migrate.mjs`).
+6. `mechanical` — `playbooks/end-of-task.md`: the report item ends with the context offer, and the `Context offer` section ends the playbook (`scripts/migrate.mjs`).
+7. `mechanical` — `playbooks/large-task.md` → `Parallel tasks`: the overlap example names the artifact-folder in place of `src/`, which the check read as a missing path in a project without it (`scripts/migrate.mjs`).
+8. `mechanical` — `playbooks/large-task.md` → `Planning`: the planning file keeps the owner's first words in a request line (for the why; the approved goal and criteria win), and the approval moves it into `handoff.md` → `Task`; the `handoff.md` intro names it (`scripts/migrate.mjs`).
+
 ## 3.11.8
 
 The audit and `pan-harness-check` say the same on two settings. `project/check.json` need not stand on the `PAN-HARNESS.md` map: it is the check's settings file, named in `playbooks/pan-harness.md` → `Growth limits`. An empty `co_change` gives a `NOTE`: `ph-doctor` asks the owner for the map of code and doc folders, or records the owner's no in a D. A worker-agent can work in the main folder itself (`ph-workers`, `prepare --same-folder`) when its task shares no files and no checks with the other active tasks; an overlap of files, or a check that covers the other task's files, gets the risk and three choices (own folder, wait, this folder at the owner's risk), and a commit that meets a held `index.lock` waits.

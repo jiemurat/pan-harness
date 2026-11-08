@@ -2,6 +2,14 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 3.12.8
+
+- A large task stopped anywhere goes on after `/clear` or in a new session from a bare "go on": the planning round, the owner's answers, the plan and the approval are written into the planning file first, and `handoff.md` before each stop of the work, so the owner never sends an answer twice.
+- After a finished task and at a large-task stop, an agent that sees its context size (Claude Desktop) offers to clear the conversation past 400 thousand tokens and each next 100 thousand, and the owner then writes "go on"; other agents advise it at each stage end.
+- A large task keeps the owner's first words in a request line, beside the approved goal, so a new session sees why the goal was set; the approved goal and criteria win where they differ.
+- Fixed: a project without `src/` got a check error from an example in `playbooks/large-task.md` → `Parallel tasks`.
+- `/ph-update` brings the new text into `playbooks/large-task.md`, `playbooks/end-of-task.md`, `handoff.md` and `AGENTS.md` → `Session start`.
+
 ## 3.11.8
 
 - `ph-doctor` and `pan-harness-check` now agree: `project/check.json` need not be on the `PAN-HARNESS.md` map, and an empty `co_change` in it gives a note, so `ph-doctor` asks you for the map of code and doc folders, or writes down that you want none.

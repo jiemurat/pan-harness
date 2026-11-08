@@ -48,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -543,8 +543,9 @@ function step2HarnessList() {
 let planningBytes = 0;
 const LARGE_TASK_TMPL = tmplLines('pan-harness/playbooks/large-task.md.tmpl');
 const ROUNDS_ITEM = LARGE_TASK_TMPL.find((l) => l.startsWith("- the rounds go into the task's planning file, ")) || '';
-const APPROVAL_LINE = LARGE_TASK_TMPL.find((l) => l.includes(' On the approval, move the planning file: ')) || '';
-const APPROVAL_TEXT = APPROVAL_LINE.slice(APPROVAL_LINE.indexOf(' On the approval, move the planning file: '));
+const APPROVAL_MARK = " Before you give the plan, write it into the planning file's `## Plan`";
+const APPROVAL_LINE = LARGE_TASK_TMPL.find((l) => l.includes(APPROVAL_MARK)) || '';
+const APPROVAL_TEXT = APPROVAL_LINE.slice(APPROVAL_LINE.indexOf(APPROVAL_MARK));
 const ONLY_READING = ' Before the approval, only reading is allowed.';
 const PLANNING_START = (() => {
   const l = AGENTS_TMPL.find((x) => x.includes(' A large task still in planning has its file in ')) || '';
@@ -564,7 +565,7 @@ function step1PlanningPlaybook() {
       done.push('3.11.7 step 1: playbooks/large-task.md: the rounds go into the planning file');
     }
   }
-  if (f.lines.some((l) => l.includes(' On the approval, move the planning file: '))) return;
+  if (f.lines.some((l) => l.includes('move the planning file: '))) return; // the 3.11.7 text or a newer one
   const at = f.lines.findIndex((l) => l.endsWith(ONLY_READING));
   if (at < 0) { byHand.push(`3.11.7 step 1: playbooks/large-task.md: the plan item does not end with "${ONLY_READING.trim()}"; put "${APPROVAL_TEXT.trim()}" in place of that sentence`); return; }
   f.lines[at] = f.lines[at].slice(0, -ONLY_READING.length) + APPROVAL_TEXT;
@@ -710,6 +711,157 @@ function step2IndexLock() {
   done.push('3.11.8 step 2: playbooks/large-task.md: a held index.lock is waited for, never deleted');
 }
 
+// ---------------------------------------------------------------- 3.12.8 (a stopped large task goes on after /clear)
+// the planning round, its answers, the plan and the approval are written into the planning file first; handoff.md
+// before each stop; a bare "go on" goes on with the one open planning file
+const ROUNDS_OLD = ', `## Next question`. Commit it after each answer.';
+const ROUNDS_NEW = (() => { const l = ROUNDS_ITEM; return l.slice(l.indexOf(', `## Plan` (the short plan below)')); })();
+const PLAN_OLD = ' On the approval, move the planning file: ';
+const PLAN_NEW = APPROVAL_TEXT.slice(0, APPROVAL_TEXT.indexOf('then move the planning file: ') + 'then move the planning file: '.length);
+const STOP_ITEM = LARGE_TASK_TMPL.find((l) => l.startsWith('- Before each stop (a question to the owner, ')) || '';
+const HANDOFF_A_OLD = 'before stopping to ask the owner a question and near';
+const HANDOFF_A_NEW = "before each stop (a question, a wait for the owner's word, a report) and near";
+const HANDOFF_B_OLD = 'A new session goes on with the work from this file.';
+const HANDOFF_B_NEW = (() => { const l = tmplLines('pan-harness/handoff.md.tmpl').find((x) => x.startsWith('The state of the active large task.')) || ''; return l.slice(l.indexOf("When the owner's answer comes")); })();
+const GO_ON_OLD = 'when the owner names it or says to go on with it, read that file and go on from its `Next question`.';
+const GO_ON_NEW = (() => { const l = AGENTS_TMPL.find((x) => x.includes(' A large task still in planning has its file in ')) || ''; return l.slice(l.indexOf('when the owner names it')); })();
+let resumeBytes = 0;
+
+// replaces the older text with the newer one in one line of a file; false when neither is there
+function swap(f, older, newer) {
+  if (f.lines.some((l) => l.includes(newer))) return true;
+  const at = f.lines.findIndex((l) => l.includes(older));
+  if (at < 0) return false;
+  f.lines[at] = f.lines[at].replace(older, newer);
+  f.changed = true;
+  return 'changed';
+}
+
+function step1PlanningRound() {
+  const f = file(LARGE_TASK);
+  if (!f) return;
+  const r = swap(f, ROUNDS_OLD, ROUNDS_NEW);
+  if (!r) byHand.push(`3.12.8 step 1: playbooks/large-task.md: the planning-file item does not end with "${ROUNDS_OLD.slice(2)}"; end it as the template does: "${ROUNDS_NEW.slice(2)}"`);
+  if (r === 'changed') done.push('3.12.8 step 1: playbooks/large-task.md: a planning round is written before it is sent, its answers first');
+}
+
+function step2PlanWaits() {
+  const f = file(LARGE_TASK);
+  if (!f) return;
+  const a = swap(f, PLAN_OLD, PLAN_NEW);
+  if (!a) byHand.push(`3.12.8 step 2: playbooks/large-task.md: the plan item is reworded; put "${PLAN_NEW.trim()}" in place of its sentence that moves the planning file on the approval`);
+  if (a === 'changed') done.push('3.12.8 step 2: playbooks/large-task.md: the plan waits in the planning file, the approval is written first');
+}
+
+function step3StopItem() {
+  const f = file(LARGE_TASK);
+  if (!f || f.lines.includes(STOP_ITEM)) return;
+  const own = f.lines.findIndex((l) => l.startsWith('- Before each stop (a question to the owner, '));
+  if (own >= 0) { // an earlier wording of the same item
+    f.lines[own] = STOP_ITEM;
+    f.changed = true;
+    done.push('3.12.8 step 3: playbooks/large-task.md: handoff.md is updated before each stop, an answer first');
+    return;
+  }
+  const at = f.lines.findIndex((l) => l.startsWith('- When a step in `handoff.md` is `done`'));
+  if (at < 0) { byHand.push(`3.12.8 step 3: playbooks/large-task.md: no "When a step in handoff.md is done" item in Execution; add "${STOP_ITEM}" there`); return; }
+  f.lines.splice(at + 1, 0, STOP_ITEM);
+  f.changed = true;
+  done.push('3.12.8 step 3: playbooks/large-task.md: handoff.md is updated before each stop, an answer first');
+}
+
+function step4HandoffIntro() {
+  const f = file('pan-harness/handoff.md');
+  if (!f) return;
+  const a = swap(f, HANDOFF_A_OLD, HANDOFF_A_NEW);
+  const b = swap(f, HANDOFF_B_OLD, HANDOFF_B_NEW);
+  if (!a || !b) byHand.push(`3.12.8 step 4: handoff.md: the intro is reworded; say there that the agent updates it "${HANDOFF_A_NEW.replace(' and near', '')}" and end it "${HANDOFF_B_NEW}"`);
+  if (a === 'changed' || b === 'changed') done.push('3.12.8 step 4: handoff.md: the intro names each stop and the answer');
+}
+
+function step5BareGoOn() {
+  const f = file(AGENTS);
+  if (!f) return;
+  const r = swap(f, GO_ON_OLD, GO_ON_NEW);
+  if (!r) {
+    if (f.lines.some((l) => l.includes(' A large task still in planning has its file in '))) byHand.push(`3.12.8 step 5: AGENTS.md: Session start: the planning-file sentence is reworded; end it "${GO_ON_NEW}"`);
+    return;
+  }
+  if (r !== 'changed') return;
+  resumeBytes += Buffer.byteLength(GO_ON_NEW) - Buffer.byteLength(GO_ON_OLD);
+  done.push('3.12.8 step 5: AGENTS.md: Session start goes on with the one open planning file on a bare "go on"');
+}
+
+// the context offer: the end-of-task report points to it, its section ends the playbook
+const EOT = 'pan-harness/playbooks/end-of-task.md';
+const EOT_TMPL = tmplLines('pan-harness/playbooks/end-of-task.md.tmpl');
+const REPORT_OLD = ' how it is turned off or reverted. Then stop.';
+const REPORT_NEW = ' how it is turned off or reverted. Then the context offer (`## Context offer` below), and stop.';
+const OFFER_SECTION = (() => {
+  const at = EOT_TMPL.indexOf('## Context offer');
+  return at < 0 ? [] : EOT_TMPL.slice(at).join('\n').replace(/\n+$/, '').split('\n');
+})();
+
+function step7ReportOffer() {
+  const f = file(EOT);
+  if (!f) return;
+  const r = swap(f, REPORT_OLD, REPORT_NEW);
+  if (!r) byHand.push(`3.12.8 step 7: playbooks/end-of-task.md: the report item is reworded; end it "${REPORT_NEW.trim()}"`);
+  if (r === 'changed') done.push('3.12.8 step 7: playbooks/end-of-task.md: the report ends with the context offer');
+}
+
+function step8OfferSection() {
+  const f = file(EOT);
+  if (!f || !OFFER_SECTION.length || f.lines.includes('## Context offer')) return;
+  while (f.lines.length && f.lines[f.lines.length - 1] === '') f.lines.pop();
+  f.lines.push('', ...OFFER_SECTION, '');
+  f.changed = true;
+  done.push('3.12.8 step 8: playbooks/end-of-task.md: the Context offer section');
+}
+
+// the overlap example of Parallel tasks named a folder in backticks, which the check reads as a path
+const EXAMPLE_OLD = '(for example both change `src/` and the fast check tests all of `src/`)';
+const EXAMPLE_NEW = '(for example both change the artifact-folder and the fast check tests all of it)';
+
+function step9OverlapExample() {
+  const f = file(LARGE_TASK);
+  if (!f) return;
+  if (swap(f, EXAMPLE_OLD, EXAMPLE_NEW) === 'changed') done.push('3.12.8 step 9: playbooks/large-task.md: the overlap example names no folder path');
+}
+
+// the owner's first words travel with the task: a request line in the planning file, moved into handoff.md → Task
+const REQ_FILE_OLD = 'The file has a `**Status:** planning` line and these sections:';
+const REQ_FILE_NEW = 'The file has a `**Status:** planning` line, a request line, `**Request:** "<the owner\'s first words, as they are>" (for the why; the approved goal and criteria win where they differ)`, and these sections:';
+const REQ_MOVE_OLD = 'the answers and decisions into the `Decisions` section of `handoff.md`';
+const REQ_MOVE_NEW = 'the request line into `Task` of `handoff.md`, the answers and decisions into its `Decisions` section';
+const REQ_TASK_OLD = 'Task (task, goal, not done, budget)';
+const REQ_TASK_NEW = 'Task (task, the request line of the planning file, goal, not done, budget)';
+
+function step10RequestLine() {
+  const f = file(LARGE_TASK);
+  if (f) {
+    const a = swap(f, REQ_FILE_OLD, REQ_FILE_NEW);
+    const b = swap(f, REQ_MOVE_OLD, REQ_MOVE_NEW);
+    if (!a || !b) byHand.push('3.12.8 step 10: playbooks/large-task.md: the planning items are reworded; give the planning file the request line of the Planning section of the template and move it into the Task section of handoff.md on the approval');
+    if (a === 'changed' || b === 'changed') done.push('3.12.8 step 10: playbooks/large-task.md: the planning file keeps the request line and the approval moves it');
+  }
+  const h = file('pan-harness/handoff.md');
+  if (!h) return;
+  const c = swap(h, REQ_TASK_OLD, REQ_TASK_NEW);
+  if (!c) byHand.push(`3.12.8 step 10: handoff.md: the intro's Task list is reworded; name "the request line of the planning file" in it`);
+  if (c === 'changed') done.push('3.12.8 step 10: handoff.md: Task holds the request line');
+}
+
+function step6ResumeLimit() {
+  const f = file('pan-harness/project/check.json');
+  if (!f || resumeBytes <= 0) return;
+  const at = f.lines.findIndex((l) => /"start_limit_bytes":\s*\d+/.test(l));
+  if (at < 0) return;
+  f.lines[at] = f.lines[at].replace(/("start_limit_bytes":\s*)(\d+)/, (_, k, v) => `${k}${Number(v) + resumeBytes}`);
+  f.changed = true;
+  done.push(`3.12.8 step 6: project/check.json: start_limit_bytes ${resumeBytes} bytes higher for the Session start sentence`);
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
@@ -726,6 +878,7 @@ const STEPS = {
   '3.10.7': [step1OwnHarness, step2HarnessList],
   '3.11.7': [step1PlanningPlaybook, step2PlanningStart, step3PlanningMap, step4ParallelSection, step5SeveralTasks, step6EndOfTaskLists, step7PlanningLimit],
   '3.11.8': [step1OverlapChecks, step2IndexLock],
+  '3.12.8': [step1PlanningRound, step2PlanWaits, step3StopItem, step4HandoffIntro, step5BareGoOn, step6ResumeLimit, step7ReportOffer, step8OfferSection, step9OverlapExample, step10RequestLine],
 };
 
 // ---------------------------------------------------------------- run
