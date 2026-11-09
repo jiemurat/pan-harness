@@ -4,7 +4,7 @@ description: Converts PDFs and scans into Markdown, reading scanned or garbled p
 compatibility: python3 (3.8 or newer), poppler (pdftotext, pdftohtml, pdftocairo, pdfinfo, pdfimages, pdftoppm); tesseract for scanned pages, installed when missing
 license: MIT
 metadata:
-  version: "3.12.8"
+  version: "3.12.9"
   package: "@jiemurat/pan-harness"
 ---
 

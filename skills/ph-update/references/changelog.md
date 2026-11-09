@@ -4,6 +4,12 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 3.12.9
+
+The last message before a clear stays readable.
+
+1. `mechanical` — `playbooks/end-of-task.md` → `Context offer`: the offer says what follows a yes (the conversation is cleared at once, then "go on"), and on the yes the agent writes one short line, calls the clearing tool and waits 5 seconds in the shell before the turn ends (`scripts/migrate.mjs`).
+
 ## 3.12.8
 
 A large task stopped anywhere goes on from its files after `/clear` or a new session and a bare "go on", and nothing the owner sent is asked again. A planning round is written into the planning file before it is sent and the owner's answers are the first file change when they come; the plan waits in the planning file's `## Plan` with `**Status:** awaiting approval`, and the approval is written first as `**Status:** approved`; in the work, `handoff.md` is updated before each stop and an answer goes into it first. The resume rules stand in the files a new session reads: a planning file starts with a paragraph copied from the playbook, and the `handoff.md` intro holds the answer-first rule. Where nothing waits in the chat alone (after a finished task, at a large-task stop), an agent that can see its context size offers to clear the conversation past 400 thousand tokens and each next 100 thousand; an agent that cannot gives one sentence of advice at each stage end. Session start goes on with the one open planning file on a bare "go on".

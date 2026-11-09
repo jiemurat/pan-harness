@@ -48,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -852,6 +852,21 @@ function step10RequestLine() {
   if (c === 'changed') done.push('3.12.8 step 10: handoff.md: Task holds the request line');
 }
 
+// the clear offer says what follows a yes, and the yes leaves its last line on the screen for 5 seconds
+const OFFER_OLD = 'the size, the question whether to clear the conversation, and that after it the owner writes "go on".';
+const OFFER_NEW = 'the size, the question whether to clear the conversation, and what follows a yes: the conversation is cleared at once, then the owner writes "go on" and the work goes on from the files.';
+const YES_OLD = 'On the owner\'s yes, first write the answers the same message holds (`playbooks/large-task.md`), then call the clearing tool: the conversation is cleared when the turn ends.';
+const YES_NEW = 'On the owner\'s yes, first write the answers the same message holds (`playbooks/large-task.md`); then write one short line (the conversation is cleared now, then "go on"), call the clearing tool and, as the last call of the turn, wait 5 seconds in the shell (`sleep 5`; PowerShell: `Start-Sleep -Seconds 5`): the conversation is cleared when the turn ends, and the wait leaves the line on the screen to be read.';
+
+function step1OfferPause() {
+  const f = file(EOT);
+  if (!f || !f.lines.includes('## Context offer')) return;
+  const a = swap(f, OFFER_OLD, OFFER_NEW);
+  const b = swap(f, YES_OLD, YES_NEW);
+  if (!a || !b) byHand.push('3.12.9 step 1: playbooks/end-of-task.md: the Context offer is reworded; take its first bullet from the template: the offer says what follows a yes, the yes writes one short line, calls the clearing tool and waits 5 seconds');
+  if (a === 'changed' || b === 'changed') done.push('3.12.9 step 1: playbooks/end-of-task.md: the offer says what follows a yes, the yes waits 5 seconds before the clear');
+}
+
 function step6ResumeLimit() {
   const f = file('pan-harness/project/check.json');
   if (!f || resumeBytes <= 0) return;
@@ -879,6 +894,7 @@ const STEPS = {
   '3.11.7': [step1PlanningPlaybook, step2PlanningStart, step3PlanningMap, step4ParallelSection, step5SeveralTasks, step6EndOfTaskLists, step7PlanningLimit],
   '3.11.8': [step1OverlapChecks, step2IndexLock],
   '3.12.8': [step1PlanningRound, step2PlanWaits, step3StopItem, step4HandoffIntro, step5BareGoOn, step6ResumeLimit, step7ReportOffer, step8OfferSection, step9OverlapExample, step10RequestLine],
+  '3.12.9': [step1OfferPause],
 };
 
 // ---------------------------------------------------------------- run

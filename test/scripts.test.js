@@ -704,7 +704,7 @@ test('migrate 3.11.8 -> current: a stopped large task goes on after /clear from 
   const goOn = back.find(([rel]) => rel === 'AGENTS.md');
   const grown = Buffer.byteLength(goOn[1].source.replace(/\\/g, '')) - Buffer.byteLength(goOn[2]);
   assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${30000 + grown}`), `the limit grows by ${grown} bytes`);
-  const v = VERSION.replace(/\./g, '\\.');
+  const v = '3\\.12\\.8';
   assert.match(r.stdout, new RegExp(`^done +${v} step 1: playbooks/large-task\\.md: a planning round is written before it is sent, its answers first$`, 'm'));
   assert.match(r.stdout, new RegExp(`^done +${v} step 2: playbooks/large-task\\.md: the plan waits in the planning file, the approval is written first$`, 'm'));
   assert.match(r.stdout, new RegExp(`^done +${v} step 3: playbooks/large-task\\.md: handoff\\.md is updated before each stop, an answer first$`, 'm'));
@@ -718,6 +718,33 @@ test('migrate 3.11.8 -> current: a stopped large task goes on after /clear from 
   for (const rel of [lt, ho, 'AGENTS.md', 'pan-harness/playbooks/end-of-task.md']) assert.equal(read(dir, rel), read(current(), rel), `${rel} equals the template`);
   const again = run('migrate.mjs', '--root', dir);
   assert.ok(again.stdout.includes('0 by hand'), again.stdout);
+});
+
+test('migrate 3.12.8 -> current: the offer says what follows a yes, the yes waits 5 seconds before the clear', () => {
+  const eot = 'pan-harness/playbooks/end-of-task.md';
+  const newer = [
+    [/, and what follows a yes: the conversation is cleared at once, then the owner writes "go on" and the work goes on from the files\./, ', and that after it the owner writes "go on".'],
+    [/\(`playbooks\/large-task\.md`\); then write one short line .*?, and the wait leaves the line on the screen to be read\./, '(`playbooks/large-task.md`), then call the clearing tool: the conversation is cleared when the turn ends.'],
+  ];
+  const dir = current();
+  for (const [re, older] of newer) {
+    assert.match(read(dir, eot), re, 'the template has the newer text');
+    put(dir, eot, read(dir, eot).replace(re, older));
+  }
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 3.12.8'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const v = VERSION.replace(/\./g, '\\.');
+  assert.match(r.stdout, new RegExp(`^done +${v} step 1: playbooks/end-of-task\\.md: the offer says what follows a yes, the yes waits 5 seconds before the clear$`, 'm'));
+  assert.equal(read(dir, eot), read(current(), eot), 'the playbook equals the template');
+  const again = run('migrate.mjs', '--root', dir);
+  assert.ok(again.stdout.includes('0 by hand'), again.stdout);
+  // a reworded offer is left to the agent
+  const other = current();
+  put(other, eot, read(other, eot).replace(newer[1][0], '(`playbooks/large-task.md`) and clear.'));
+  put(other, 'PAN-HARNESS.md', read(other, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 3.12.8'));
+  const h = run('migrate.mjs', '--root', other);
+  assert.match(h.stdout, new RegExp(`^by hand ${v} step 1: playbooks/end-of-task\\.md: `, 'm'));
 });
 
 test('a harness without src/ gets no path error from the Parallel tasks example', () => {

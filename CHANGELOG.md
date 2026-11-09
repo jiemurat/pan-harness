@@ -2,6 +2,11 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 3.12.9
+
+- The offer to clear a long conversation says what follows a yes, and after the yes the agent's last short line stays on the screen for 5 seconds before the conversation is cleared, so you can read it.
+- `/ph-update` brings the new text into `playbooks/end-of-task.md`.
+
 ## 3.12.8
 
 - A large task stopped anywhere goes on after `/clear` or in a new session from a bare "go on": the planning round, the owner's answers, the plan and the approval are written into the planning file first, and `handoff.md` before each stop of the work, so the owner never sends an answer twice.
