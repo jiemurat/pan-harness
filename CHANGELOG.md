@@ -2,6 +2,10 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 3.13.9
+
+- New skill `ph-humanize`: removes the signs that make a text read as machine-written, in any language: generic and inflated claims, stock connectors, formula structure, and characters an ordinary keyboard cannot type. It fixes a Markdown or text file in place (with a `.before-humanize` copy unless git can restore it) and a Word, PowerPoint or Excel file itself, keeps every fact, asks for the missing ones and reports the number of changes. It runs only when you call it.
+
 ## 3.12.9
 
 - The offer to clear a long conversation says what follows a yes, and after the yes the agent's last short line stays on the screen for 5 seconds before the conversation is cleared, so you can read it.

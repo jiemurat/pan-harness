@@ -4,6 +4,10 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 3.13.9
+
+A skill that removes the signs of machine-written text joins the pan-harness package: `ph-humanize`. The harness standard is the same. There are no migration steps.
+
 ## 3.12.9
 
 The last message before a clear stays readable.

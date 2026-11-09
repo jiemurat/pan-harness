@@ -35,3 +35,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## ph-humanize
+
+The rules of `skills/ph-humanize/` are written in this package's own words. They draw on the findings of Wikipedia's "Signs of AI writing" page and its Russian counterpart (text under CC BY-SA 4.0), on the process of https://github.com/blader/humanizer (MIT) and on the papers listed in `skills/ph-humanize/references/sources.md`. No text or list of these sources is copied.

@@ -1,7 +1,8 @@
 // The package's own texts are in English: the skill sources, the shared references, templates and
 // scripts, the CLI library, the tests and the eval scenarios. The one exception is the language
 // question ph-init asks first: its Uzbek and Russian lines (QUESTION) are taken out of a line before
-// the line is checked. A line is flagged when it holds a Cyrillic letter, an apostrophe between two
+// the line is checked; and the example file of ph-humanize (EXEMPT), whose rules need examples in
+// English, Russian and Uzbek. A line is flagged when it holds a Cyrillic letter, an apostrophe between two
 // letters that is not an English contraction (Uzbek writes o and g with one, and joins suffixes to
 // English terms with one), an Uzbek word, a word that starts with an Uzbek stem, or a word that
 // ends in an Uzbek verb or case ending. In a Python file the string prefixes (f'', r'', b'', u'',
@@ -15,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIRS = ['skills-src', 'core', 'lib', 'test', 'evals'];
+const EXEMPT = ['skills-src/ph-humanize/references/examples.md'];
 const QUESTION = ['Qaysi tilda gaplashamiz?', 'На каком языке будем общаться?', "b) O'zbek", 'c) Русский',
   "Men COOPER'man, bu loyihaning asosiy agentiman.", 'Я COOPER, главный агент этого проекта.',
   'Javobsiz inglizcha gaplashaman.', 'Без ответа буду общаться по-английски.'];
@@ -84,6 +86,7 @@ test('the package texts hold no Uzbek or Russian beyond the language question', 
   const found = [];
   for (const dir of DIRS) {
     for (const p of files(path.join(ROOT, dir))) {
+      if (EXEMPT.includes(path.relative(ROOT, p).split(path.sep).join('/'))) continue;
       fs.readFileSync(p, 'utf8').split('\n').forEach((line, i) => {
         const why = foreign(p.endsWith('.py') ? line.replace(PY_PREFIX, '') : line);
         if (why) found.push(`${path.relative(ROOT, p).split(path.sep).join('/')}:${i + 1}: ${why}: ${line.trim().slice(0, 80)}`);

@@ -32,8 +32,8 @@ const exists = (dir, rel) => fs.existsSync(path.join(dir, rel));
 const read = (dir, rel) => fs.readFileSync(path.join(dir, rel), 'utf8');
 const manifest = (dir, base = '.agents/skills') => JSON.parse(read(dir, `${base}/.pan-harness.json`));
 
-test('the package ships the fourteen ph-* skills', () => {
-  assert.deepEqual(SKILLS, ['ph-archived-claude-sessions', 'ph-create-worker', 'ph-delete-worker', 'ph-doctor', 'ph-excel-to-md', 'ph-grilling', 'ph-init', 'ph-merge-work',
+test('the package ships the fifteen ph-* skills', () => {
+  assert.deepEqual(SKILLS, ['ph-archived-claude-sessions', 'ph-create-worker', 'ph-delete-worker', 'ph-doctor', 'ph-excel-to-md', 'ph-grilling', 'ph-humanize', 'ph-init', 'ph-merge-work',
     'ph-pdf-to-md', 'ph-rename-claude-session', 'ph-update', 'ph-word-to-md', 'ph-workers', 'ph-writing-for-agents']);
 });
 

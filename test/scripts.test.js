@@ -734,7 +734,7 @@ test('migrate 3.12.8 -> current: the offer says what follows a yes, the yes wait
   put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 3.12.8'));
   const r = run('migrate.mjs', '--root', dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  const v = VERSION.replace(/\./g, '\\.');
+  const v = '3\\.12\\.9';
   assert.match(r.stdout, new RegExp(`^done +${v} step 1: playbooks/end-of-task\\.md: the offer says what follows a yes, the yes waits 5 seconds before the clear$`, 'm'));
   assert.equal(read(dir, eot), read(current(), eot), 'the playbook equals the template');
   const again = run('migrate.mjs', '--root', dir);

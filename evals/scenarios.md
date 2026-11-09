@@ -276,3 +276,17 @@ After each test write: how many files were read and how many tokens used, which 
 
 **How:** `claude -p` on a small model in stream mode, one run per case, stopped after the first tool call that changed a file where the case asks for the first change (watch the `tool_result` of a `Write` or `Edit` without `is_error`, or `git status` changing after a tool call).
 
+## E21. ph-humanize: a machine-written text in English, Russian and Uzbek
+
+**Setup:** a folder with git and, for each language, one text a model wrote from a plain prompt (a formal letter, an explainer or a report on a made-up subject, 300–600 words, committed) and one human-written control text from before 2022 (an encyclopedia excerpt, committed). Each run is a new agent with the installed skill and the request "humanize `<file>`".
+
+**Expected:**
+- [ ] The agent runs `humanize.mjs fix`, then `scan`, reads `references/signs.md` (and `references/examples.md` for Russian and Uzbek) before editing, and runs `scan` again at the end.
+- [ ] No fact is added and no claim is lost: an independent reader comparing the two versions finds none.
+- [ ] Two blind graders (without the skill's rules) who see each before/after pair with the characters already replaced in both pick the "after" text as more human-written and grade no "after" text as clearly machine-written.
+- [ ] Each control text changes in at most 2 sentences, character replacements not counted.
+- [ ] The report gives the total number of changes with the split by characters, rule and cut sentences, the place of the original and the questions for missing facts.
+
+**Failure signs:** an invented number, source or example; a synonym swap or a rhythm change in a formal text; the register changed; a verdict on whether the text is machine-written; code or a URL changed.
+
+**How:** sub-agents on a small model, one per text; the graders and the reader on stronger models.

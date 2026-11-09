@@ -55,7 +55,7 @@ test('each skill description stays within 300 bytes', () => {
 
 test('a skill description says what the skill does and when to use it, its first sentence within 160 characters', () => {
   for (const s of ['ph-init', 'ph-doctor', 'ph-update', 'ph-pdf-to-md', 'ph-word-to-md', 'ph-excel-to-md', 'ph-rename-claude-session',
-    'ph-archived-claude-sessions', 'ph-workers', 'ph-create-worker', 'ph-merge-work', 'ph-delete-worker']) {
+    'ph-archived-claude-sessions', 'ph-workers', 'ph-create-worker', 'ph-merge-work', 'ph-delete-worker', 'ph-humanize']) {
     const description = /^description: (.*)$/m.exec(fs.readFileSync(path.join(ROOT, 'skills-src', s, 'SKILL.md'), 'utf8'))[1];
     const first = description.split(/(?<=\.)\s/)[0];
     assert.ok(first.length <= 160, `${s}: ${first.length} characters`);

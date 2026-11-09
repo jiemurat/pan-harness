@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/@jiemurat/pan-harness)](https://www.npmjs.com/package/@jiemurat/pan-harness) [![ci](https://github.com/jiemurat/pan-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/jiemurat/pan-harness/actions/workflows/ci.yml)
 
-Panoramic Harness (pan-harness for short) is a set of plain-text rules and knowledge that let any AI coding agent run a project like its owner. The harness is three things in your repository: `AGENTS.md`, `PAN-HARNESS.md` and a `pan-harness/` folder. Any agent and any model can read them; nothing depends on one tool's memory or settings. This package installs fourteen [agent skills](https://agentskills.io): five build and maintain the harness, four run worker-agents in parallel, three turn documents into Markdown, two work with Claude Desktop sessions.
+Panoramic Harness (pan-harness for short) is a set of plain-text rules and knowledge that let any AI coding agent run a project like its owner. The harness is three things in your repository: `AGENTS.md`, `PAN-HARNESS.md` and a `pan-harness/` folder. Any agent and any model can read them; nothing depends on one tool's memory or settings. This package installs fifteen [agent skills](https://agentskills.io): five build and maintain the harness, four run worker-agents in parallel, three turn documents into Markdown, one removes AI signs from a text, two work with Claude Desktop sessions.
 
 | Skill | What it does |
 |---|---|
@@ -18,6 +18,7 @@ Panoramic Harness (pan-harness for short) is a set of plain-text rules and knowl
 | `ph-pdf-to-md` | Converts PDFs and scans into Markdown: a script drafts the text-layer pages with headings, lists and ruled tables for the agent to correct, scanned or garbled pages are read from the page image, and a check compares the words, numbers and table columns |
 | `ph-word-to-md` | Converts Word documents (`.docx`, `.doc`) into Markdown with list numbers as Word shows them, tables, footnotes and links, and checks every word and number |
 | `ph-excel-to-md` | Converts Excel workbooks (`.xlsx`, `.xlsm`, `.xls`, `.xlsb`) into Markdown, every cell as Excel shows it, and checks every cell, number and date |
+| `ph-humanize` | Removes the signs that make a text read as machine-written, in English, Russian, Uzbek or any other language: generic and inflated claims, stock connectors, formula structure, and characters an ordinary keyboard cannot type (long dashes, curly quotes, invisible spaces); keeps every fact, asks for the missing ones and reports the number of changes |
 | `ph-rename-claude-session` | Retitles a Claude Desktop session to its current topic, in the user's language, and gives a short summary of the session; in other agents it says it is unavailable |
 | `ph-archived-claude-sessions` | Lists the archived Claude Desktop sessions of this folder, of every folder or of a named project as a tree, each sub-session under the session that started it; installed only for Claude |
 
