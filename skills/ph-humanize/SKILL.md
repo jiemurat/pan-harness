@@ -3,7 +3,7 @@ name: ph-humanize
 description: Humanizes a text or a file: removes the stock phrases, generic claims, formula structure and odd characters that make it read machine-written. Use it whenever the user asks, in any language, to humanize or de-AI a text, even a pasted paragraph. Not for AI detection or translation.
 license: MIT
 metadata:
-  version: "3.13.9"
+  version: "3.14.9"
   package: "@jiemurat/pan-harness"
 ---
 

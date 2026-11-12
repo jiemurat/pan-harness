@@ -662,6 +662,49 @@ test('planning files: a linked one is quiet; no link, a long Queue item and a li
   assert.match(check(dir).out, /^ERROR pan-harness\/plan\.md: path `pan-harness\/planning\/gone-task\.md` does not exist - .*planning file/m);
 });
 
+test('planning rounds: an unanswered round names a question without its ➡️ line; an answered one is quiet', () => {
+  const dir = harness();
+  edit(dir, 'AGENTS.md', '1. Read this file, then `PAN-HARNESS.md`.', '1. Read this file, then `PAN-HARNESS.md`. A task in planning has its file in `pan-harness/planning/`.');
+  const round = (q2) => '# Planning: demo task\n\n**Status:** planning\n\n## Goal draft\n\n- A goal.\n\n## Rounds\n\n### Round 1\n\n'
+    + '❓ **1. Goal**: accept the goal?\n- a) yes\n- b) no\n\n➡️ a) yes — it matches the request.\n\n'
+    + `❓ **2. Limit**: how many requests a minute?\n- a) 60\n- b) 120\n${q2}\n`
+    + '**Accept as recommended?** A) a plain-text body.\n\n## Next question\n\nRound 1.\n';
+  put(dir, 'pan-harness/planning/demo-task.md', round('\n➡️ a) 60 — the page needs about 10.\n'));
+  edit(dir, 'pan-harness/plan.md', '## 1. Queue\n\n', '## 1. Queue\n\n- **Demo task** — planning: `pan-harness/planning/demo-task.md`\n\n');
+  const quiet = check(dir);
+  assert.match(quiet.out, /0 error\(s\), 0 warning\(s\)/, quiet.out);
+
+  put(dir, 'pan-harness/planning/demo-task.md', round(''));
+  assert.match(check(dir).out, /^WARN +pan-harness[\\/]planning[\\/]demo-task\.md: question 2 of the unanswered round has no ➡️ line - /m);
+
+  put(dir, 'pan-harness/planning/demo-task.md', round('').replace('## Next question', 'Answers (today): "1a 2b".\n\n## Next question'));
+  const answered = check(dir);
+  assert.match(answered.out, /0 error\(s\), 0 warning\(s\)/, answered.out);
+});
+
+test('a Queue item that points to a part\'s plan.md: quiet while the part has an open task, named when it has none', () => {
+  const dir = harness();
+  put(dir, 'backend/PAN-HARNESS.md', '# PAN-HARNESS\n\nStandard: pan-harness 3.13.9\n');
+  put(dir, 'backend/pan-harness/plan.md', '# Plan\n\n## 1. Queue\n\n- Rate limit: planning: `pan-harness/planning/rate-limit.md`\n');
+  put(dir, 'backend/pan-harness/planning/rate-limit.md', '# Planning: rate limit\n\n**Status:** planning\n');
+  put(dir, 'backend/pan-harness/handoff.md', '# Handoff\n\n**Status:** none\n');
+  const item = '- **Rate limit** (part `backend`, large task, planning): a limit on every route. Its state: `backend/pan-harness/plan.md`.\n';
+  edit(dir, 'pan-harness/plan.md', '## 1. Queue\n\n', `## 1. Queue\n\n${item}\n`);
+  const planning = check(dir);
+  assert.match(planning.out, /0 error\(s\), 0 warning\(s\)/, planning.out);
+
+  fs.rmSync(path.join(dir, 'backend', 'pan-harness', 'planning'), { recursive: true });
+  put(dir, 'backend/pan-harness/handoff.md', '# Handoff\n\n**Status:** active\n');
+  const active = check(dir);
+  assert.match(active.out, /0 error\(s\), 0 warning\(s\)/, active.out);
+
+  put(dir, 'backend/pan-harness/handoff.md', '# Handoff\n\n**Status:** none\n');
+  assert.match(check(dir).out, /^WARN +pan-harness\/plan\.md: the Queue item 'Rate limit' points to `backend\/pan-harness\/plan\.md`, but that part has no open task - /m);
+
+  fs.rmSync(path.join(dir, 'backend'), { recursive: true });
+  assert.match(check(dir).out, /^WARN +pan-harness\/plan\.md: the Queue item 'Rate limit' points to `backend\/pan-harness\/plan\.md`, but no harness is there - /m);
+});
+
 test('handoff-<task>.md: a second active task is checked like handoff.md; a finished one is named', () => {
   const dir = harness();
   put(dir, 'pan-harness/handoff-second-task.md', '# Handoff: second task\n\nThe state of a second active large task.\n\n**Status:** active\n\n## Task\n\nA task.\n');

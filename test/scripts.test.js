@@ -673,6 +673,45 @@ test('migrate 3.11.7 -> current: Parallel tasks counts the checks in an overlap 
   assert.ok(again.stdout.includes('0 by hand'), again.stdout);
 });
 
+test('migrate 3.13.9 -> current: a task left open in a part is found from the umbrella Queue, with the project\'s rule number', () => {
+  const dir = current();
+  const goOn = / A `plan\.md` item that points to a part's `plan\.md` .*? go on with its open task \(R26\)\./;
+  const write = / a task you leave open there \(a planning file or an active `handoff\*\.md`\) gets one item .*? so that a new session here finds it;/;
+  let agents = read(dir, 'AGENTS.md');
+  assert.match(agents, goOn, 'the template has the Session start sentence');
+  assert.match(agents, write, 'the template has the own-harness sentence');
+  const added = Buffer.byteLength(goOn.exec(agents)[0]) + Buffer.byteLength(write.exec(agents)[0]);
+  // the 3.13.9 text, with the own-harness rule renumbered as a project may have it
+  agents = agents.replace(goOn, '').replace(write, '').replaceAll('R26', 'R21');
+  put(dir, 'AGENTS.md', agents);
+  const lt = 'pan-harness/playbooks/large-task.md';
+  const rounds = [
+    ['A new session: send again only a round without answers, as written in `## Rounds`: the same numbers, options, option letters and `➡️` letters, translated into the chat language when it differs.', 'A new session: send again only a round without answers, as written and with its numbers.'],
+    ["Before you send a round, write it into `## Rounds` as you send it — each question with its options and its `➡️` line with the reason, in the file's language — and its first question into `## Next question`;", "Write each round's questions into `## Rounds` and the first of them into `## Next question` before you send them;"],
+  ];
+  for (const [newer, older] of rounds) {
+    assert.ok(read(dir, lt).includes(newer), `the template has: ${newer}`);
+    put(dir, lt, read(dir, lt).replace(newer, older));
+  }
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 3.13.9'));
+  put(dir, 'pan-harness/project/check.json', '{\n  "start_limit_bytes": 30000\n}\n');
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const v = '3\\.14\\.9';
+  assert.match(r.stdout, new RegExp(`^done +${v} step 1: AGENTS\\.md: Session start goes on with a task this harness left open in a part, through its Queue pointer$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 2: AGENTS\\.md: the own-harness rule writes a Queue pointer for a task left open in a part$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 3: project/check\\.json: start_limit_bytes ${added} bytes higher for the pointer sentences$`, 'm'));
+  const now = read(dir, 'AGENTS.md');
+  assert.match(now, /go on with its open task \(R21\)\./, 'the project\'s rule number');
+  assert.doesNotMatch(now, /R26/);
+  assert.match(now, write);
+  assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${30000 + added}`));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 4: playbooks/large-task\\.md: a planning round is written as sent, a resend keeps its choices$`, 'm'));
+  assert.equal(read(dir, lt), read(current(), lt), 'the playbook equals the template');
+  const again = run('migrate.mjs', '--root', dir);
+  assert.doesNotMatch(again.stdout, /3\.14\.9 step/, again.stdout);
+});
+
 test('migrate 3.11.8 -> current: a stopped large task goes on after /clear from its files, once', () => {
   const dir = current();
   const lt = 'pan-harness/playbooks/large-task.md';

@@ -48,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9', '3.13.9']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9', '3.13.9', '3.14.9']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -714,8 +714,13 @@ function step2IndexLock() {
 // ---------------------------------------------------------------- 3.12.8 (a stopped large task goes on after /clear)
 // the planning round, its answers, the plan and the approval are written into the planning file first; handoff.md
 // before each stop; a bare "go on" goes on with the one open planning file
+// 3.14.9 rewords two sentences of the same item; the 3.12.8 text keeps its own wording of them
+const ROUND_INTRO_OLD = 'A new session: send again only a round without answers, as written and with its numbers.';
+const ROUND_INTRO_NEW = 'A new session: send again only a round without answers, as written in `## Rounds`: the same numbers, options, option letters and `➡️` letters, translated into the chat language when it differs.';
+const ROUND_WRITE_OLD = 'Write each round\'s questions into `## Rounds` and the first of them into `## Next question` before you send them;';
+const ROUND_WRITE_NEW = 'Before you send a round, write it into `## Rounds` as you send it — each question with its options and its `➡️` line with the reason, in the file\'s language — and its first question into `## Next question`;';
 const ROUNDS_OLD = ', `## Next question`. Commit it after each answer.';
-const ROUNDS_NEW = (() => { const l = ROUNDS_ITEM; return l.slice(l.indexOf(', `## Plan` (the short plan below)')); })();
+const ROUNDS_NEW = (() => { const l = ROUNDS_ITEM; return l.slice(l.indexOf(', `## Plan` (the short plan below)')).replace(ROUND_INTRO_NEW, ROUND_INTRO_OLD).replace(ROUND_WRITE_NEW, ROUND_WRITE_OLD); })();
 const PLAN_OLD = ' On the approval, move the planning file: ';
 const PLAN_NEW = APPROVAL_TEXT.slice(0, APPROVAL_TEXT.indexOf('then move the planning file: ') + 'then move the planning file: '.length);
 const STOP_ITEM = LARGE_TASK_TMPL.find((l) => l.startsWith('- Before each stop (a question to the owner, ')) || '';
@@ -724,7 +729,7 @@ const HANDOFF_A_NEW = "before each stop (a question, a wait for the owner's word
 const HANDOFF_B_OLD = 'A new session goes on with the work from this file.';
 const HANDOFF_B_NEW = (() => { const l = tmplLines('pan-harness/handoff.md.tmpl').find((x) => x.startsWith('The state of the active large task.')) || ''; return l.slice(l.indexOf("When the owner's answer comes")); })();
 const GO_ON_OLD = 'when the owner names it or says to go on with it, read that file and go on from its `Next question`.';
-const GO_ON_NEW = (() => { const l = AGENTS_TMPL.find((x) => x.includes(' A large task still in planning has its file in ')) || ''; return l.slice(l.indexOf('when the owner names it')); })();
+const GO_ON_NEW = (() => { const l = AGENTS_TMPL.find((x) => x.includes(' A large task still in planning has its file in ')) || ''; const a = l.indexOf('when the owner names it'); return l.slice(a, l.indexOf('`Next question`.', a) + '`Next question`.'.length); })(); // its own sentence: a later version adds after it
 let resumeBytes = 0;
 
 // replaces the older text with the newer one in one line of a file; false when neither is there
@@ -867,6 +872,73 @@ function step1OfferPause() {
   if (a === 'changed' || b === 'changed') done.push('3.12.9 step 1: playbooks/end-of-task.md: the offer says what follows a yes, the yes waits 5 seconds before the clear');
 }
 
+// a task the umbrella session leaves open in a part's harness gets a Queue pointer here, so that "go on" after /clear finds it
+const POINTER_GO_ON_AFTER = '`Next question`.';
+const POINTER_GO_ON = (() => { const l = AGENTS_TMPL.find((x) => x.includes(' A large task still in planning has its file in ')) || ''; const a = l.indexOf(" A `plan.md` item that points to a part's `plan.md`"); return a < 0 ? '' : l.slice(a); })();
+const POINTER_WRITE_AFTER = 'write what the work found into its files and run its end of task;';
+const POINTER_WRITE = (() => { const l = AGENTS_TMPL.find((x) => x.includes(POINTER_WRITE_AFTER)) || ''; const a = l.indexOf(POINTER_WRITE_AFTER) + POINTER_WRITE_AFTER.length; const b = l.indexOf(' so that a new session here finds it;', a); return b < 0 ? '' : l.slice(a, b + ' so that a new session here finds it;'.length); })();
+let pointerBytes = 0;
+
+// the project's number of the own-harness rule, in place of the template's
+function ownHarnessRule(f) {
+  const m = f.lines.map((l) => /\*\*R(\d+)\. A folder with its own harness is worked by its harness\.\*\*/.exec(l)).find(Boolean);
+  return m ? `R${m[1]}` : null;
+}
+
+function step1PointerGoOn() {
+  const f = file(AGENTS);
+  if (!f || !POINTER_GO_ON) return;
+  const rule = ownHarnessRule(f);
+  if (!rule) return; // no own-harness rule: the project has no part to point to
+  const text = POINTER_GO_ON.replace(/\(R\d+\)/, `(${rule})`);
+  if (f.lines.some((l) => l.includes(text))) return;
+  const at = f.lines.findIndex((l) => l.includes(' A large task still in planning has its file in ') && l.includes(POINTER_GO_ON_AFTER));
+  if (at < 0) {
+    byHand.push(`3.14.9 step 1: AGENTS.md: Session start: the planning-file sentence is reworded; add after it "${text.trim()}"`);
+    return;
+  }
+  const end = f.lines[at].indexOf(POINTER_GO_ON_AFTER, f.lines[at].indexOf(' A large task still in planning has its file in ')) + POINTER_GO_ON_AFTER.length;
+  f.lines[at] = f.lines[at].slice(0, end) + text + f.lines[at].slice(end);
+  f.changed = true;
+  pointerBytes += Buffer.byteLength(text);
+  done.push('3.14.9 step 1: AGENTS.md: Session start goes on with a task this harness left open in a part, through its Queue pointer');
+}
+
+function step2PointerWrite() {
+  const f = file(AGENTS);
+  if (!f || !POINTER_WRITE || !ownHarnessRule(f)) return;
+  if (f.lines.some((l) => l.includes(POINTER_WRITE))) return;
+  const at = f.lines.findIndex((l) => l.includes(POINTER_WRITE_AFTER));
+  if (at < 0) {
+    byHand.push(`3.14.9 step 2: AGENTS.md: the own-harness rule is reworded; add after its end-of-task words "${POINTER_WRITE.trim()}"`);
+    return;
+  }
+  f.lines[at] = f.lines[at].replace(POINTER_WRITE_AFTER, POINTER_WRITE_AFTER + POINTER_WRITE);
+  f.changed = true;
+  pointerBytes += Buffer.byteLength(POINTER_WRITE);
+  done.push('3.14.9 step 2: AGENTS.md: the own-harness rule writes a Queue pointer for a task left open in a part');
+}
+
+function step3PointerLimit() {
+  const f = file('pan-harness/project/check.json');
+  if (!f || pointerBytes <= 0) return;
+  const at = f.lines.findIndex((l) => /"start_limit_bytes":\s*\d+/.test(l));
+  if (at < 0) return;
+  f.lines[at] = f.lines[at].replace(/("start_limit_bytes":\s*)(\d+)/, (_, k, v) => `${k}${Number(v) + pointerBytes}`);
+  f.changed = true;
+  done.push(`3.14.9 step 3: project/check.json: start_limit_bytes ${pointerBytes} bytes higher for the pointer sentences`);
+}
+
+// a planning round is kept as it was sent, and a resend keeps its choices
+function step4RoundAsSent() {
+  const f = file(LARGE_TASK);
+  if (!f) return;
+  const a = swap(f, ROUND_INTRO_OLD, ROUND_INTRO_NEW);
+  const b = swap(f, ROUND_WRITE_OLD, ROUND_WRITE_NEW);
+  if (!a || !b) byHand.push(`3.14.9 step 4: playbooks/large-task.md: the planning-file item is reworded; take from the template the intro sentence "${ROUND_INTRO_NEW}" and the sentence "${ROUND_WRITE_NEW}"`);
+  if (a === 'changed' || b === 'changed') done.push('3.14.9 step 4: playbooks/large-task.md: a planning round is written as sent, a resend keeps its choices');
+}
+
 function step6ResumeLimit() {
   const f = file('pan-harness/project/check.json');
   if (!f || resumeBytes <= 0) return;
@@ -895,6 +967,7 @@ const STEPS = {
   '3.11.8': [step1OverlapChecks, step2IndexLock],
   '3.12.8': [step1PlanningRound, step2PlanWaits, step3StopItem, step4HandoffIntro, step5BareGoOn, step6ResumeLimit, step7ReportOffer, step8OfferSection, step9OverlapExample, step10RequestLine],
   '3.12.9': [step1OfferPause],
+  '3.14.9': [step1PointerGoOn, step2PointerWrite, step3PointerLimit, step4RoundAsSent],
 };
 
 // ---------------------------------------------------------------- run

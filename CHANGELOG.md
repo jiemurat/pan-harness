@@ -2,6 +2,12 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 3.14.9
+
+- A task a session in the umbrella folder leaves open in a part (a folder below with its own harness, worked by the session itself) gets one pointer line in the umbrella `plan.md` → `Queue`, so after `/clear` a bare "go on" in the umbrella finds the part's task and goes on with it; Session start does not read the parts' harnesses. The line is removed when the task ends; a pointer whose part has no open task is removed at Session start, and `pan-harness-check` warns on it.
+- A planning round is written into the planning file as it is sent: each question with its options and its recommendation with the reason. A session that goes on after `/clear` sends the round again with the same numbers, options and recommendations (translated into the chat language), so an answer such as "4a" means the same choice; `pan-harness-check` warns on a question of an unanswered round that has no recommendation.
+- `/ph-update` brings the new text into `AGENTS.md` → `Session start`, the own-harness rule and `playbooks/large-task.md`.
+
 ## 3.13.9
 
 - New skill `ph-humanize`: removes the signs that make a text read as machine-written, in any language: generic and inflated claims, stock connectors, formula structure, and characters an ordinary keyboard cannot type. It fixes a Markdown or text file in place (with a `.before-humanize` copy unless git can restore it) and a Word, PowerPoint or Excel file itself, keeps every fact, asks for the missing ones and reports the number of changes. It runs only when you call it.

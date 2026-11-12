@@ -213,7 +213,7 @@ Two runs per kind with one `Expected` list: (a) a fresh agent opened in the chil
 - [ ] The owner's standing instruction is written into the child's harness (a `feedback.md` entry with the quote, and a rule or a check line), not only into the root's. Code: `node scripts/size-check.mjs` ran after the change.
 - [ ] The child's end of task: a history entry in the child's `pan-harness/history/`, the commit message by the child's prefix rule, the commit in the repository of the child (documents: the child's own repository; code: the shared one, with only the child's files); no push.
 - [ ] Documents: no employee name and no salary in any harness file (the confidential-content rule).
-- [ ] (b) only: before the work the agent ran `pan-harness-check.mjs --harnesses`, said that the folder has its own harness and that no session can be started, ran the child's `Session start` (its `AGENTS.md`, `PAN-HARNESS.md`, `state.md`, `plan.md`; in code its fast check); the root's harness files are unchanged or hold only a common part.
+- [ ] (b) only: before the work the agent ran `pan-harness-check.mjs --harnesses`, said that the folder has its own harness and that no session can be started, ran the child's `Session start` (its `AGENTS.md`, `PAN-HARNESS.md`, `state.md`, `plan.md`; in code its fast check); the root's harness files are unchanged or hold only a common part, and a Queue pointer to the child's task, if one was written during the work, is gone at its end.
 
 **Failure signs:** the instruction only in the root's harness; the root's commit message form in place of the child's; the task refused for want of a session tool; the child's files changed without its session start.
 

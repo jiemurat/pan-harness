@@ -4,6 +4,15 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 3.14.9
+
+A task that a session in the umbrella folder leaves open in a part's harness is found after `/clear` from the umbrella: the own-harness rule writes one pointer item into the umbrella `plan.md` → `Queue`, and Session start goes on with it; `pan-harness-check` warns on a pointer whose part has no open task. A planning round is written into the planning file as sent (options, the `➡️` line with the reason), and a resend keeps its numbers, options and `➡️` letters; `pan-harness-check` warns on a question of an unanswered round without `➡️`.
+
+1. `mechanical` — `AGENTS.md` → `Session start`: after the planning-file sentence, the sentence on a Queue item that points to a part's `plan.md`, with the project's own-harness rule number (`scripts/migrate.mjs`).
+2. `mechanical` — `AGENTS.md`, the own-harness rule: a task left open in a part gets a Queue pointer, removed when it ends (`scripts/migrate.mjs`).
+3. `mechanical` — `project/check.json` → `start_limit_bytes` grows by the added bytes (`scripts/migrate.mjs`).
+4. `mechanical` — `playbooks/large-task.md` → `Planning`, the planning-file item: its intro sentence on a resend and its sentence on writing a round (`scripts/migrate.mjs`).
+
 ## 3.13.9
 
 A skill that removes the signs of machine-written text joins the pan-harness package: `ph-humanize`. The harness standard is the same. There are no migration steps.

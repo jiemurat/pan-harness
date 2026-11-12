@@ -118,7 +118,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const VERSION = '3.13.9';
+const VERSION = '3.14.9';
 
 // Sizes in bytes. 25 KB fits the start set of a complex project written
 // compactly; 40 KB keeps any doc readable in one go. An agent reads a doc over
@@ -1036,6 +1036,27 @@ for (const entry of glob(path.join(H, 'planning'), '*.md')) {
       + 'its Queue item ("planning: `pan-harness/planning/<task>.md`", playbooks/large-task.md)');
   }
 }
+// a round not answered yet is kept as it was sent, so a new session sends the same choices again
+for (const entry of glob(path.join(H, 'planning'), '*.md')) {
+  const lines = section(read(entry) || '', '## Rounds');
+  const starts = lines.map((l, i) => (/^(#{1,4} *)?Round \d+/.test(l) ? i : -1)).filter((i) => i >= 0);
+  const last = lines.slice(starts.length ? starts[starts.length - 1] : 0);
+  if (last.some((l) => /^\s*(\*\*)?Answers?\b/.test(l) || /\bAnswer:/.test(l))) continue;
+  const questions = [];
+  let open = null; // a bold line such as the "Accept as recommended?" list ends the question above it
+  for (const line of last) {
+    if (/^(❓|\d+\. )/.test(line)) questions.push(open = [line]);
+    else if (/^\*\*/.test(line)) open = null;
+    else if (open) open.push(line);
+  }
+  for (const [n, q] of questions.entries()) {
+    const text = q.join('\n');
+    if (/as recommended/i.test(text) || text.includes('➡️')) continue;
+    const num = (/^(?:❓ *(?:\*\*)?)?(\d+)\./.exec(q[0]) || [null, String(n + 1)])[1];
+    warnings.push(`${rel(entry)}: question ${num} of the unanswered round has no ➡️ line - a new session cannot send it again `
+      + 'as it was sent; write each question with its options and its ➡️ line with the reason (playbooks/large-task.md)');
+  }
+}
 const QUEUE_ITEM_LINES = 15;
 let queueItem = null;
 const queueItems = [];
@@ -1049,6 +1070,23 @@ for (const item of queueItems) {
   warnings.push(`pan-harness/plan.md: the Queue item '${title}' has ${item.length} lines (> ${QUEUE_ITEM_LINES}) - `
     + 'planning answers belong in its planning file; move them to pan-harness/planning/<task>.md on the owner\'s yes '
     + '(playbooks/large-task.md)');
+}
+// a Queue item that points to a part's plan.md is a task this harness left open in that part (AGENTS.md, the own-harness rule)
+for (const item of queueItems) {
+  const pointer = /`([^`]+)\/pan-harness\/plan\.md`/.exec(item.join('\n'));
+  if (!pointer) continue;
+  const title = (/\*\*([^*]+)\*\*/.exec(item[0]) || [null, item[0].slice(2, 42)])[1];
+  const part = path.join(ROOT, pointer[1]);
+  const head = `pan-harness/plan.md: the Queue item '${title}' points to \`${pointer[0].slice(1, -1)}\`, but `;
+  if (!exists(path.join(part, 'PAN-HARNESS.md'))) {
+    warnings.push(`${head}no harness is there - fix the path or remove the item`);
+    continue;
+  }
+  const partH = path.join(part, 'pan-harness');
+  const active = glob(partH, 'handoff*.md').some((p) => /^\*\*Status:\*\* active\b/m.test(read(p) || ''));
+  if (!active && !glob(path.join(partH, 'planning'), '*.md').length) {
+    warnings.push(`${head}that part has no open task - the task ended there; remove the item (Session start)`);
+  }
 }
 
 // 18. co_change: a watched file changed, the doc that describes it did not
