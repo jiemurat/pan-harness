@@ -48,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9', '3.13.9', '3.14.9']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9', '3.13.9', '3.14.9', '3.15.9']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -939,6 +939,101 @@ function step4RoundAsSent() {
   if (a === 'changed' || b === 'changed') done.push('3.14.9 step 4: playbooks/large-task.md: a planning round is written as sent, a resend keeps its choices');
 }
 
+// the usage limit: before each bigger step of any task the 5-hour limit is read; under 10% left the work
+// is saved in handoff.md and the owner asked; sub-agents, sub-sessions and parts get it through their briefs
+const LIMIT_ITEM = AGENTS_TMPL.find((l) => l.startsWith('- **Usage limit.** ')) || '';
+const LIMIT_OWN = [[' start a new agent session in that folder with the task (', ' start a new agent session in that folder with the task and the usage-limit brief line (`playbooks/large-task.md` → `Usage limit`) ('],
+  ["this file's `Never` items still hold", "this file's `Never` items still hold, and read the 5-hour usage limit before each bigger step there too (`playbooks/large-task.md` → `Usage limit`)"]];
+const LIMIT_SECTION = (() => { const a = LARGE_TASK_TMPL.indexOf('## Usage limit'); const b = LARGE_TASK_TMPL.indexOf('## Parallel tasks'); return a < 0 || b < a ? [] : LARGE_TASK_TMPL.slice(a, b); })();
+const LIMIT_BUDGET = LIMIT_SECTION.filter((l) => /^- If (you can see the usage limit|the budget is over|you cannot see the limit)/.test(l));
+const DELEGATION_TMPL = tmplLines('pan-harness/playbooks/delegation.md.tmpl');
+const LIMIT_BRIEF = DELEGATION_TMPL.find((l) => l.startsWith('- the usage-limit line: ')) || '';
+let limitBytes = 0;
+
+function step1LimitItem() {
+  const f = file(AGENTS);
+  if (!f || !LIMIT_ITEM || f.lines.some((l) => l.startsWith('- **Usage limit.** '))) return;
+  const at = f.lines.findIndex((l) => l.startsWith('- **Delegate reading.** '));
+  if (at < 0) { byHand.push(`3.15.9 step 1: AGENTS.md: no "Delegate reading" item in Working style; add "${LIMIT_ITEM}" there`); return; }
+  f.lines.splice(at + 1, 0, LIMIT_ITEM);
+  f.changed = true;
+  limitBytes += Buffer.byteLength(LIMIT_ITEM) + 1;
+  done.push('3.15.9 step 1: AGENTS.md: Working style reads the 5-hour limit before each bigger step');
+}
+
+function step2LimitOwn() {
+  const f = file(AGENTS);
+  if (!f || !ownHarnessRule(f)) return;
+  const r = LIMIT_OWN.map(([older, newer]) => swap(f, older, newer));
+  if (r.includes(false)) { byHand.push(`3.15.9 step 2: AGENTS.md: the own-harness rule is reworded; take from the template "${LIMIT_OWN[0][1].trim()}" and "${LIMIT_OWN[1][1]}"`); }
+  LIMIT_OWN.forEach(([older, newer], i) => { if (r[i] === 'changed') limitBytes += Buffer.byteLength(newer) - Buffer.byteLength(older); });
+  if (r.includes('changed')) done.push('3.15.9 step 2: AGENTS.md: the own-harness rule carries the usage limit into a part');
+}
+
+function step3LimitSection() {
+  const f = file(LARGE_TASK);
+  if (!f || !LIMIT_SECTION.length || f.lines.includes('## Usage limit')) return;
+  const at = f.lines.findIndex((l) => l === LIMIT_BUDGET[0]);
+  if (LIMIT_BUDGET.length !== 3 || at < 0 || LIMIT_BUDGET.some((l, i) => f.lines[at + i] !== l)) {
+    byHand.push('3.15.9 step 3: playbooks/large-task.md: the three budget bullets of Execution are not in the template words; add the template\'s `## Usage limit` section before `## Parallel tasks` and keep the project\'s budget rule in it');
+    return;
+  }
+  f.lines.splice(at, 3);
+  const end = f.lines.indexOf('## Parallel tasks');
+  const at2 = end < 0 ? f.lines.length : end;
+  f.lines.splice(at2, 0, ...(f.lines[at2 - 1] === '' ? LIMIT_SECTION : ['', ...LIMIT_SECTION]));
+  f.changed = true;
+  done.push('3.15.9 step 3: playbooks/large-task.md: the Usage limit section, the budget bullets moved in');
+}
+
+function step4LimitBrief() {
+  const f = file(DELEGATION);
+  if (!f || !LIMIT_BRIEF || f.lines.includes(LIMIT_BRIEF)) return;
+  const at = f.lines.indexOf('- the checks it runs before it reports;');
+  const n = f.lines.indexOf('Done when the brief has these five parts.');
+  if (at < 0 || n < 0) { byHand.push(`3.15.9 step 4: playbooks/delegation.md: the brief list is reworded; add "${LIMIT_BRIEF}" to it`); return; }
+  f.lines.splice(at + 1, 0, LIMIT_BRIEF);
+  f.lines[n + 1] = 'Done when the brief has these six parts.';
+  f.changed = true;
+  done.push('3.15.9 step 4: playbooks/delegation.md: the brief carries the usage-limit line');
+}
+
+const START_OLD = 'run the fast check (`PAN-HARNESS.md` → `Project checks`).';
+const START_ADD = ' Before it, and before each later bigger step, read the 5-hour usage limit; at 90% used or more, stop by `playbooks/large-task.md` → `Usage limit` before any change, a small one too.';
+const CONTENTS = (() => { const a = LARGE_TASK_TMPL.indexOf('## Contents'); const b = LARGE_TASK_TMPL.indexOf('## Planning'); return a < 0 || b < a ? [] : LARGE_TASK_TMPL.slice(a, b); })();
+
+function step5LimitStart() {
+  const f = file(AGENTS);
+  if (!f || f.lines.some((l) => l.includes(START_ADD.trim()))) return;
+  const at = f.lines.findIndex((l) => /^\d+\. /.test(l) && l.includes('run the fast check'));
+  if (at < 0) return; // code=no: no fast check item in Session start
+  if (!f.lines[at].includes(START_OLD)) { byHand.push(`3.15.9 step 5: AGENTS.md: the Session start fast check item is reworded; add after its first sentence "${START_ADD.trim()}"`); return; }
+  f.lines[at] = f.lines[at].replace(START_OLD, START_OLD + START_ADD);
+  f.changed = true;
+  limitBytes += Buffer.byteLength(START_ADD);
+  done.push('3.15.9 step 5: AGENTS.md: Session start reads the 5-hour limit before the fast check');
+}
+
+function step6LimitContents() {
+  const f = file(LARGE_TASK);
+  if (!f || !CONTENTS.length || f.lines.includes('## Contents')) return;
+  const at = f.lines.indexOf('## Planning');
+  if (at < 0) { byHand.push('3.15.9 step 6: playbooks/large-task.md: no `## Planning` heading; add the template\'s `## Contents` list after the intro'); return; }
+  f.lines.splice(at, 0, ...CONTENTS);
+  f.changed = true;
+  done.push('3.15.9 step 6: playbooks/large-task.md: the Contents list (the playbook is over 10 KB)');
+}
+
+function step7LimitBytes() {
+  const f = file('pan-harness/project/check.json');
+  if (!f || limitBytes <= 0) return;
+  const at = f.lines.findIndex((l) => /"start_limit_bytes":\s*\d+/.test(l));
+  if (at < 0) return;
+  f.lines[at] = f.lines[at].replace(/("start_limit_bytes":\s*)(\d+)/, (_, k, v) => `${k}${Number(v) + limitBytes}`);
+  f.changed = true;
+  done.push(`3.15.9 step 7: project/check.json: start_limit_bytes ${limitBytes} bytes higher for the usage-limit text`);
+}
+
 function step6ResumeLimit() {
   const f = file('pan-harness/project/check.json');
   if (!f || resumeBytes <= 0) return;
@@ -968,6 +1063,7 @@ const STEPS = {
   '3.12.8': [step1PlanningRound, step2PlanWaits, step3StopItem, step4HandoffIntro, step5BareGoOn, step6ResumeLimit, step7ReportOffer, step8OfferSection, step9OverlapExample, step10RequestLine],
   '3.12.9': [step1OfferPause],
   '3.14.9': [step1PointerGoOn, step2PointerWrite, step3PointerLimit, step4RoundAsSent],
+  '3.15.9': [step1LimitItem, step2LimitOwn, step3LimitSection, step4LimitBrief, step5LimitStart, step6LimitContents, step7LimitBytes],
 };
 
 // ---------------------------------------------------------------- run

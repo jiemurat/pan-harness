@@ -213,16 +213,20 @@ test('the package is called the pan-harness package in the agent texts, and the 
 
 test('the usage limit rule is in the large-task playbook template, the structure description, the audit and the changelog', () => {
   const read = (rel) => fs.readFileSync(path.join(CORE, rel), 'utf8');
-  const execution = read('templates/pan-harness/playbooks/large-task.md.tmpl').split('## Execution\n')[1].split(/\n## /)[0];
-  for (const part of ['If you can see the usage limit, before a large task, a sub-agent run or a stage over 10% of the 5-hour window',
+  const section = read('templates/pan-harness/playbooks/large-task.md.tmpl').split('## Usage limit\n')[1].split(/\n## /)[0];
+  for (const part of ['A bigger step: each `handoff.md` step', 'over 20 tool calls', '`mcp__ccd_session_mgmt__get_usage`', 'At 90% used or more: write `pan-harness/handoff.md`',
+    'another agent can go on from it in this folder', 'whether to wait or go on', 'ask again only after the reset time', 'A sub-agent cannot talk to the owner',
+    'If you can see the usage limit, before a large task, a sub-agent run or a stage over 10% of the 5-hour window',
     'the share left and its renewal time', 'with no measurement, put the stage off when under 10% is left', 'If the budget is over, the scope stays',
     '`plan.md` → `Scheduled`', 'If you cannot see the limit, go on without asking', 'limit: not checked']) {
-    assert.ok(execution.includes(part), `Execution: ${part}`);
+    assert.ok(section.includes(part), `Usage limit: ${part}`);
   }
-  assert.match(read('references/structure.md'), /`## Execution`: .*the limit rule/);
+  assert.match(read('templates/AGENTS.md.tmpl'), /^- \*\*Usage limit\.\*\* .*\(`playbooks\/large-task\.md` → `Usage limit`\)\.$/m);
+  assert.match(read('templates/pan-harness/playbooks/delegation.md.tmpl'), /^- the usage-limit line: /m);
+  assert.match(read('references/structure.md'), /`## Usage limit`: the 5-hour limit before each bigger step/);
   const audit = read('references/audit.md');
   assert.match(audit, /^- Continuity and checks: A58–A79$/m);
-  assert.match(audit, /^\| A66 \| .*Execution.*limit.* \| Interrupted work \| manual.* \| mechanical.* \|$/m);
+  assert.match(audit, /^\| A66 \| .*Usage limit.* \| Interrupted work \| manual.* \| mechanical.* \|$/m);
   assert.match(read('references/changelog.md'), /^## 2\.4\.2$/m);
 });
 

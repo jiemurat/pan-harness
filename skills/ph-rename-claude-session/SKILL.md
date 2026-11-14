@@ -4,7 +4,7 @@ description: Retitles this Claude Desktop session to its current topic and gives
 compatibility: Claude Desktop (its session tools); in another agent the skill says so and stops
 license: MIT
 metadata:
-  version: "3.14.9"
+  version: "3.15.9"
   package: "@jiemurat/pan-harness"
 ---
 

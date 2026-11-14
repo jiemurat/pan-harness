@@ -4,6 +4,18 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 3.15.9
+
+Before each bigger step of any task, not only a large one, an agent that can see the 5-hour usage limit reads it; at 90% used or more it saves the work in `handoff.md`, tells the owner another agent can go on from it, and asks whether to wait or go on. The Session start fast check item reads the limit too. A sub-agent hands its state back to the agent that started it; a session started in another folder or as a worker-agent gets the rule in its brief, and the umbrella's agent keeps it in a part.
+
+1. `mechanical` — `AGENTS.md` → `Working style`: the "Usage limit" item after "Delegate reading" (`scripts/migrate.mjs`).
+2. `mechanical` — `AGENTS.md`, the own-harness rule: a session started in a part gets the usage-limit brief line, and the usage limit still holds when you work a part yourself (`scripts/migrate.mjs`).
+3. `mechanical` — `playbooks/large-task.md`: the `## Usage limit` section before `## Parallel tasks`; the three budget bullets of `## Execution` move into it (`scripts/migrate.mjs`).
+4. `mechanical` — `playbooks/delegation.md` → "The brief": the usage-limit line, six parts (`scripts/migrate.mjs`).
+5. `mechanical` — `AGENTS.md` → `Session start`, the fast check item: the limit is read before it and before each later bigger step (`scripts/migrate.mjs`).
+6. `mechanical` — `playbooks/large-task.md`: a `## Contents` list, the playbook being over 10 KB (`scripts/migrate.mjs`).
+7. `mechanical` — `project/check.json` → `start_limit_bytes` grows by the added bytes (`scripts/migrate.mjs`).
+
 ## 3.14.9
 
 A task that a session in the umbrella folder leaves open in a part's harness is found after `/clear` from the umbrella: the own-harness rule writes one pointer item into the umbrella `plan.md` → `Queue`, and Session start goes on with it; `pan-harness-check` warns on a pointer whose part has no open task. A planning round is written into the planning file as sent (options, the `➡️` line with the reason), and a resend keeps its numbers, options and `➡️` letters; `pan-harness-check` warns on a question of an unanswered round without `➡️`.

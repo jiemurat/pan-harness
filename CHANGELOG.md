@@ -2,6 +2,11 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 3.15.9
+
+- Before each bigger step of any task (each large-task step, a sub-agent or sub-session start, a test or build run, a step of over 20 tool calls), an agent that can see the 5-hour usage limit (Claude Desktop) reads it. At 90% used or more it saves the work in `pan-harness/handoff.md`, tells the owner another agent can go on from it, and asks whether to wait or go on; after "go on" it asks again only after the limit resets. A sub-agent stops and hands its state back; a session started in a nested harness folder, and a worker-agent, get the rule in their brief. An agent that cannot see the limit goes on as before.
+- `/ph-update` brings the rule into `AGENTS.md` → `Working style`, the own-harness rule, `playbooks/large-task.md` and `playbooks/delegation.md`.
+
 ## 3.14.9
 
 - A task a session in the umbrella folder leaves open in a part (a folder below with its own harness, worked by the session itself) gets one pointer line in the umbrella `plan.md` → `Queue`, so after `/clear` a bare "go on" in the umbrella finds the part's task and goes on with it; Session start does not read the parts' harnesses. The line is removed when the task ends; a pointer whose part has no open task is removed at Session start, and `pan-harness-check` warns on it.

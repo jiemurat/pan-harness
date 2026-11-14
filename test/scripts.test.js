@@ -110,6 +110,8 @@ test('scaffold: in a child folder of a harness whose hook the repository runs, t
 function current() {
   const dir = repo();
   assert.equal(run('scaffold.mjs', '--root', dir).status, 0);
+  // ph-init deletes the template note at the top of each file (references/init.md, "Fill each file made")
+  for (const rel of ['AGENTS.md', 'PAN-HARNESS.md', 'pan-harness/state.md', 'pan-harness/plan.md']) put(dir, rel, read(dir, rel).replace(/^<!--[\s\S]*?-->\r?\n/, ''));
   put(dir, 'pan-harness/scripts/pan-harness-check.mjs', '// an old copy\n');
   const hook = read(dir, '.githooks/pre-commit');
   put(dir, '.githooks/pre-commit', hook.replace(/^# pre-commit \(pan-harness\).*$/m, '# pre-commit (pan-harness): an old comment'));
@@ -195,22 +197,23 @@ test('migrate: a dry run writes nothing, an old or unknown standard stops, CRLF 
   assert.match(u.stdout, /unknown standard \(no Standard line\)/);
 });
 
-// the usage limit rule: three bullets at the end of the large-task playbook's Execution section
+// the usage limit rule: the large-task playbook's Usage limit section, its three budget bullets at the end
 const LIMIT_LINE = /^- (If you can see the usage limit|If the budget is over|If you cannot see the limit),/;
-const executionOf = (playbook) => playbook.split('## Execution\n')[1].split(/\n## /)[0].split('\n');
-const templateLimitLines = () => executionOf(fs.readFileSync(path.join(SKILL, 'templates', 'pan-harness', 'playbooks', 'large-task.md.tmpl'), 'utf8'))
+const limitSectionOf = (playbook) => playbook.split('## Usage limit\n')[1].split(/\n## /)[0].split('\n');
+const templateLimitLines = () => limitSectionOf(fs.readFileSync(path.join(SKILL, 'templates', 'pan-harness', 'playbooks', 'large-task.md.tmpl'), 'utf8'))
   .filter((l) => LIMIT_LINE.test(l));
 
-test('the large-task playbook template and scaffold carry the usage limit rule at the end of Execution, within 620 bytes', () => {
+test('the large-task playbook template and scaffold carry the usage limit section, its budget bullets at its end within 620 bytes', () => {
   const lines = templateLimitLines();
   assert.equal(lines.length, 3, 'three bullets');
   assert.ok(Buffer.byteLength(lines.join('\n')) <= 620, `${Buffer.byteLength(lines.join('\n'))} bytes`);
-  const bullets = executionOf(fs.readFileSync(path.join(SKILL, 'templates', 'pan-harness', 'playbooks', 'large-task.md.tmpl'), 'utf8'))
-    .filter((l) => l.startsWith('- '));
-  assert.deepEqual(bullets.slice(-3), lines, 'the last three bullets of Execution');
+  const playbook = fs.readFileSync(path.join(SKILL, 'templates', 'pan-harness', 'playbooks', 'large-task.md.tmpl'), 'utf8');
+  const bullets = limitSectionOf(playbook).filter((l) => l.startsWith('- '));
+  assert.deepEqual(bullets.slice(-3), lines, 'the last three bullets of Usage limit');
+  assert.ok(playbook.indexOf('## Execution\n') < playbook.indexOf('## Usage limit\n') && playbook.indexOf('## Usage limit\n') < playbook.indexOf('## Parallel tasks\n'), 'between Execution and Parallel tasks');
   const dir = repo();
   assert.equal(run('scaffold.mjs', '--root', dir).status, 0);
-  assert.deepEqual(executionOf(read(dir, 'pan-harness/playbooks/large-task.md')).filter((l) => LIMIT_LINE.test(l)), lines);
+  assert.deepEqual(limitSectionOf(read(dir, 'pan-harness/playbooks/large-task.md')).filter((l) => LIMIT_LINE.test(l)), lines);
 });
 
 // the project's full check: an end-of-task item before the harness check item; migrate brings it to 2.4.2 and 2.5.2 harnesses
@@ -784,6 +787,67 @@ test('migrate 3.12.8 -> current: the offer says what follows a yes, the yes wait
   put(other, 'PAN-HARNESS.md', read(other, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 3.12.8'));
   const h = run('migrate.mjs', '--root', other);
   assert.match(h.stdout, new RegExp(`^by hand ${v} step 1: playbooks/end-of-task\\.md: `, 'm'));
+});
+
+test('migrate 3.14.9 -> current: the usage-limit rule in Working style, the own-harness rule, large-task.md and delegation.md, once', () => {
+  const dir = current();
+  const lt = 'pan-harness/playbooks/large-task.md';
+  const dg = 'pan-harness/playbooks/delegation.md';
+  let agents = read(dir, 'AGENTS.md');
+  const item = agents.split('\n').find((l) => l.startsWith('- **Usage limit.** '));
+  assert.ok(item, 'the template has the Working style item');
+  // the 3.14.9 text: each pair is the newer text of the template and the older text it replaces
+  const own = [
+    [' with the task and the usage-limit brief line (`playbooks/large-task.md` → `Usage limit`)', ' with the task'],
+    ["this file's `Never` items still hold, and read the 5-hour usage limit before each bigger step there too (`playbooks/large-task.md` → `Usage limit`)", "this file's `Never` items still hold"],
+    [' Before it, and before each later bigger step, read the 5-hour usage limit; at 90% used or more, stop by `playbooks/large-task.md` → `Usage limit` before any change, a small one too.', ''],
+  ];
+  let added = Buffer.byteLength(item) + 1;
+  agents = agents.replace(`${item}\n`, '');
+  for (const [newer, older] of own) {
+    assert.ok(agents.includes(newer), `the template has: ${newer}`);
+    agents = agents.replace(newer, older);
+    added += Buffer.byteLength(newer) - Buffer.byteLength(older);
+  }
+  put(dir, 'AGENTS.md', agents.replaceAll('R26', 'R21'));
+  const contents = '## Contents\n- Planning\n- Execution\n- Usage limit\n- Parallel tasks\n\n';
+  assert.ok(read(dir, lt).includes(contents), 'the template has the Contents list');
+  put(dir, lt, read(dir, lt).replace(contents, ''));
+  const playbook = read(dir, lt);
+  const section = /\n## Usage limit\n[\s\S]*?\n(?=## Parallel tasks\n)/.exec(playbook);
+  assert.ok(section, 'the template has the Usage limit section before Parallel tasks');
+  const budget = section[0].split('\n').filter((l) => /^- If (you can see the usage limit|the budget is over|you cannot see the limit)/.test(l));
+  assert.equal(budget.length, 3, 'the section keeps the three budget bullets');
+  put(dir, lt, playbook.replace(section[0], `\n${budget.join('\n')}\n\n`).replace(/\n\n(- If you can see the usage limit)/, '\n$1'));
+  assert.match(read(dir, lt), /^- The task is done when its own checks pass.*\n- If you can see the usage limit/m, 'the 3.14.9 Execution ends with the budget bullets');
+  const delegation = read(dir, dg);
+  const brief = delegation.split('\n').find((l) => l.startsWith('- the usage-limit line: '));
+  assert.ok(brief, 'the template brief has the usage-limit line');
+  assert.ok(delegation.includes('Done when the brief has these six parts.'));
+  put(dir, dg, delegation.replace(`${brief}\n`, '').replace('these six parts', 'these five parts'));
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 3.14.9'));
+  put(dir, 'pan-harness/project/check.json', '{\n  "start_limit_bytes": 30000\n}\n');
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const v = VERSION.replace(/\./g, '\\.');
+  assert.match(r.stdout, new RegExp(`^done +${v} step 1: AGENTS\\.md: Working style reads the 5-hour limit before each bigger step$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 2: AGENTS\\.md: the own-harness rule carries the usage limit into a part$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 3: playbooks/large-task\\.md: the Usage limit section, the budget bullets moved in$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 4: playbooks/delegation\\.md: the brief carries the usage-limit line$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 5: AGENTS\\.md: Session start reads the 5-hour limit before the fast check$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 6: playbooks/large-task\\.md: the Contents list \\(the playbook is over 10 KB\\)$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 7: project/check\\.json: start_limit_bytes ${added} bytes higher for the usage-limit text$`, 'm'));
+  assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${30000 + added}`));
+  assert.equal(read(dir, 'AGENTS.md'), read(current(), 'AGENTS.md').replaceAll('R26', 'R21'), 'AGENTS.md equals the template, the project\'s rule number kept');
+  for (const rel of [lt, dg]) assert.equal(read(dir, rel), read(current(), rel), `${rel} equals the template`);
+  const again = run('migrate.mjs', '--root', dir);
+  assert.doesNotMatch(again.stdout, new RegExp(`${v} step`), again.stdout);
+  // a playbook in the project's own words is left to the agent
+  const other = current();
+  put(other, lt, read(other, lt).replace(section[0], '\n- Watch the limit.\n'));
+  put(other, 'PAN-HARNESS.md', read(other, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 3.14.9'));
+  const h = run('migrate.mjs', '--root', other);
+  assert.match(h.stdout, new RegExp(`^by hand ${v} step 3: playbooks/large-task\\.md: `, 'm'));
 });
 
 test('a harness without src/ gets no path error from the Parallel tasks example', () => {

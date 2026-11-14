@@ -4,7 +4,7 @@ description: Gives tasks to the project's worker-agents, each in its own visible
 compatibility: git and Node 18 or newer; Claude Desktop opens the sessions itself (its session tools), in another agent the owner opens them
 license: MIT
 metadata:
-  version: "3.14.9"
+  version: "3.15.9"
   package: "@jiemurat/pan-harness"
 ---
 

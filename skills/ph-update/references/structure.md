@@ -151,7 +151,7 @@ Profile: live-system=yes, code=yes, sensitive-data=secrets+pii
 2. `## Project`: the owner, the goal, the rule on talking with the owner.
 3. `## Boundaries`: the `**Never:**`, `**Ask first:**` and `**Always:**` lines, with `(R…)` links to the rules. It stands at the top of the file, because a model weighs a sentence in the middle of a long text less (P7). Every rule whose breach can do harm (an outage, lost data, a secret, an effect outside, an action that cannot be undone) is here.
 4. `## Session start`: which files are read in which order, going on from `handoff.md` when a task is active, checking the state.
-5. `## Workflow`: the task types and a pointer to `pan-harness/playbooks/large-task.md` (`## Planning`: the first question is the goal, the outcome and the criteria, the final plan has the exceptions, the budget and the stages, P21; `## Execution`: updating `handoff.md`, checking the criteria with evidence, the limit rule: comparing the budget with the limit left before a big stage).
+5. `## Workflow`: the task types and a pointer to `pan-harness/playbooks/large-task.md` (`## Planning`: the first question is the goal, the outcome and the criteria, the final plan has the exceptions, the budget and the stages, P21; `## Execution`: updating `handoff.md`, checking the criteria with evidence; `## Usage limit`: the 5-hour limit before each bigger step, a stop under 10%).
 6. `## Working style`: check every claim, before and after, test first, small steps, speak in numbers, keep the scope, honest report.
 7. `## Rules`: the domain rules pointer, then the numbered rules `R1…` with their source (`← F…`, `← L…`, `← D…`). A domain rule stands with its number at the top of its domain playbook; `AGENTS.md` keeps only the pointer line (P9).
 

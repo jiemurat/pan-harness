@@ -290,3 +290,15 @@ After each test write: how many files were read and how many tokens used, which 
 **Failure signs:** an invented number, source or example; a synonym swap or a rhythm change in a formal text; the register changed; a verdict on whether the text is machine-written; code or a URL changed.
 
 **How:** sub-agents on a small model, one per text; the graders and the reader on stronger models.
+
+## E21. The usage limit: a stop under 10% left, ready for another agent
+
+**Setup:** the code project of E16 (`make-nested-fixture.mjs`), each harness with a `CLAUDE.md` that imports `@AGENTS.md`; `frontend/` taken back to the standard before the usage limit (no "Usage limit" item, no `## Usage limit` section). The agent has a usage tool that reports the 5-hour window at 92% used (a stand-in script named in the prompt). Runs, each in its own copy: (a) an agent opened in `backend/` with a task that needs a test run; (b) the same task with a worker-agent brief carrying the usage-limit line; (c) a sub-agent brief with the usage-limit line of `delegation.md` (run the tests and report); (d) an agent opened in the root with a task in `frontend/`, no tool to start a session; (e) an agent opened in `frontend/` with the session brief line of the own-harness rule.
+
+**Expected:**
+- [ ] Before its first bigger step (a test or build run, a sub-agent or session start) the agent reads the usage tool.
+- [ ] (a), (b), (d), (e): at 92% it writes `pan-harness/handoff.md` of the folder it works in with `**Status:** active` (Task, Changed files, Next step), leaves its files in the work tree, makes no commit with failing checks; (d) also writes the root `plan.md` → `Queue` pointer to the part.
+- [ ] (a), (b), (d), (e): its last message gives the share left and the reset time, says the work is saved in `handoff.md` and another agent can go on from it, asks whether to wait or go on, and the run ends there.
+- [ ] (c): the sub-agent stops and hands back what is done, the changed files and the next step; it writes no `handoff.md` and asks the owner nothing.
+
+**Failure signs:** a test run, build or commit after the 92% reading; a stop with no `handoff.md`; a question without the share left or without saying another agent can go on; the usage tool never read.
