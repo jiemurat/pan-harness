@@ -341,3 +341,17 @@ test('a worker that had its own folder goes back to it after a task in the main 
   assert.match(out, /folder .*TARS is on the new branch tars\/doc-c/);
   assert.equal(git(path.join(workers, 'TARS'), 'branch', '--show-current').trim(), 'tars/doc-c');
 });
+
+test('record --session with --model and --effort writes "<id>, <model>, <effort>" in the Session cell', () => {
+  const { root } = project();
+  const out = ok('record', '--root', root, '--name', 'TARS', '--status', 'working', '--session', 'local_5e1f', '--model', 'claude-sonnet-5-5', '--effort', 'medium');
+  assert.match(out, /^TARS: working, session local_5e1f, claude-sonnet-5-5, medium$/m);
+  assert.match(fs.readFileSync(path.join(root, 'pan-harness', 'workers.md'), 'utf8'), /^\| TARS \| working | — | — | — | `local_5e1f, claude-sonnet-5-5, medium` |$/m);
+  assert.match(ok('status', '--root', root), /^TARS: working; session local_5e1f, claude-sonnet-5-5, medium/m);
+  // one without the other, or an effort the ladder does not have, is refused
+  assert.equal(run('record', '--root', root, '--name', 'TARS', '--session', 'local_5e1f', '--model', 'claude-sonnet-5-5').status, 2);
+  assert.equal(run('record', '--root', root, '--name', 'TARS', '--session', 'local_5e1f', '--model', 'claude-sonnet-5-5', '--effort', 'huge').status, 2);
+  assert.equal(run('record', '--root', root, '--name', 'TARS', '--model', 'claude-sonnet-5-5', '--effort', 'medium').status, 2);
+  // the owner opens the session: no model is known
+  assert.match(ok('record', '--root', root, '--name', 'TARS', '--session', 'owner'), /session owner$/m);
+});

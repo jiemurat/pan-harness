@@ -14,6 +14,12 @@ const VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf
 // the fixture's dates: today, so that no fixed date sits in this file
 const DAY = new Date().toISOString().slice(0, 10);
 const MONTH = DAY.slice(0, 7);
+// the Updated: line counts local calendar days, as the agent's `date +%F`
+const daysAgo = (n) => {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
 const FILES = {
   'AGENTS.md': `# Demo
@@ -74,6 +80,7 @@ Profile: live-system=no, code=no, sensitive-data=secrets
 None.
 
 Standard: pan-harness ${VERSION}
+Updated: ${daysAgo(0)}
 `,
   'pan-harness/state.md': `# State\n\n**Last updated:** ${DAY}\n`,
   'pan-harness/plan.md': '# Plan\n\n## 1. Queue\n\n## 2. Scheduled\n\n| Date | Task |\n|---|---|\n',
@@ -379,6 +386,32 @@ test('--harnesses lists the harnesses below the project: folder, standard, same 
   assert.doesNotMatch(check(dir, '--harnesses').out, /inner/);
 });
 
+test('--harnesses prints ph-update due from the 7th day after the later of Updated and checked, nothing on the 6th', () => {
+  const dir = harness();
+  const due = (line) => {
+    edit(dir, 'PAN-HARNESS.md', /^Updated: .*$/m.exec(fs.readFileSync(path.join(dir, 'PAN-HARNESS.md'), 'utf8'))[0], line);
+    const r = check(dir, '--harnesses');
+    assert.equal(r.code, 0, r.out);
+    return r.out.trim();
+  };
+  assert.equal(due(`Updated: ${daysAgo(6)}`), '');
+  assert.equal(due(`Updated: ${daysAgo(7)}`), `ph-update due: updated ${daysAgo(7)}, 7 days`);
+  assert.equal(due(`Updated: ${daysAgo(30)}, checked ${daysAgo(6)}`), '');
+  assert.equal(due(`Updated: ${daysAgo(30)}, checked ${daysAgo(9)}`), `ph-update due: updated ${daysAgo(30)}, checked ${daysAgo(9)}, 9 days`);
+  assert.doesNotMatch(due(`Updated: ${daysAgo(7)}`), /\t/); // the hook splits folder lines on tabs
+});
+
+test('a harness with no Updated: line, or one with a bad date, warns that the weekly ph-update check cannot run', () => {
+  const dir = harness();
+  edit(dir, 'PAN-HARNESS.md', `Updated: ${daysAgo(0)}\n`, '');
+  let r = check(dir);
+  assert.match(r.out, /^WARN  PAN-HARNESS\.md: no 'Updated: <date>' line/m, r.out);
+  assert.equal(check(dir, '--harnesses').out.trim(), '');
+  put(dir, 'PAN-HARNESS.md', `${fs.readFileSync(path.join(dir, 'PAN-HARNESS.md'), 'utf8')}Updated: last week\n`);
+  r = check(dir);
+  assert.match(r.out, /^WARN  PAN-HARNESS\.md: no 'Updated: <date>' line/m, r.out);
+});
+
 test('a clean root harness with child harnesses below it: no error, no warning', () => {
   const r = check(nested());
   assert.equal(r.code, 0, r.out);
@@ -556,7 +589,7 @@ test('markers with scope "changed": only the lines changed since the last commit
 function activeHandoff() {
   return fs.readFileSync(path.join(CORE, 'templates', 'pan-harness', 'handoff.md.tmpl'), 'utf8')
     .replace(/^<!--[\s\S]*?-->\n/, '').replace('{{none, active or waiting-owner}}', 'active')
-    .replace(/^\*\*(Work ID|Opened by):\*\* .*\n/gm, '') // a task that opened no sub-session removes the two lines
+    .replace(/^\*\*(Work ID|Opened by|Session):\*\* .*\n/gm, '') // a task that opened no sub-session removes the three lines
     .replace(/\{\{[^}]*\}\}/g, '`todo` the item of this section, with its evidence');
 }
 const handoffErrors = (out) => out.split('\n').filter((l) => l.startsWith('ERROR pan-harness/handoff.md'));
@@ -807,6 +840,24 @@ test('--tree prints the open state files as a tree and one Action line; several 
   put(plain, 'pan-harness/handoff.md', activeHandoff());
   assert.match(check(plain, '--tree').out, /^\(no Work ID\)  active  handoff\.md  \(owner\)\nAction: go on with handoff\.md\.$/m);
   assert.equal(check(harness(), '--tree').out.trim(), 'Action: no open task.');
+});
+
+test('--tree prints the Session line of a child and reopens it on that model and effort', () => {
+  const dir = harness();
+  const root = '20261114-140614-rate-limit-231e';
+  const api = '20261114-141502-api-tests-9c0a';
+  const session = (t, s) => t.replace(/^(\*\*Opened by:\*\*.*)$/m, `$1\n**Session:** ${s}`);
+  put(dir, 'pan-harness/handoff-rate-limit.md', treeHandoff(root, 'owner', 'Wait for the children.'));
+  put(dir, 'pan-harness/handoff-api-tests.md', session(treeHandoff(api, root, 'Run the API tests.'), 'local_5e1f, claude-sonnet-5-5, medium'));
+  put(dir, 'pan-harness/handoff-docs.md', treeHandoff('20261114-142233-docs-44d2', root, 'The README section.'));
+  const r = check(dir, '--tree');
+  assert.equal(r.code, 0, r.out);
+  assert.deepEqual(r.out.trimEnd().split('\n'), [
+    `${root}  active  handoff-rate-limit.md  (owner)`,
+    `├─ ${api}  active  handoff-api-tests.md  session: local_5e1f, claude-sonnet-5-5, medium  next: Run the API tests.`,
+    '└─ 20261114-142233-docs-44d2  active  handoff-docs.md  next: The README section.',
+    'Action: go on with handoff-rate-limit.md; open sessions again for: handoff-api-tests.md on claude-sonnet-5-5, medium; handoff-docs.md.',
+  ]);
 });
 
 test('a broken sub-session tree: an opener without a Work ID, one Work ID twice, a parent that ended before its child', () => {

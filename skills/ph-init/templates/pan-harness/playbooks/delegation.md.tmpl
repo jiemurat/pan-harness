@@ -1,5 +1,5 @@
 <!--
-pan-harness template. Saved in the project as `pan-harness/playbooks/delegation.md`. The model names are Claude Code's; for another agent, write its own tiers or keep "cheapest", "middle" and "your model". Remove this note.
+pan-harness template. Saved in the project as `pan-harness/playbooks/delegation.md`. Remove this note.
 -->
 # Playbook: delegation
 
@@ -20,24 +20,51 @@ Do it yourself: a dependent chain of steps, edits that touch each other, a quick
 
 ## Model and effort
 
+On Claude only. Another agent starts its sub-agents on its own model and effort.
+
+**The ladder** has 20 steps, top to bottom: Fable 5.2, Opus 5.5, Sonnet 5.5, Haiku 5.5, and inside each model the effort `max`, `xhigh`, `high`, `medium`, `low`. Any effort of a model stands above any effort of the next model: Opus `low` is above Sonnet `max`. Your step is your own model and effort.
+
+**The moves** from your step:
+- down or the same step: allowed;
+- one step up: only for the row of the work table marked "one step up", and never in these seven: Fable `xhigh` → `max`, Fable `high` → `xhigh`, Fable `medium` → `high`, Opus `xhigh` → `max`, Opus `high` → `xhigh`, Sonnet `xhigh` → `max`, Sonnet `high` → `xhigh`;
+- two or more steps up: never.
+
+**The work table:**
+
 | Work | Model | Effort |
 |---|---|---|
-| Search, read, summarize | the cheapest (`haiku`) | `low` |
-| Mechanical edits by an exact list, test and build runs | the middle (`sonnet`) | `low` or `medium` |
-| A fresh review of finished work | your model | yours |
-| Judgment, the plan, the edits, the final answer | you, not a sub-agent | — |
+| Read-only search, reading many files, a summary with evidence | Haiku 5.5 | `medium` |
+| A trivial count or list | Haiku 5.5 | `low` |
+| A test, build or log run that returns the failures | Haiku 5.5 | `medium` |
+| Mechanical edits by an exact list | Sonnet 5.5 | `medium` |
+| Scoped writing with clear criteria | Sonnet 5.5 | `high` |
+| A fresh review of finished work | yours | yours |
+| A plan, architecture or a bug with an unclear cause | Opus 5.5 | `high`, one step up |
+
+**Pick** before each start:
+1. Is the level clear? It is when the work fits one row of the table, its input and output files are known, and the brief says how the result is checked. A work that fits two rows has no clear level. When it is not clear, take your own model and effort and go to item 3.
+2. Take the row's model and effort. When the moves do not allow it from your step, take your own. Never pick `xhigh` or `max` yourself; keeping your own step is not a pick.
+3. Pass both to the tool that starts the work, the effort too: a cheaper model without its own effort runs at that model's default. A sub-agent takes `model` as `haiku`, `sonnet`, `opus` or `fable` and `effort`; a session takes the full model ID (`claude-haiku-5-5`, `claude-sonnet-5-5`, `claude-opus-5-5`, `claude-fable-5-2`) and `effort`.
+4. Write the model, the effort and why into the brief.
+
+**A session above your step.** The app starts a session no higher than its opener: a higher model or effort drops to yours silently, each on its own. Start such a session at your own step, then raise it with `set_session_model` and `set_session_effort` (it takes effect from its next turn), and check with `get_session` that it shows the chosen model and effort. The app may ask the owner first: wait for the answer.
+
+**A cheap failure.** When a sub-agent on a lower step fails its check or returns no evidence, run the work once more on your own model and effort; do not raise it step by step.
+
+The decisions, the edits that touch each other and the final answer stay with you (`When`).
 
 ## The brief
 
 A sub-agent sees neither `AGENTS.md` nor this conversation. Its brief gives:
 - the objective, and the question it answers;
+- the model and effort it runs on, and why (`Model and effort`);
 - the folder, and that it only reads (or the exact files it may edit);
 - the rules of `AGENTS.md` its work needs;
 - the checks it runs before it reports;
 - the usage-limit line: "Before each bigger step read the 5-hour limit; at 90% used or more, stop and hand back what is done, the changed files and the next step." (`playbooks/large-task.md` → `Usage limit`);
 - what it returns: about 2 000 tokens at most, each claim with its evidence (a path and line number, a command and its output).
 
-Done when the brief has these six parts.
+Done when the brief has these seven parts.
 
 ## The result
 

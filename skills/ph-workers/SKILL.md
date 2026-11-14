@@ -4,7 +4,7 @@ description: Gives tasks to the project's worker-agents, each in its own visible
 compatibility: git and Node 18 or newer; Claude Desktop opens the sessions itself (its session tools), in another agent the owner opens them
 license: MIT
 metadata:
-  version: "3.16.9"
+  version: "3.17.9"
   package: "@jiemurat/pan-harness"
 ---
 
@@ -26,10 +26,10 @@ The list is `pan-harness/workers.md`; `node <skill>/workers/workers.mjs` keeps i
 6. **The folder.** Choose a short task slug (`a-z`, `0-9`, `-`) and run `prepare --root . --name <NAME> --task <slug>`. Done when it prints `BRIEF`. On exit 3 the disk cannot copy-on-write: show the owner the size it printed and, on a yes, run it again with `--copy`. On exit 1 act on the message: a cloud-synced place needs `--dir` outside it; an unmerged branch goes through `ph-merge-work` first.
 7. **The brief.** Take the printed text from `BRIEF` on and write after `Task:` the owner's task in the owner's words, unchanged, the place of the result when the owner named one (else the worker places it by `AGENTS.md`), its done condition (a large task: "Large task" in its place), and what the final message gives: the commits, the changed files, the check results, anything unlike the main folder. A done condition you wrote yourself ends with "(proposed)" and goes into your report to the owner, so the owner can correct it. Then write the whole brief into the brief file its "Context refresh" line names: the worker reads it back after a refresh. Done when the brief file holds the brief.
 8. **The session.** The worker's row has no session (`—`):
-   - Claude Desktop: load `mcp__ccd_session__start_session` (ToolSearch `select:mcp__ccd_session__start_session`) and call it with `initiation: "user_asked"`, `context: "fresh"`, `cwd` = the worker folder, `use_worktree: false`, `name` = the worker's name in lower case, `title` = `<NAME>: <task>`, `prompt` = the brief, `background` = the project, the main-agent and the merge on the owner's word (80 characters or more; it names no approval: the owner gives it in the worker's session), `wake_when_done: true`. Then run `record --root . --name <NAME> --session <the session id>`.
+   - Claude Desktop: pick the worker's model and effort by the `## Model and effort` section of the project's `playbooks/delegation.md` and add a line with them and why to the brief file. Load `mcp__ccd_session__start_session` (ToolSearch `select:mcp__ccd_session__start_session`) and call it with `initiation: "user_asked"`, `model` = the full model ID, `effort`, `context: "fresh"`, `cwd` = the worker folder, `use_worktree: false`, `name` = the worker's name in lower case, `title` = `<NAME>: <task>`, `prompt` = the brief, `background` = the project, the main-agent and the merge on the owner's word (80 characters or more; it names no approval: the owner gives it in the worker's session), `wake_when_done: true`; a step above yours starts at yours and is raised as that section says. Check with `get_session`, then run `record --root . --name <NAME> --session <the session id> --model <model> --effort <effort>` with the model and effort it shows.
    - Without that tool: give the owner the folder, the command to open their agent in it (for example `cd "<folder>" && claude`) and the brief to paste as the first message; run `record --root . --name <NAME> --session owner` (`owner`: the owner opens the session).
 
-   The worker's row has a session: send the brief to that session (`SendMessage` with `to` = the session id); it keeps its memory of earlier tasks. Done when the session has the brief.
+   The worker's row has a session: send the brief to that session (`SendMessage` with `to` = the session id, the first field of its `Session` cell); it keeps its memory of earlier tasks. Done when the session has the brief.
 9. **Commit the list** (`pan-harness/workers.md`), then tell the owner in one or two lines: the worker, the task, the folder, a link to the session. End the turn: Claude Desktop wakes you when the worker ends its turn; with `owner` sessions the owner tells you. Then go on with `## The worker is done`.
 
 ## The worker is done

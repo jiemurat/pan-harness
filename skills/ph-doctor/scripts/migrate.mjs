@@ -48,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9', '3.13.9', '3.14.9', '3.15.9', '3.16.9']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9', '3.13.9', '3.14.9', '3.15.9', '3.16.9', '3.17.9']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -1004,7 +1004,7 @@ const CONTENTS = (() => { const a = LARGE_TASK_TMPL.indexOf('## Contents'); cons
 
 function step5LimitStart() {
   const f = file(AGENTS);
-  if (!f || f.lines.some((l) => l.includes(START_ADD.trim()))) return;
+  if (!f || f.lines.some((l) => l.includes(START_ADD.trim()) || l.includes(START_LINK.trim()))) return;
   const at = f.lines.findIndex((l) => /^\d+\. /.test(l) && l.includes('run the fast check'));
   if (at < 0) return; // code=no: no fast check item in Session start
   if (!f.lines[at].includes(START_OLD)) { byHand.push(`3.15.9 step 5: AGENTS.md: the Session start fast check item is reworded; add after its first sentence "${START_ADD.trim()}"`); return; }
@@ -1283,6 +1283,232 @@ function step6ResumeLimit() {
   done.push(`3.12.8 step 6: project/check.json: start_limit_bytes ${resumeBytes} bytes higher for the Session start sentence`);
 }
 
+// ---------------------------------------------------------------- 3.17.9 (the weekly ph-update check)
+// PAN-HARNESS.md keeps the date of the last ph-update under Standard:, Session start acts on the
+// `ph-update due` line of --harnesses, and the start set limit grows by the bytes both add
+let updateBytes = 0;
+const DUE_MARK = ' When it prints `ph-update due` (main-agent only), ';
+const DUE_TEXT = (() => {
+  const l = AGENTS_TMPL.find((x) => x.includes(DUE_MARK)) || '';
+  const from = l.indexOf(DUE_MARK);
+  return from < 0 ? '' : l.slice(from);
+})();
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+function step1UpdatedLine() {
+  const f = file('PAN-HARNESS.md');
+  if (f.lines.some((l) => /^Updated: /.test(l))) return;
+  const line = `Updated: ${today()}`;
+  f.lines.splice(f.lines.findIndex((l) => /^Standard: pan-harness /.test(l)) + 1, 0, line);
+  f.changed = true;
+  updateBytes += Buffer.byteLength(line) + Buffer.byteLength(f.eol);
+  done.push(`3.17.9 step 1: PAN-HARNESS.md: ${line} under Standard:`);
+}
+
+function step2DueSentence() {
+  const f = file(AGENTS);
+  if (!f || f.lines.some((l) => l.includes('`ph-update due`'))) return;
+  const at = f.lines.findIndex((l) => /^\d+\. List the folders below this one with their own harness: /.test(l) && l.includes('--harnesses` (no output: none).'));
+  if (at < 0 || !DUE_TEXT) {
+    byHand.push(`3.17.9 step 2: AGENTS.md: Session start has no item that runs --harnesses with "(no output: none)."; add to it "${DUE_TEXT.trim()}"`);
+    return;
+  }
+  f.lines[at] = f.lines[at] + DUE_TEXT;
+  f.changed = true;
+  updateBytes += Buffer.byteLength(DUE_TEXT);
+  done.push('3.17.9 step 2: AGENTS.md: Session start acts on the ph-update due line');
+}
+
+function step3UpdateBytes() {
+  const f = file('pan-harness/project/check.json');
+  if (!f || updateBytes <= 0) return;
+  const at = f.lines.findIndex((l) => /"start_limit_bytes":\s*\d+/.test(l));
+  if (at < 0) return;
+  f.lines[at] = f.lines[at].replace(/("start_limit_bytes":\s*)(\d+)/, (_, k, v) => `${k}${Number(v) + updateBytes}`);
+  f.changed = true;
+  done.push(`3.17.9 step 3: project/check.json: start_limit_bytes ${updateBytes} bytes higher for the ph-update check`);
+}
+
+// the sub-session depth: at most 2 levels below the owner's session (was 4)
+const DEPTH_OLD = "- At most 4 levels below the owner's session: a child at `Level: 4` opens no sub-session and works on itself.";
+const DEPTH_NEW = LARGE_TASK_TMPL.find((l) => l.includes("levels below the owner's session")) || '';
+
+function step4DepthTwo() {
+  const f = file('pan-harness/playbooks/large-task.md');
+  if (!f || !DEPTH_NEW || f.lines.includes(DEPTH_NEW)) return;
+  const at = f.lines.indexOf(DEPTH_OLD);
+  if (at < 0) {
+    if (f.lines.some((l) => l.includes("levels below the owner's session"))) {
+      byHand.push(`3.17.9 step 4: playbooks/large-task.md: the New session depth line is reworded; write in its place "${DEPTH_NEW}"`);
+    }
+    return;
+  }
+  f.lines[at] = DEPTH_NEW;
+  f.changed = true;
+  done.push('3.17.9 step 4: playbooks/large-task.md: New session depth at most 2 levels');
+}
+
+// a session the owner asks for gets a brief file with Level and When done
+const OWNER_SESSION = LARGE_TASK_TMPL.find((l) => l.startsWith('- A session the owner asks for ')) || '';
+
+function step5OwnerSession() {
+  const f = file('pan-harness/playbooks/large-task.md');
+  if (!f || !OWNER_SESSION || f.lines.some((l) => l.startsWith('- A session the owner asks for '))) return;
+  if (!f.lines.some((l) => l === '## New session')) return;
+  const at = f.lines.findIndex((l) => l.startsWith("- Make the child's Work ID:"));
+  if (at < 0) {
+    byHand.push(`3.17.9 step 5: playbooks/large-task.md: New session has no "Make the child's Work ID" bullet; add after it "${OWNER_SESSION}"`);
+    return;
+  }
+  f.lines.splice(at + 1, 0, OWNER_SESSION);
+  f.changed = true;
+  done.push('3.17.9 step 5: playbooks/large-task.md: New session briefs a session the owner asks for');
+}
+
+// the usage limit item names the bigger steps; Session start points to it in place of its own sentence
+let limitListBytes = 0;
+const LIMIT_ITEM_OLD = '- **Usage limit.** Before each bigger step, an agent that can see the 5-hour usage limit reads it; with under 10% left, it leaves the work ready for another agent, stops, tells the owner another agent can go on from it and asks whether to wait or go on (`playbooks/large-task.md` → `Usage limit`).';
+const START_LINK = ' Before it, read the usage limit (`Working style` → "Usage limit").';
+
+function step6LimitList() {
+  const f = file(AGENTS);
+  if (!f || !LIMIT_ITEM || f.lines.includes(LIMIT_ITEM)) return;
+  const at = f.lines.indexOf(LIMIT_ITEM_OLD);
+  if (at < 0) {
+    if (f.lines.some((l) => l.startsWith('- **Usage limit.** '))) byHand.push(`3.17.9 step 6: AGENTS.md: the Usage limit item is reworded; write in its place "${LIMIT_ITEM}"`);
+    return;
+  }
+  f.lines[at] = LIMIT_ITEM;
+  f.changed = true;
+  limitListBytes += Buffer.byteLength(LIMIT_ITEM) - Buffer.byteLength(LIMIT_ITEM_OLD);
+  done.push('3.17.9 step 6: AGENTS.md: Usage limit names the bigger steps');
+}
+
+function step7StartLink() {
+  const f = file(AGENTS);
+  if (!f || f.lines.some((l) => l.includes(START_LINK.trim()))) return;
+  const at = f.lines.findIndex((l) => /^\d+\. /.test(l) && l.includes('run the fast check'));
+  if (at < 0) return; // code=no: no fast check item in Session start
+  if (!f.lines[at].includes(START_ADD)) { byHand.push(`3.17.9 step 7: AGENTS.md: the Session start fast check item is reworded; let its usage-limit sentence say "${START_LINK.trim()}"`); return; }
+  f.lines[at] = f.lines[at].replace(START_ADD, START_LINK);
+  f.changed = true;
+  limitListBytes += Buffer.byteLength(START_LINK) - Buffer.byteLength(START_ADD);
+  done.push('3.17.9 step 7: AGENTS.md: Session start points to the Usage limit item');
+}
+
+function step8LimitListBytes() {
+  const f = file('pan-harness/project/check.json');
+  if (!f || limitListBytes === 0) return;
+  const at = f.lines.findIndex((l) => /"start_limit_bytes":\s*\d+/.test(l));
+  if (at < 0) return;
+  f.lines[at] = f.lines[at].replace(/("start_limit_bytes":\s*)(\d+)/, (_, k, v) => `${k}${Number(v) + limitListBytes}`);
+  f.changed = true;
+  const by = limitListBytes > 0 ? `${limitListBytes} bytes higher` : `${-limitListBytes} bytes lower`;
+  done.push(`3.17.9 step 8: project/check.json: start_limit_bytes ${by} for the Usage limit item`);
+}
+
+// the model and effort rule: delegation.md picks by the ladder, the moves and the work table; the brief names them
+const MODEL_OLD = ['| Work | Model | Effort |', '|---|---|---|',
+  '| Search, read, summarize | the cheapest (`haiku`) | `low` |',
+  '| Mechanical edits by an exact list, test and build runs | the middle (`sonnet`) | `low` or `medium` |',
+  '| A fresh review of finished work | your model | yours |',
+  '| Judgment, the plan, the edits, the final answer | you, not a sub-agent | — |'];
+const MODEL_SECTION = (() => { const a = DELEGATION_TMPL.indexOf('## Model and effort'); const b = DELEGATION_TMPL.findIndex((l, i) => i > a && l.startsWith('## ')); return a < 0 || b < a ? [] : DELEGATION_TMPL.slice(a + 1, b - 1); })();
+const MODEL_BRIEF = DELEGATION_TMPL.find((l) => l.startsWith('- the model and effort it runs on, ')) || '';
+const MODEL_AGENTS = [' to a sub-agent on a cheaper model;', ' to a sub-agent on the model and effort of `pan-harness/playbooks/delegation.md` → `Model and effort`;'];
+let modelBytes = 0;
+
+function step9ModelSection() {
+  const f = file(DELEGATION);
+  if (!f || !MODEL_SECTION.length || f.lines.some((l) => l.startsWith('**The ladder** '))) return;
+  const at = f.lines.indexOf('## Model and effort');
+  const old = at < 0 ? -1 : f.lines.indexOf(MODEL_OLD[0], at);
+  if (old < 0 || MODEL_OLD.some((l, i) => f.lines[old + i] !== l)) {
+    byHand.push('3.17.9 step 9: playbooks/delegation.md: the Model and effort table is not in the template words; put the template\'s `## Model and effort` section in its place and keep the project\'s own rows as a note to the owner');
+    return;
+  }
+  f.lines.splice(at + 1, old + MODEL_OLD.length - at - 1, ...MODEL_SECTION);
+  f.changed = true;
+  done.push('3.17.9 step 9: playbooks/delegation.md: Model and effort picks by the ladder, the moves and the work table');
+}
+
+function step10ModelBrief() {
+  const f = file(DELEGATION);
+  if (!f || !MODEL_BRIEF || f.lines.includes(MODEL_BRIEF)) return;
+  const at = f.lines.indexOf('- the objective, and the question it answers;');
+  const n = f.lines.indexOf('Done when the brief has these six parts.');
+  if (at < 0 || n < 0) { byHand.push(`3.17.9 step 10: playbooks/delegation.md: the brief list is reworded; add "${MODEL_BRIEF}" to it`); return; }
+  f.lines.splice(at + 1, 0, MODEL_BRIEF);
+  f.lines[n + 1] = 'Done when the brief has these seven parts.';
+  f.changed = true;
+  done.push('3.17.9 step 10: playbooks/delegation.md: the brief names the model and effort');
+}
+
+function step11ModelAgents() {
+  const f = file(AGENTS);
+  if (!f || !f.lines.some((l) => l.startsWith('- **Delegate reading.** '))) return;
+  const r = swap(f, ...MODEL_AGENTS);
+  if (!r) { byHand.push(`3.17.9 step 11: AGENTS.md: the Delegate reading item is reworded; let it hand the work "${MODEL_AGENTS[1].trim()}"`); return; }
+  if (r === 'changed') {
+    modelBytes += Buffer.byteLength(MODEL_AGENTS[1]) - Buffer.byteLength(MODEL_AGENTS[0]);
+    done.push('3.17.9 step 11: AGENTS.md: Delegate reading points to Model and effort');
+  }
+}
+
+function step12ModelBytes() {
+  const f = file('pan-harness/project/check.json');
+  if (!f || modelBytes === 0) return;
+  const at = f.lines.findIndex((l) => /"start_limit_bytes":\s*\d+/.test(l));
+  if (at < 0) return;
+  f.lines[at] = f.lines[at].replace(/("start_limit_bytes":\s*)(\d+)/, (_, k, v) => `${k}${Number(v) + modelBytes}`);
+  f.changed = true;
+  done.push(`3.17.9 step 12: project/check.json: start_limit_bytes ${modelBytes} bytes higher for the Delegate reading item`);
+}
+
+// a sub-session opens on the model and effort of delegation.md; its state file keeps them beside its session id
+const SESSION_OPEN_OLD = '- Commit the two files, open the sub-session with the brief\'s text, and tell the owner one line: the signal, the session\'s link, "the work goes on there".';
+const SESSION_OPEN = LARGE_TASK_TMPL.filter((l) => l.startsWith('- Pick the child\'s model and effort ') || l.startsWith('- Commit the two files and open the sub-session with the brief\'s text, the model and the effort;'));
+const SESSION_TREE = [' each from its own brief and state file; each does the same for its children.', ' each from its own brief and state file and on the model and effort of its `**Session:**` line; each does the same for its children.'];
+
+function step13SessionOpen() {
+  const f = file(LARGE_TASK);
+  if (!f || SESSION_OPEN.length !== 2 || f.lines.includes(SESSION_OPEN[1])) return;
+  const at = f.lines.indexOf(SESSION_OPEN_OLD);
+  if (at < 0) { byHand.push(`3.17.9 step 13: playbooks/large-task.md: the New session "Commit the two files" bullet is reworded; put in its place "${SESSION_OPEN.join('" and "')}"`); return; }
+  f.lines.splice(at, 1, ...SESSION_OPEN);
+  f.changed = true;
+  done.push('3.17.9 step 13: playbooks/large-task.md: a sub-session opens on the model and effort of delegation.md, its Session line written');
+}
+
+function step14SessionTree() {
+  const f = file(LARGE_TASK);
+  if (!f || !f.lines.some((l) => l.startsWith('**A stopped tree.** '))) return;
+  const r = swap(f, ...SESSION_TREE);
+  if (!r) byHand.push(`3.17.9 step 14: playbooks/large-task.md: A stopped tree is reworded; let it open each child "${SESSION_TREE[1].split(';')[0].trim()}"`);
+  if (r === 'changed') done.push('3.17.9 step 14: playbooks/large-task.md: a stopped tree reopens each child on its Session line');
+}
+
+// only the owner's session deletes sub-sessions, once, at the very end; a sub-session only archives
+const ON_DONE_OLD_END = "At the task's end, delete all the task's archived children in one approval card (`delete_session` with their ids from the app's session list). Done when no child of the task is left.";
+const ON_DONE_NEW_END = "A sub-session deletes no session: an approval card would stop the work while the owner is away. Only the owner's session deletes, once, as the very last step of the whole work: after its final report, when no session of the tree still works, it deletes every archived session of the tree in one approval card (`delete_session` with their ids from the app's session list). Done when each child is archived; in the owner's session, when the card is sent.";
+
+function step15DeleteAtEnd() {
+  const f = file('pan-harness/playbooks/large-task.md');
+  if (!f || f.lines.some((l) => l.includes(ON_DONE_NEW_END))) return;
+  const at = f.lines.findIndex((l) => l.startsWith('**The opener, on "Done".**'));
+  if (at < 0) return;
+  if (!f.lines[at].includes(ON_DONE_OLD_END)) {
+    byHand.push(`3.17.9 step 15: playbooks/large-task.md: the opener paragraph is reworded; let it end with "${ON_DONE_NEW_END}"`);
+    return;
+  }
+  f.lines[at] = f.lines[at].replace(ON_DONE_OLD_END, ON_DONE_NEW_END);
+  f.changed = true;
+  done.push('3.17.9 step 15: playbooks/large-task.md: only the owner\'s session deletes sub-sessions, at the end');
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
@@ -1304,6 +1530,8 @@ const STEPS = {
   '3.14.9': [step1PointerGoOn, step2PointerWrite, step3PointerLimit, step4RoundAsSent],
   '3.15.9': [step1LimitItem, step2LimitOwn, step3LimitSection, step4LimitBrief, step5LimitStart, step6LimitContents, step7LimitBytes],
   '3.16.9': [step1RefreshItem, step2RefreshSection, step3Offer300, step4RefreshBytes, step5WaitingStatus, step6UmbrellaBrief, step7StageEnd, step8FilesLayer, step9ReportBytes, step10NewSessionItem, step11NewSessionSection, step12DelegationGoal, step13NewSessionBytes],
+  '3.17.9': [step1UpdatedLine, step2DueSentence, step3UpdateBytes, step4DepthTwo, step5OwnerSession, step6LimitList, step7StartLink, step8LimitListBytes,
+    step9ModelSection, step10ModelBrief, step11ModelAgents, step12ModelBytes, step13SessionOpen, step14SessionTree, step15DeleteAtEnd],
 };
 
 // ---------------------------------------------------------------- run

@@ -413,3 +413,51 @@ test('the audit and the check say the same on project/check.json and an empty co
   assert.match(row('A63'), /an empty map is ok when a D records the owner's decision/);
   assert.match(script, /co_change is empty: ph-doctor asks the owner/);
 });
+
+test('ph-update writes the Updated: date on every path; with no new version it stops without ph-doctor', () => {
+  const skill = fs.readFileSync(path.join(ROOT, 'skills-src', 'ph-update', 'SKILL.md'), 'utf8');
+  assert.match(skill, /When the three are the same: write the date \(step 7\), tell the owner there is no new version, commit and stop\./);
+  assert.doesNotMatch(skill, /When the three are the same, go to step 6/);
+  assert.match(skill, /^7\. \*\*Date, commit and report\.\*\* Make the `Updated:` line under `Standard:` in `PAN-HARNESS\.md` `Updated: ` plus the output of `date \+%F` \(no `checked`\)\./m);
+  assert.match(skill, /Done when: `grep '\^Updated:' PAN-HARNESS\.md` prints today/);
+  assert.match(skill, /A `ph-update due` line is not a folder\./);
+});
+
+// the model and effort rule of delegation.md: each part an agent needs to pick a model and an effort
+test('delegation.md picks the model and effort by the ladder, the moves and the work table, on Claude only', () => {
+  const t = fs.readFileSync(path.join(CORE, 'templates', 'pan-harness', 'playbooks', 'delegation.md.tmpl'), 'utf8');
+  const a = t.indexOf('## Model and effort');
+  const s = t.slice(a, t.indexOf('\n## ', a + 1));
+  const want = [
+    'On Claude only.',
+    '**The ladder** has 20 steps',
+    'Fable 5.2, Opus 5.5, Sonnet 5.5, Haiku 5.5',
+    '`max`, `xhigh`, `high`, `medium`, `low`',
+    'Opus `low` is above Sonnet `max`',
+    '- down or the same step: allowed;',
+    '- one step up: only for the row of the work table marked "one step up"',
+    '- two or more steps up: never.',
+    'Fable `xhigh` → `max`', 'Fable `high` → `xhigh`', 'Fable `medium` → `high`', 'Opus `xhigh` → `max`',
+    'Opus `high` → `xhigh`', 'Sonnet `xhigh` → `max`', 'Sonnet `high` → `xhigh`',
+    '| Read-only search, reading many files, a summary with evidence | Haiku 5.5 | `medium` |',
+    '| A trivial count or list | Haiku 5.5 | `low` |',
+    '| A test, build or log run that returns the failures | Haiku 5.5 | `medium` |',
+    '| Mechanical edits by an exact list | Sonnet 5.5 | `medium` |',
+    '| Scoped writing with clear criteria | Sonnet 5.5 | `high` |',
+    '| A fresh review of finished work | yours | yours |',
+    '| A plan, architecture or a bug with an unclear cause | Opus 5.5 | `high`, one step up |',
+    'the work fits one row of the table, its input and output files are known, and the brief says how the result is checked',
+    'take your own model and effort',
+    'Never pick `xhigh` or `max` yourself; keeping your own step is not a pick.',
+    'A work that fits two rows has no clear level.',
+    '`claude-haiku-5-5`, `claude-sonnet-5-5`, `claude-opus-5-5`, `claude-fable-5-2`',
+    '`set_session_model` and `set_session_effort`',
+    'check with `get_session`',
+    'run the work once more on your own model and effort',
+  ];
+  const missing = want.filter((w) => !s.includes(w));
+  assert.deepEqual(missing, [], 'missing in delegation.md.tmpl → Model and effort');
+  assert.ok(t.includes('- the model and effort it runs on, and why (`Model and effort`);'), 'the brief names the model and effort');
+  assert.ok(t.includes('Done when the brief has these seven parts.'));
+  assert.ok(!t.includes('write its own tiers'), 'the top note for other agents is gone');
+});

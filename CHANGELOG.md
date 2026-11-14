@@ -2,6 +2,18 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 3.17.9
+
+- The harness remembers when `/ph-update` last ran (`PAN-HARNESS.md` → `Updated:`). From the 7th day after it, the main agent checks npm at session start: when a newer version is out, it asks you once whether to run `/ph-update` and runs it on your yes; otherwise, or on your no, it writes the check date and asks again 7 days later.
+- `/ph-update` with no new version now only writes the date, commits and stops; the full `ph-doctor` runs after a new version (and stays your monthly `/ph-doctor`). `/ph-update` adds the `Updated:` line and the new Session start sentence to an existing harness.
+- Sub-sessions go at most 2 levels deep below your session (was 4): your session, its sub-session, and one more; the one at level 2 does its work itself. `/ph-update` changes the line in `playbooks/large-task.md`.
+- A session you ask the agent to open (the app's offer card, or in words) gets a brief with its level and a "Done" message, so it tells the session that opened it when it ends. `/ph-update` adds the line to `playbooks/large-task.md`.
+- The agent reads the 5-hour usage limit before each helper or session it starts (several started at once count as one), before each test or build run and before any long step: the `Usage limit` item of `AGENTS.md` now lists these steps itself. `/ph-update` brings the new item into `AGENTS.md`.
+- On Claude, the agent starts each helper (sub-agent) on the model and effort of its work when the work's level is clear: `playbooks/delegation.md` → `Model and effort` gives a 20-step ladder (Fable, Opus, Sonnet, Haiku, each from `max` to `low`), the moves allowed from the agent's own step (down or the same; one step up only for a plan, architecture or an unclear bug, with seven exceptions; never two), a work table and the checks; when the level is not clear, the helper keeps the agent's own model and effort. A helper on a cheaper model that fails its check is run once more on the agent's own. The brief names the model and effort and why. `/ph-update` brings the section into `playbooks/delegation.md` and the pointer into `AGENTS.md`.
+- A sub-session opens on the model and effort of its work by the same rule (a step above the opener's is raised after the start and checked); its state file keeps `**Session:** <id>, <model>, <effort>`, and `pan-harness-check --tree` prints it, so a stopped tree is reopened on the same models. `/ph-update` brings the text into `playbooks/large-task.md`.
+- A worker-agent's session (`ph-workers`) opens on the model and effort of its task by the same rule; `workers.mjs record --session <id> --model <model> --effort <effort>` writes `<id>, <model>, <effort>` in the `Session` cell of `pan-harness/workers.md`.
+- Only your own session deletes the sub-sessions of a piece of work, once, as its very last step after the final report; a sub-session only archives its children, so no approval card stops the work while you are away. `/ph-update` changes the paragraph in `playbooks/large-task.md`.
+
 ## 3.16.9
 
 - A sub-session the main agent started (a worker-agent, a part session or any other) refreshes itself without you: past 500 thousand tokens of context it stops with its state in files, the main agent clears its conversation and tells it to go on, and it goes on from its brief file and state file.

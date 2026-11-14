@@ -16,12 +16,16 @@ Usage:
 --harnesses: prints the harnesses below the project, one line each, tab-separated:
 the folder, its Standard version and "same repo" or "own repo"; the search skips
 hidden folders and node_modules and stops at a folder with its own PAN-HARNESS.md
-(a harness inside it is that harness's business). Nothing is checked.
+(a harness inside it is that harness's business). Then, with no tab, the line
+"ph-update due: updated <date>[, checked <date>], <N> days" when this harness's
+Updated: line is 7 or more days old (from the later date). Nothing is checked.
 
 --tree: prints the open state files (handoff.md and handoff-<task>.md with
 Status active or waiting-owner) as a tree by their Work ID and Opened by lines,
 the planning files apart, and one Action line: the root to go on with and the
-children to open sessions for again, or the roots to ask the owner about.
+children to open sessions for again (a child's Session line, <id>, <model>,
+<effort>, is printed and gives the model and effort to open it on), or the
+roots to ask the owner about.
 Nothing is checked.
 
 --new-id <task>: prints a new Work ID, <YYYYMMDD>-<HHMMSS>-<task>-<4 hex>, in
@@ -132,7 +136,7 @@ import { spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
-const VERSION = '3.16.9';
+const VERSION = '3.17.9';
 
 // Sizes in bytes. 25 KB fits the start set of a complex project written
 // compactly; 40 KB keeps any doc readable in one go. An agent reads a doc over
@@ -344,8 +348,27 @@ function harnessesBelow() {
   return found.sort((a, b) => (a.rel < b.rel ? -1 : a.rel > b.rel ? 1 : 0));
 }
 
+/** The Updated: line of PAN-HARNESS.md: {updated, checked, days} (days since the later date, in local
+ * calendar days as `date +%F`), or null when the line is missing or its date is not YYYY-MM-DD. */
+function updatedLine(text) {
+  const m = /^Updated: (\d{4}-\d{2}-\d{2})(?:, checked (\d{4}-\d{2}-\d{2}))?\s*$/m.exec(text);
+  if (!m) return null;
+  const day = (s) => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10));
+  const now = new Date();
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const last = Math.max(day(m[1]), m[2] ? day(m[2]) : -Infinity);
+  return { updated: m[1], checked: m[2] || null, days: Math.round((today - last) / 86400000) };
+}
+const UPDATE_DAYS = 7; // the weekly ph-update check: due on the 7th day after the later date
+
 if (args.harnesses) {
   for (const h of harnessesBelow()) console.log(`${h.rel}\t${h.version}\t${h.own ? 'own repo' : 'same repo'}`);
+  // this harness only, with no tab: the hook reads the tab-separated lines as folders
+  const own = path.join(ROOT, 'PAN-HARNESS.md');
+  const u = exists(own) ? updatedLine(fs.readFileSync(own, 'utf8')) : null;
+  if (u && u.days >= UPDATE_DAYS) {
+    console.log(`ph-update due: updated ${u.updated}${u.checked ? `, checked ${u.checked}` : ''}, ${u.days} days`);
+  }
   process.exit(0);
 }
 
@@ -408,7 +431,7 @@ function section(body, heading) {
   return out;
 }
 
-/** The open state files (Status active or waiting-owner): [{file, rel, status, id, openedBy, next}], handoff.md first. */
+/** The open state files (Status active or waiting-owner): [{file, rel, status, id, openedBy, session, next}], handoff.md first. */
 function openStates() {
   const line = (t, name) => { const m = new RegExp(`^\\*\\*${name}:\\*\\*[ \\t]*(.*)$`, 'm').exec(t); return m ? m[1].replace(/`/g, '').trim() || null : null; };
   const out = [];
@@ -418,7 +441,7 @@ function openStates() {
     const st = /^\*\*Status:\*\*\s*([\w-]+)/m.exec(t);
     if (!st || !['active', 'waiting-owner'].includes(st[1])) continue;
     const next = (section(t, '## Next step').find((l) => l.trim()) || '').trim();
-    out.push({ file: path.basename(f), rel: rel(f), status: st[1], id: line(t, 'Work ID'), openedBy: line(t, 'Opened by'),
+    out.push({ file: path.basename(f), rel: rel(f), status: st[1], id: line(t, 'Work ID'), openedBy: line(t, 'Opened by'), session: line(t, 'Session'),
       next: next.length > 80 ? `${next.slice(0, 79)}…` : next });
   }
   return out;
@@ -437,7 +460,7 @@ if (args.tree) {
       if (seen.has(c)) return;
       seen.add(c);
       const last = i === all.length - 1;
-      console.log(`${prefix}${last ? '└─ ' : '├─ '}${c.id}  ${c.status}  ${c.file}  next: ${c.next}`);
+      console.log(`${prefix}${last ? '└─ ' : '├─ '}${c.id}  ${c.status}  ${c.file}  ${c.session ? `session: ${c.session}  ` : ''}next: ${c.next}`);
       walk(c, `${prefix}${last ? '   ' : '│  '}`);
     });
   };
@@ -452,8 +475,12 @@ if (args.tree) {
   if (!roots.length) console.log('Action: no open task.');
   else if (roots.length > 1) console.log(`Action: several roots: ask the owner which to go on with: ${roots.map((r) => r.file).join(', ')}.`);
   else {
-    const kids = childrenOf(roots[0]).map((c) => c.file);
-    console.log(`Action: go on with ${roots[0].file}${kids.length ? `; open sessions again for: ${kids.join(', ')}` : ''}.`);
+    // a child with a Session line (<id>, <model>, <effort>) is opened again on its model and effort
+    const on = (c) => { const p = (c.session || '').split(/,\s*/); return p.length === 3 ? `${c.file} on ${p[1]}, ${p[2]}` : c.file; };
+    const all = childrenOf(roots[0]);
+    const kids = all.map(on);
+    const sep = all.some((c) => on(c) !== c.file) ? '; ' : ', ';
+    console.log(`Action: go on with ${roots[0].file}${kids.length ? `; open sessions again for: ${kids.join(sep)}` : ''}.`);
   }
   process.exit(0);
 }
@@ -1491,6 +1518,12 @@ if (!stdVersion) {
 } else if (stdVersion !== VERSION) {
   warnings.push(`PAN-HARNESS.md: standard ${stdVersion}, this script ${VERSION} - the harness and the skill `
     + "differ; run ph-update (ph-doctor when its changelog.md does not list this version)");
+}
+
+// 22b. the date of the last ph-update, for the weekly check at Session start
+if (panText && !updatedLine(panText)) {
+  warnings.push("PAN-HARNESS.md: no 'Updated: <date>' line (YYYY-MM-DD) under 'Standard:' - the weekly ph-update check "
+    + 'at Session start never comes due; write `Updated: <today>` under it (ph-doctor does it)');
 }
 
 // 23. project extensions

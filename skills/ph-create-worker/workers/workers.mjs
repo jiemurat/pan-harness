@@ -25,8 +25,9 @@ Commands:
           [--same-folder]   the worker works in the main folder on its current branch:
                             no folder, no branch, the main folder's tasks and uncommitted
                             work stay (the row's folder is `.`)
-  record --name N [--status S] [--task T] [--session ID]
-                            change fields of a worker row
+  record --name N [--status S] [--task T] [--session ID [--model M --effort E]]
+                            change fields of a worker row; the Session cell is
+                            "ID, M, E" with the model and effort the session runs on
   remove --name N [--forget] [--force]
                             remove the worker's folder and its merged branches; --forget
                             also removes the row; --force removes unmerged work too
@@ -42,6 +43,7 @@ import { spawnSync } from 'node:child_process';
 
 const PRESET = ['TARS', 'CASE', 'PLEX', 'KIPP', 'WALLE'];
 const STATES = ['free', 'working', 'review'];
+const EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'];
 const COLUMNS = ['Name', 'Status', 'Task', 'Branch', 'Folder', 'Session'];
 const LIST = 'pan-harness/workers.md';
 // the usage-limit line of a sub-session's brief, as the large-task playbook template words it
@@ -506,7 +508,9 @@ function cmdRecord(root, a) {
   if (a.status) row.Status = a.status;
   if (a.status === 'free') Object.assign(row, { Task: '—', Branch: '—' }); // the folder and the session stay for the next task
   if (a.task) row.Task = a.task;
-  if (a.session) row.Session = a.session;
+  if ((a.model || a.effort) && !(a.session && a.model && a.effort)) fail('--model and --effort come together, with --session', 2);
+  if (a.effort && !EFFORTS.includes(a.effort)) fail(`effort is one of ${EFFORTS.join(', ')}`, 2);
+  if (a.session) row.Session = a.model ? `${a.session}, ${a.model}, ${a.effort}` : a.session;
   writeList(root, rows, text);
   console.log(`${row.Name}: ${row.Status}${row.Session !== '—' ? `, session ${row.Session}` : ''}`);
 }

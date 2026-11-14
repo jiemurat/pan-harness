@@ -4,6 +4,44 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 3.17.9
+
+`PAN-HARNESS.md` keeps the date of the last `/ph-update` on an `Updated:` line under `Standard:` (`Updated: <date>, checked <date>`; `checked` is the last weekly check that found no new version or the owner's no). From the 7th day after the later date, `pan-harness-check.mjs --harnesses` prints `ph-update due`; at Session start the main-agent then runs `npm view @jiemurat/pan-harness version` and, when it is newer than `Standard:`, asks the owner whether to run `/ph-update`; otherwise, or on a no, it writes today as `checked` and commits it alone; when `npm view` fails, it does nothing. A `/ph-update` with no new version only writes the date and stops; the check warns on a harness with no `Updated:` line.
+
+1. `mechanical` — `PAN-HARNESS.md`: the line `Updated: <today>` under `Standard:` (`scripts/migrate.mjs`).
+2. `mechanical` — `AGENTS.md` → `Session start`: the item that runs `--harnesses` gets the sentence "When it prints `ph-update due` …" at its end (`scripts/migrate.mjs`).
+3. `mechanical` — `project/check.json` → `start_limit_bytes` grows by the added bytes (`scripts/migrate.mjs`).
+
+A sub-session opens at most 2 levels below the owner's session (was 4): a child at `Level: 2` opens no sub-session and works on itself.
+
+4. `mechanical` — `playbooks/large-task.md` → `New session`: the depth line says 2 levels (`scripts/migrate.mjs`).
+
+A session the owner asks for (the app's offer card, or in words) gets a brief file with `Level` and `When done`, so it messages its opener when it ends.
+
+5. `mechanical` — `playbooks/large-task.md` → `New session`: the bullet for a session the owner asks for, after the Work ID bullet (`scripts/migrate.mjs`).
+
+The `Usage limit` item of `AGENTS.md` names the bigger steps itself (each sub-agent or session started, several at once counting as one; each test, build or behaviour-test run; each `handoff.md` step; any step over 20 tool calls), and `Session start` points to it in place of its own usage-limit sentence.
+
+6. `mechanical` — `AGENTS.md` → `Working style` → `Usage limit`: the item with the list of bigger steps (`scripts/migrate.mjs`).
+7. `mechanical` — `AGENTS.md` → `Session start`: the fast check item says "Before it, read the usage limit (`Working style` → "Usage limit")." in place of its usage-limit sentence (`scripts/migrate.mjs`).
+8. `mechanical` — `project/check.json` → `start_limit_bytes` grows by the added bytes (`scripts/migrate.mjs`).
+
+On Claude, an agent starts a sub-agent on the model and effort of its work when the work's level is clear, else on its own: `playbooks/delegation.md` → `Model and effort` holds the 20-step ladder, the three moves from the agent's own step and their seven exceptions, the work table, the pick (the clear-level test, both values passed to the tool, the brief line), the raise of a session above the opener's step with a `get_session` check, and one retry on the agent's own model after a cheap failure.
+
+9. `mechanical` — `playbooks/delegation.md` → `Model and effort`: the template's section in place of the four-row table (`scripts/migrate.mjs`).
+10. `mechanical` — `playbooks/delegation.md` → `The brief`: the model and effort line after the objective, seven parts (`scripts/migrate.mjs`).
+11. `mechanical` — `AGENTS.md` → `Working style` → "Delegate reading": the sub-agent runs on the model and effort of `delegation.md` → `Model and effort` (`scripts/migrate.mjs`).
+12. `mechanical` — `project/check.json` → `start_limit_bytes` grows by the added bytes (`scripts/migrate.mjs`).
+
+A sub-session opens on the model and effort `playbooks/delegation.md` → `Model and effort` picks; after the start the opener writes `**Session:** <id>, <model>, <effort>`, as `get_session` shows them, into the child's state file, and `pan-harness-check.mjs --tree` prints the line and reopens a stopped child on that model and effort.
+
+13. `mechanical` — `playbooks/large-task.md` → `New session` → "Opening one": the pick bullet and the open bullet with the `**Session:**` line, in place of the "Commit the two files" bullet (`scripts/migrate.mjs`).
+14. `mechanical` — `playbooks/large-task.md` → `New session` → "A stopped tree": each child opens again on the model and effort of its `**Session:**` line (`scripts/migrate.mjs`).
+
+Only the owner's session deletes sessions, once, as the very last step of the whole work, after its final report: a sub-session only archives its children, since an approval card would stop the work while the owner is away.
+
+15. `mechanical` — `playbooks/large-task.md` → `New session` → `The opener, on "Done"`: the end of the paragraph (`scripts/migrate.mjs`).
+
 ## 3.16.9
 
 A session the main-agent started (a worker-agent, a part session or any other sub-session) stops past 500 thousand tokens of context with its state in files and no timer or background task running (the app does not clear a session with live work); the main-agent clears its conversation and tells it to go on, and it reads its brief file and state file back. The brief is kept in a brief file beside the state file. The clear offer starts at 300 thousand tokens, in every session.

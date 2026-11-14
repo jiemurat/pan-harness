@@ -79,6 +79,11 @@ function place(rel, body, mode) {
 for (const [tmpl, rel] of FILES) {
   let body = fs.readFileSync(path.join(TEMPLATES, ...tmpl.split('/')), 'utf8');
   if (rel === 'PAN-HARNESS.md' && version) body = body.replace('Standard: pan-harness {{version}}', `Standard: pan-harness ${version}`);
+  // the date of the last ph-update, in local calendar days as `date +%F`: the weekly check counts from it
+  if (rel === 'PAN-HARNESS.md') {
+    const d = new Date();
+    body = body.replace('Updated: {{date}}', `Updated: ${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+  }
   if (rel.startsWith('pan-harness/history/')) body = body.replace('# History: {{YYYY-MM}}', `# History: ${month}`);
   place(rel, body, rel === '.githooks/pre-commit' ? 0o755 : undefined);
 }
