@@ -9,12 +9,23 @@ dependencies. Project-specific checks go to pan-harness/project/scripts/check-*
 Usage:
   node pan-harness/scripts/pan-harness-check.mjs [--root DIR] [--live] [--since COMMIT]
   node pan-harness/scripts/pan-harness-check.mjs --harnesses
+  node pan-harness/scripts/pan-harness-check.mjs --tree
+  node pan-harness/scripts/pan-harness-check.mjs --new-id <task>
   node <skill>/scripts/pan-harness-check.mjs --root <project>
 
 --harnesses: prints the harnesses below the project, one line each, tab-separated:
 the folder, its Standard version and "same repo" or "own repo"; the search skips
 hidden folders and node_modules and stops at a folder with its own PAN-HARNESS.md
 (a harness inside it is that harness's business). Nothing is checked.
+
+--tree: prints the open state files (handoff.md and handoff-<task>.md with
+Status active or waiting-owner) as a tree by their Work ID and Opened by lines,
+the planning files apart, and one Action line: the root to go on with and the
+children to open sessions for again, or the roots to ask the owner about.
+Nothing is checked.
+
+--new-id <task>: prints a new Work ID, <YYYYMMDD>-<HHMMSS>-<task>-<4 hex>, in
+local time; <task> is the task's short name, lowercase with hyphens.
 
 --since COMMIT: the terms check reads the lines changed since COMMIT, committed or
 not, instead of the uncommitted ones, and every such line is listed as REVIEW
@@ -60,7 +71,7 @@ Warnings:
     from the owner and the harness; third-party skills, MCP servers and agent
     plugins with the owner's permission);
   - a lesson from check.json "fields_from" "Layer" on without Layer:, or with a Layer: value
-    other than task, context, environment, verification or state;
+    other than task, context, environment, verification, state or files;
   - code=yes: no **Fast check:**, **See the result:** or **Logs:** line in PAN-HARNESS.md
     Project checks, or no fast check item in AGENTS.md Session start or
     "Check while you work" item in Working style;
@@ -78,12 +89,14 @@ Warnings:
     open criterion (an item that starts with the hourglass) whose decision has no
     open item in plan.md;
   - plan.md: a dated Scheduled row whose date has passed;
-  - planning: a file in pan-harness/planning/ that plan.md does not link, a
+  - planning: a file in pan-harness/planning/ without its status line (or with another value), its
+    **Request:** line or one of its six sections; a file there that plan.md does not link, a
     plan.md Queue item over 15 lines (its planning answers belong in a planning file);
-  - handoff.md and handoff-<task>.md: an active task over 8 KB, without its
+  - handoff.md and handoff-<task>.md: an open task (active or waiting-owner) over 8 KB, without its
     sections, with steps that have no state, several active steps, or done
-    steps without evidence; a handoff-<task>.md left at Status none (removed at
-    its task's end);
+    steps without evidence; a waiting-owner task with no open question; a handoff-<task>.md left at Status none (removed at
+    its task's end); in the sub-session tree, an Opened by line without a Work ID,
+    one Work ID in two open files, an opener that no open state file holds;
   - co_change (check.json): a watched file changed but none of the docs that
     describe it did (changes come from git status);
   - terms: a term glossed in brackets ("the inspection (check)") in a new or
@@ -116,9 +129,10 @@ adds to it).
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
-const VERSION = '3.15.9';
+const VERSION = '3.16.9';
 
 // Sizes in bytes. 25 KB fits the start set of a complex project written
 // compactly; 40 KB keeps any doc readable in one go. An agent reads a doc over
@@ -135,6 +149,7 @@ const STANDARD_FILES = ['state.md', 'plan.md', 'handoff.md', 'system-map.md', 'r
 const OPTIONAL_FILES = ['workers.md'];
 // the state of a second large task run by a second session in the same folder (playbooks/large-task.md)
 const HANDOFF_TASK = /^handoff-[^/\\]+\.md$/;
+const BRIEF_FILE = /^brief(-[^/\\]+)?\.md$/; // a sub-session's brief, read back on a context refresh
 const STANDARD_DIRS = new Set(['history', 'archive', 'playbooks', 'scripts', 'project', 'planning']);
 const SCRIPTS = ['pan-harness-check.mjs', 'secret-check.mjs'];
 // the standard playbooks: upkeep, a large task, the end of a task, delegation to sub-agents, the form of a question
@@ -177,17 +192,19 @@ const PAN_SECTIONS = ['## Profile', '## Map', '## Project checks'];
 // ---------------------------------------------------------------- helpers
 
 function parseArgs(argv) {
-  const out = { root: null, live: false, since: null, harnesses: false };
+  const out = { root: null, live: false, since: null, harnesses: false, tree: false, newId: null };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--live') out.live = true;
     else if (a === '--harnesses') out.harnesses = true;
+    else if (a === '--tree') out.tree = true;
+    else if (a === '--new-id') out.newId = argv[++i] ?? '';
     else if (a === '--root') out.root = argv[++i];
     else if (a.startsWith('--root=')) out.root = a.slice(7);
     else if (a === '--since') out.since = argv[++i];
     else if (a.startsWith('--since=')) out.since = a.slice(8);
     else if (a === '-h' || a === '--help') {
-      console.log('usage: pan-harness-check.mjs [--root DIR] [--live] [--since COMMIT] | --harnesses');
+      console.log('usage: pan-harness-check.mjs [--root DIR] [--live] [--since COMMIT] | --harnesses | --tree | --new-id <task>');
       process.exit(0);
     } else {
       console.error(`pan-harness-check: unknown argument ${a}`);
@@ -286,6 +303,17 @@ const rglob = (base, pattern) => glob(base, `**/${pattern}`);
 // ---------------------------------------------------------------- setup
 
 const args = parseArgs(process.argv.slice(2));
+if (args.newId !== null) {
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(args.newId)) {
+    console.error("pan-harness-check: --new-id takes the task's short name, lowercase with hyphens (rate-limit)");
+    process.exit(2);
+  }
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  console.log(`${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`
+    + `-${args.newId}-${randomBytes(2).toString('hex')}`);
+  process.exit(0);
+}
 const ROOT = args.root ? path.resolve(args.root) : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 if (!exists(path.join(ROOT, 'AGENTS.md')) && !isDir(path.join(ROOT, 'pan-harness'))) {
   console.error(`pan-harness-check: ${ROOT} has neither AGENTS.md nor pan-harness/; pass --root <project>`);
@@ -380,6 +408,56 @@ function section(body, heading) {
   return out;
 }
 
+/** The open state files (Status active or waiting-owner): [{file, rel, status, id, openedBy, next}], handoff.md first. */
+function openStates() {
+  const line = (t, name) => { const m = new RegExp(`^\\*\\*${name}:\\*\\*[ \\t]*(.*)$`, 'm').exec(t); return m ? m[1].replace(/`/g, '').trim() || null : null; };
+  const out = [];
+  for (const f of [path.join(H, 'handoff.md'), ...glob(H, 'handoff-*.md').filter((x) => HANDOFF_TASK.test(path.basename(x)))]) {
+    if (!isFile(f)) continue;
+    const t = read(f);
+    const st = /^\*\*Status:\*\*\s*([\w-]+)/m.exec(t);
+    if (!st || !['active', 'waiting-owner'].includes(st[1])) continue;
+    const next = (section(t, '## Next step').find((l) => l.trim()) || '').trim();
+    out.push({ file: path.basename(f), rel: rel(f), status: st[1], id: line(t, 'Work ID'), openedBy: line(t, 'Opened by'),
+      next: next.length > 80 ? `${next.slice(0, 79)}…` : next });
+  }
+  return out;
+}
+
+if (args.tree) {
+  const states = openStates();
+  const ids = new Set(states.map((s) => s.id).filter(Boolean));
+  const isRoot = (s) => !s.openedBy || s.openedBy === 'owner' || !ids.has(s.openedBy) || s.openedBy === s.id;
+  const order = (a, b) => (a.file === 'handoff.md' ? -1 : b.file === 'handoff.md' ? 1 : (a.id || a.file).localeCompare(b.id || b.file));
+  const roots = states.filter(isRoot).sort(order);
+  const childrenOf = (s) => (s.id ? states.filter((c) => c !== s && !isRoot(c) && c.openedBy === s.id).sort(order) : []);
+  const seen = new Set();
+  const walk = (s, prefix) => {
+    childrenOf(s).forEach((c, i, all) => {
+      if (seen.has(c)) return;
+      seen.add(c);
+      const last = i === all.length - 1;
+      console.log(`${prefix}${last ? '└─ ' : '├─ '}${c.id}  ${c.status}  ${c.file}  next: ${c.next}`);
+      walk(c, `${prefix}${last ? '   ' : '│  '}`);
+    });
+  };
+  for (const r of roots) {
+    seen.add(r);
+    const by = !r.openedBy || r.openedBy === 'owner' ? '(owner)' : `(opened by ${r.openedBy}, not open)`;
+    console.log(`${r.id || '(no Work ID)'}  ${r.status}  ${r.file}  ${by}`);
+    walk(r, '');
+  }
+  const planning = glob(path.join(H, 'planning'), '*.md').map((f) => `planning/${path.basename(f)}`);
+  if (planning.length) console.log(`In planning, not in the tree: ${planning.join(', ')}`);
+  if (!roots.length) console.log('Action: no open task.');
+  else if (roots.length > 1) console.log(`Action: several roots: ask the owner which to go on with: ${roots.map((r) => r.file).join(', ')}.`);
+  else {
+    const kids = childrenOf(roots[0]).map((c) => c.file);
+    console.log(`Action: go on with ${roots[0].file}${kids.length ? `; open sessions again for: ${kids.join(', ')}` : ''}.`);
+  }
+  process.exit(0);
+}
+
 const panText = read(path.join(ROOT, 'PAN-HARNESS.md'));
 
 // 1. profile
@@ -457,7 +535,7 @@ if (isDir(H)) {
   for (const entry of sortPaths(listDir(H))) {
     const name = path.basename(entry);
     if (name.startsWith('.') || name === '__pycache__') continue;
-    if ((isDir(entry) && !STANDARD_DIRS.has(name)) || (isFile(entry) && !STANDARD_FILES.includes(name) && !OPTIONAL_FILES.includes(name) && !HANDOFF_TASK.test(name))) {
+    if ((isDir(entry) && !STANDARD_DIRS.has(name)) || (isFile(entry) && !STANDARD_FILES.includes(name) && !OPTIONAL_FILES.includes(name) && !HANDOFF_TASK.test(name) && !BRIEF_FILE.test(name))) {
       warnings.push(`${rel(entry)}: not part of the standard - agents look here only for standard names; `
         + 'move project-specific things to pan-harness/project/');
     }
@@ -739,8 +817,8 @@ require(path.join(H, 'lessons.md'),
 require(path.join(H, 'lessons.md'), // the layer of a lesson: checked from fields_from.Layer on
   entriesOf(read(path.join(H, 'lessons.md')), /^- \*\*L\d+ /, /^#/),
   [['Layer:', bw('Layer')]], /^- \*\*(L\d+)/, 'Layer');
-// the layer is one of five words: the fix goes to that layer, and ph-doctor counts lessons by it
-const LAYERS = ['task', 'context', 'environment', 'verification', 'state'];
+// the layer is one of six words: the fix goes to that layer, and ph-doctor counts lessons by it
+const LAYERS = ['task', 'context', 'environment', 'verification', 'state', 'files'];
 const badLayers = [];
 for (const block of entriesOf(read(path.join(H, 'lessons.md')), /^- \*\*L\d+ /, /^#/)) {
   const name = /^- \*\*(L\d+)/.exec(block);
@@ -816,7 +894,7 @@ for (const p of docs) {
     if (['*', '<', 'YYYY', '…', '{{'].some((mark) => found.includes(mark)) || found.startsWith('archive/')) continue;
     const bare = found.replace(/\/+$/, '');
     const inHarness = bare.startsWith('pan-harness/') ? bare.slice('pan-harness/'.length) : bare;
-    if (OPTIONAL_DIRS.has(inHarness) || (bare !== inHarness && OPTIONAL_FILES.includes(inHarness)) || bare === ARTIFACT_DIR) continue;
+    if (OPTIONAL_DIRS.has(inHarness) || (bare !== inHarness && (OPTIONAL_FILES.includes(inHarness) || BRIEF_FILE.test(inHarness))) || bare === ARTIFACT_DIR) continue;
     if (!bases.some((b) => exists(path.join(b, found)))) {
       errors.push(`${rel(p)}: path \`${found}\` does not exist - an agent will look for it in vain; fix the `
         + (inHarness.startsWith('planning/') ? 'link: a planning file is removed on the approval, so remove the link too, '
@@ -960,7 +1038,7 @@ for (const HF of [HANDOFF, ...glob(H, 'handoff-*.md').filter((f) => HANDOFF_TASK
   if (!isFile(HF)) continue;
   const hn = rel(HF).split(path.sep).join('/');
   const ht = text.has(HF) ? text.get(HF) : read(HF);
-  const st = /^\*\*Status:\*\*\s*(\w+)/m.exec(ht);
+  const st = /^\*\*Status:\*\*\s*([\w-]+)/m.exec(ht);
   // the shape: a script edit that took the first match of a name (an older intro names each heading)
   // lands outside its section and leaves a heading twice or text in the intro; errors, so the hook stops it
   const hl = outsideCode(ht);
@@ -983,19 +1061,24 @@ for (const HF of [HANDOFF, ...glob(H, 'handoff-*.md').filter((f) => HANDOFF_TASK
     }
   }
   if (!st) {
-    errors.push(`${hn}: no '**Status:** none' or '**Status:** active' line - the next `
+    errors.push(`${hn}: no '**Status:** none', 'active' or 'waiting-owner' line - the next `
       + `session cannot tell whether a task is in progress; ${rebuild}, or add the line (template handoff.md.tmpl)`);
-  } else if (st[1] === 'active') {
+  } else if (st[1] === 'active' || st[1] === 'waiting-owner') {
     const size = Buffer.byteLength(ht, 'utf8');
     if (size > HANDOFF_LIMIT) {
       warnings.push(`${hn}: ${size} bytes (> ${HANDOFF_LIMIT}) - an active handoff is read at `
-        + 'every session start with the start set; move finished stages to the history entry');
+        + 'every session start with the start set; at each stage end keep one line a step and move the evidence to the history entry '
+        + '(playbooks/large-task.md -> Execution)');
     }
     for (const sec of HANDOFF_SECTIONS) {
       if (!hl.some((line) => starts(line, sec))) {
-        errors.push(`${hn}: an active task without '${sec}' - a new session resumes `
+        errors.push(`${hn}: an open task without '${sec}' - a new session resumes `
           + 'the task from this file; add the section (template handoff.md.tmpl)');
       }
+    }
+    if (st[1] === 'waiting-owner' && !section(ht, '## Open questions').some((line) => line.trim() && !/^None\.?$/i.test(line.trim()))) {
+      warnings.push(`${hn}: waiting-owner without a question in '## Open questions' - a new session has nothing to send `
+        + 'again; write the question there, or set the status line back to active');
     }
     const steps = section(ht, '## Steps').filter((line) => line.startsWith('- ')); // nested lines are details
     const actives = steps.filter((line) => line.includes('`active`'));
@@ -1024,7 +1107,29 @@ for (const HF of [HANDOFF, ...glob(H, 'handoff-*.md').filter((f) => HANDOFF_TASK
     }
   } else {
     warnings.push(`${hn}: unknown status '${st[1]}' - the next session reads only `
-      + 'none or active; use one of them');
+      + 'none, active or waiting-owner; use one of them');
+  }
+}
+
+// 17a. the sub-session tree: each open state file's Work ID once, its opener open
+{
+  const states = openStates();
+  const firstWith = new Map();
+  for (const s of states) {
+    if (s.openedBy && !s.id) {
+      warnings.push(`${s.rel}: '**Opened by:**' without '**Work ID:**' - \`--tree\` cannot place its children under it; `
+        + 'add the line with an ID from `pan-harness-check.mjs --new-id <task>`');
+    }
+    if (s.id && firstWith.has(s.id)) {
+      warnings.push(`${s.rel}: the Work ID ${s.id} stands in ${firstWith.get(s.id).file} too - \`--tree\` cannot tell the two apart; `
+        + 'give this one a new ID (`--new-id <task>`) and change it in its children\'s Opened by line');
+    } else if (s.id) firstWith.set(s.id, s);
+  }
+  for (const s of states) {
+    if (s.openedBy && s.openedBy !== 'owner' && s.openedBy !== s.id && !firstWith.has(s.openedBy)) {
+      warnings.push(`${s.rel}: opened by ${s.openedBy}, which no open state file holds - its opener ended before it, `
+        + 'so "go on" treats it as a root; finish it, or set its Opened by line to owner');
+    }
   }
 }
 
@@ -1034,6 +1139,31 @@ for (const entry of glob(path.join(H, 'planning'), '*.md')) {
   if (!planBody.includes(`planning/${path.basename(entry)}`)) {
     warnings.push(`${rel(entry)}: no link from plan.md - the next session will not find this task; add it to `
       + 'its Queue item ("planning: `pan-harness/planning/<task>.md`", playbooks/large-task.md)');
+  }
+}
+// the shape a new session resumes from: the status line, the request line and the six sections
+const PLANNING_STATUS = ['planning', 'awaiting approval', 'approved', 'approved, waiting'];
+const PLANNING_SECTIONS = ['## Goal draft', '## Criteria draft', '## Rounds', '## Research', '## Plan', '## Next question'];
+for (const entry of glob(path.join(H, 'planning'), '*.md')) {
+  const pl = outsideCode(read(entry) || '');
+  const head = `${rel(entry)}: `;
+  const status = pl.find((line) => line.startsWith('**Status:**'));
+  if (!status) {
+    warnings.push(`${head}no status line - a new session cannot tell where the planning stands; add '**Status:** planning' `
+      + '(or awaiting approval, approved, approved, waiting) under the heading (playbooks/large-task.md)');
+  } else {
+    const value = status.slice('**Status:**'.length).trim();
+    if (!PLANNING_STATUS.includes(value)) {
+      warnings.push(`${head}status '${value}' - a new session reads only ${PLANNING_STATUS.join('; ')}; use one of them (playbooks/large-task.md)`);
+    }
+  }
+  if (!pl.some((line) => line.startsWith('**Request:**'))) {
+    warnings.push(`${head}no '**Request:**' line - the owner's first words keep the why of the task; add them as they are (playbooks/large-task.md)`);
+  }
+  const missing = PLANNING_SECTIONS.filter((sec) => !pl.some((line) => line.trim() === sec));
+  if (missing.length) {
+    warnings.push(`${head}no ${missing.map((m) => `'${m}'`).join(', ')} section - a new session resumes the planning from them; add the section `
+      + '(playbooks/large-task.md)');
   }
 }
 // a round not answered yet is kept as it was sent, so a new session sends the same choices again
@@ -1083,7 +1213,7 @@ for (const item of queueItems) {
     continue;
   }
   const partH = path.join(part, 'pan-harness');
-  const active = glob(partH, 'handoff*.md').some((p) => /^\*\*Status:\*\* active\b/m.test(read(p) || ''));
+  const active = glob(partH, 'handoff*.md').some((p) => /^\*\*Status:\*\* (active|waiting-owner)\b/m.test(read(p) || ''));
   if (!active && !glob(path.join(partH, 'planning'), '*.md').length) {
     warnings.push(`${head}that part has no open task - the task ended there; remove the item (Session start)`);
   }

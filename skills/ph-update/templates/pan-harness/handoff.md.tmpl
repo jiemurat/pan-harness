@@ -7,11 +7,13 @@ pan-harness template. Saved in the project as `pan-harness/handoff.md`.
 -->
 # Handoff
 
-The state of the active large task. The agent updates it with each status message, before each stop (a question, a wait for the owner's word, a report) and near the end of the context; the checks run in full even when the context is running out. When the owner's answer comes, the first file change, before any other (a Session start fix too), moves it from `Open questions` into `Decisions` here, in one edit. A new session goes on with the work from this file: it asks again only an open question.
+The state of the active large task. The agent updates it with each status message, before each stop (a question, a wait for the owner's word, a report) and near the end of the context; the checks run in full even when the context is running out. When the owner's answer comes, the first file change, before any other (a Session start fix too), moves it from `Open questions` into `Decisions` here, in one edit. A new session goes on with the work from this file: it asks again only an open question. While the task waits for the owner's answer to a question in `Open questions`, the status line says `waiting-owner`; the edit that moves the answer into `Decisions` sets it back to `active`.
 
 When a large task is approved, set the status line below to `active` and fill the sections: Task (task, the request line of the planning file, goal, not done, budget), Criteria (K1…: what is observed, the threshold, how and when it is checked, status), Steps (each step with its outcome, completion criterion and check command when one exists; status — `todo`, `active`, `blocked` or `done`, one `active` at a time), Changed files (the files this task has changed so far), Checks, Decisions, Open questions, Next step, Work files (the planned and the temporary files). When the task ends, move the decisions into `decisions.md` and the rest into the history entry, and set the status line to `none`.
 
-**Status:** {{none or active}}
+**Status:** {{none, active or waiting-owner}}
+**Work ID:** {{from `--new-id`; only when this work opened a sub-session or was opened by one, else remove the line}}
+**Opened by:** {{the opener's Work ID, or `owner`}}
 
 ## Task
 

@@ -555,7 +555,8 @@ test('markers with scope "changed": only the lines changed since the last commit
 // handoff.md from the template, active, with its placeholders filled
 function activeHandoff() {
   return fs.readFileSync(path.join(CORE, 'templates', 'pan-harness', 'handoff.md.tmpl'), 'utf8')
-    .replace(/^<!--[\s\S]*?-->\n/, '').replace('{{none or active}}', 'active')
+    .replace(/^<!--[\s\S]*?-->\n/, '').replace('{{none, active or waiting-owner}}', 'active')
+    .replace(/^\*\*(Work ID|Opened by):\*\* .*\n/gm, '') // a task that opened no sub-session removes the two lines
     .replace(/\{\{[^}]*\}\}/g, '`todo` the item of this section, with its evidence');
 }
 const handoffErrors = (out) => out.split('\n').filter((l) => l.startsWith('ERROR pan-harness/handoff.md'));
@@ -585,20 +586,35 @@ test('handoff.md: text in the intro, a heading twice, two status lines, a missin
   assert.match(r.out, /^ERROR pan-harness\/handoff\.md: '## Next step' stands 2 times - /m);
   assert.match(r.out, /^ERROR pan-harness\/handoff\.md: 2 status lines - /m);
   put(dir, 'pan-harness/handoff.md', activeHandoff().replace(/\n## Work files\n[\s\S]*$/, '\n'));
-  assert.match(check(dir).out, /^ERROR pan-harness\/handoff\.md: an active task without '## Work files'/m);
+  assert.match(check(dir).out, /^ERROR pan-harness\/handoff\.md: an open task without '## Work files'/m);
   put(dir, 'pan-harness/handoff.md', '# Handoff\n\nThe state.\n\n**Status:** none\n\n## Task\n\n- Done.\n');
   r = check(dir);
   assert.match(r.out, /^ERROR pan-harness\/handoff\.md: '\*\*Status:\*\* none' with ## Task - /m);
   assert.equal(handoffErrors(r.out).length, 1, r.out);
 });
 
-test('pan-harness/workers.md is a standard file; another file in pan-harness/ is not', () => {
+test('handoff.md: an open task over 8 KB points to the stage-end move', () => {
+  const dir = harness();
+  const s = activeHandoff();
+  const evidence = `${'- `done` — Step: the check ran, its output is kept here line by line.\n'.repeat(120)}`;
+  put(dir, 'pan-harness/handoff.md', s.replace('## Criteria', `${evidence}\n## Criteria`));
+  assert.match(check(dir).out, /^WARN +pan-harness\/handoff\.md: \d+ bytes \(> 8192\) - an active handoff is read at every session start with the start set; at each stage end keep one line a step and move the evidence to the history entry \(playbooks\/large-task\.md -> Execution\)$/m);
+});
+
+test('pan-harness/workers.md and a brief file are standard files; another file in pan-harness/ is not', () => {
   const dir = harness();
   put(dir, 'pan-harness/workers.md', '# Workers\n\n| Name | Status | Task | Branch | Folder | Session |\n|---|---|---|---|---|---|\n| TARS | free | — | — | — | — |\n', true);
   put(dir, 'pan-harness/notes.md', '# Notes\n', true);
+  put(dir, 'pan-harness/brief.md', 'You are TARS.\n', true);
+  put(dir, 'pan-harness/brief-doc-b.md', 'You are CASE.\n', true);
   const { out } = check(dir);
   assert.doesNotMatch(out, /pan-harness\/workers\.md: not part of the standard/);
+  assert.doesNotMatch(out, /brief(-doc-b)?\.md: not part of the standard/);
   assert.match(out, /pan-harness\/notes\.md: not part of the standard/);
+  const other = harness();
+  const lt = path.join(other, 'pan-harness', 'playbooks', 'large-task.md');
+  fs.writeFileSync(lt, `${fs.readFileSync(lt, 'utf8')}\nThe brief file: \`pan-harness/brief.md\`.\n`);
+  assert.doesNotMatch(check(other).out, /path `pan-harness\/brief\.md` does not exist/, 'a brief file is named before it exists');
 });
 
 test('pan-harness/workers.md may be missing: a path to it is no error until ph-workers makes it', () => {
@@ -629,13 +645,40 @@ test('newest entry: only an item that starts with ⏳ is an open criterion, with
 test('handoff.md without a status line is an error', () => {
   const dir = harness();
   put(dir, 'pan-harness/handoff.md', '# Handoff\n\nThe state of the active large task.\n');
-  assert.match(check(dir).out, /^ERROR pan-harness\/handoff\.md: no '\*\*Status:\*\* none' or '\*\*Status:\*\* active' line/m);
+  assert.match(check(dir).out, /^ERROR pan-harness\/handoff\.md: no '\*\*Status:\*\* none', 'active' or 'waiting-owner' line/m);
 });
 
-test('lessons: a Layer value outside the five words is a warning', () => {
+test('lessons: files is a layer; a Layer value outside the six words is a warning', () => {
   const dir = harness();
-  edit(dir, 'pan-harness/lessons.md', '  - Layer: context\n', '  - Layer: test design\n');
-  assert.match(check(dir).out, /^WARN +pan-harness\/lessons\.md: Layer not one of task, context, environment, verification, state \(L1: test design\)/m);
+  edit(dir, 'pan-harness/lessons.md', '  - Layer: context\n', '  - Layer: files\n');
+  assert.match(check(dir).out, /0 error\(s\), 0 warning\(s\)/);
+  edit(dir, 'pan-harness/lessons.md', '  - Layer: files\n', '  - Layer: test design\n');
+  assert.match(check(dir).out, /^WARN +pan-harness\/lessons\.md: Layer not one of task, context, environment, verification, state, files \(L1: test design\)/m);
+});
+
+// a planning file with its status line, request line and six sections; the rounds go between
+const planningFile = (rounds = '', status = 'planning') => `# Planning: demo task\n\n**Status:** ${status}\n\n**Request:** "a demo"\n\n`
+  + `## Goal draft\n\n- A goal.\n\n## Criteria draft\n\n- K1.\n\n## Rounds\n\n${rounds}## Research\n\n- None.\n\n## Plan\n\n- Later.\n\n## Next question\n\nRound 1.\n`;
+
+test('planning files: a status line, a request line and the six sections; each one missing is named', () => {
+  const dir = harness();
+  edit(dir, 'AGENTS.md', '1. Read this file, then `PAN-HARNESS.md`.', '1. Read this file, then `PAN-HARNESS.md`. A task in planning has its file in `pan-harness/planning/`.');
+  edit(dir, 'pan-harness/plan.md', '## 1. Queue\n\n', '## 1. Queue\n\n- **Demo task** — planning: `pan-harness/planning/demo-task.md`\n\n');
+  const f = 'pan-harness/planning/demo-task.md';
+  for (const status of ['planning', 'awaiting approval', 'approved', 'approved, waiting']) {
+    put(dir, f, planningFile('', status));
+    const quiet = check(dir);
+    assert.match(quiet.out, /0 error\(s\), 0 warning\(s\)/, `${status}: ${quiet.out}`);
+  }
+  put(dir, f, planningFile().replace('**Status:** planning\n\n', ''));
+  assert.match(check(dir).out, /^WARN +pan-harness[\\/]planning[\\/]demo-task\.md: no status line - /m);
+  put(dir, f, planningFile('', 'started'));
+  assert.match(check(dir).out, /^WARN +pan-harness[\\/]planning[\\/]demo-task\.md: status 'started' - /m);
+  put(dir, f, planningFile().replace('**Request:** "a demo"\n\n', ''));
+  assert.match(check(dir).out, /^WARN +pan-harness[\\/]planning[\\/]demo-task\.md: no '\*\*Request:\*\*' line - /m);
+  put(dir, f, planningFile().replace('## Research\n\n- None.\n\n', '').replace('## Plan\n\n- Later.\n\n', ''));
+  const out = check(dir).out;
+  assert.match(out, /^WARN +pan-harness[\\/]planning[\\/]demo-task\.md: no '## Research', '## Plan' section - /m);
 });
 
 test('planning files: a linked one is quiet; no link, a long Queue item and a link to a missing file are named', () => {
@@ -643,7 +686,7 @@ test('planning files: a linked one is quiet; no link, a long Queue item and a li
   // the session start names the folder before any task is planned: no error for the missing folder
   edit(dir, 'AGENTS.md', '1. Read this file, then `PAN-HARNESS.md`.', '1. Read this file, then `PAN-HARNESS.md`. A task in planning has its file in `pan-harness/planning/`.');
   assert.match(check(dir).out, /0 error\(s\), 0 warning\(s\)/);
-  put(dir, 'pan-harness/planning/demo-task.md', '# Planning: demo task\n\n**Status:** planning\n\n## Goal draft\n\n- A goal.\n');
+  put(dir, 'pan-harness/planning/demo-task.md', planningFile());
   const link = '- **Demo task** — planning: `pan-harness/planning/demo-task.md`\n';
   edit(dir, 'pan-harness/plan.md', '## 1. Queue\n\n', `## 1. Queue\n\n${link}\n`);
   const quiet = check(dir);
@@ -665,10 +708,10 @@ test('planning files: a linked one is quiet; no link, a long Queue item and a li
 test('planning rounds: an unanswered round names a question without its ➡️ line; an answered one is quiet', () => {
   const dir = harness();
   edit(dir, 'AGENTS.md', '1. Read this file, then `PAN-HARNESS.md`.', '1. Read this file, then `PAN-HARNESS.md`. A task in planning has its file in `pan-harness/planning/`.');
-  const round = (q2) => '# Planning: demo task\n\n**Status:** planning\n\n## Goal draft\n\n- A goal.\n\n## Rounds\n\n### Round 1\n\n'
+  const round = (q2) => planningFile('### Round 1\n\n'
     + '❓ **1. Goal**: accept the goal?\n- a) yes\n- b) no\n\n➡️ a) yes — it matches the request.\n\n'
     + `❓ **2. Limit**: how many requests a minute?\n- a) 60\n- b) 120\n${q2}\n`
-    + '**Accept as recommended?** A) a plain-text body.\n\n## Next question\n\nRound 1.\n';
+    + '**Accept as recommended?** A) a plain-text body.\n\n');
   put(dir, 'pan-harness/planning/demo-task.md', round('\n➡️ a) 60 — the page needs about 10.\n'));
   edit(dir, 'pan-harness/plan.md', '## 1. Queue\n\n', '## 1. Queue\n\n- **Demo task** — planning: `pan-harness/planning/demo-task.md`\n\n');
   const quiet = check(dir);
@@ -677,7 +720,7 @@ test('planning rounds: an unanswered round names a question without its ➡️ l
   put(dir, 'pan-harness/planning/demo-task.md', round(''));
   assert.match(check(dir).out, /^WARN +pan-harness[\\/]planning[\\/]demo-task\.md: question 2 of the unanswered round has no ➡️ line - /m);
 
-  put(dir, 'pan-harness/planning/demo-task.md', round('').replace('## Next question', 'Answers (today): "1a 2b".\n\n## Next question'));
+  put(dir, 'pan-harness/planning/demo-task.md', round('').replace('## Research', 'Answers (today): "1a 2b".\n\n## Research'));
   const answered = check(dir);
   assert.match(answered.out, /0 error\(s\), 0 warning\(s\)/, answered.out);
 });
@@ -710,9 +753,96 @@ test('handoff-<task>.md: a second active task is checked like handoff.md; a fini
   put(dir, 'pan-harness/handoff-second-task.md', '# Handoff: second task\n\nThe state of a second active large task.\n\n**Status:** active\n\n## Task\n\nA task.\n');
   const out = check(dir).out;
   assert.doesNotMatch(out, /handoff-second-task\.md: not part of the standard/);
-  assert.match(out, /^ERROR pan-harness\/handoff-second-task\.md: an active task without '## Criteria'/m);
+  assert.match(out, /^ERROR pan-harness\/handoff-second-task\.md: an open task without '## Criteria'/m);
   put(dir, 'pan-harness/handoff-second-task.md', '# Handoff: second task\n\nThe state of a second active large task.\n\n**Status:** none\n');
   assert.match(check(dir).out, /^WARN +pan-harness\/handoff-second-task\.md: '\*\*Status:\*\* none' - a finished task's file is removed at its end/m);
+});
+
+// an open state file of a sub-session tree: the template's sections, its Work ID, its opener and its Next step
+function treeHandoff(id, openedBy, next, status = 'active') {
+  return activeHandoff().replace('**Status:** active', `**Status:** ${status}\n**Work ID:** ${id}\n**Opened by:** ${openedBy}`)
+    .replace(/## Next step\n\n[^\n]*\n/, `## Next step\n\n${next}\n`);
+}
+
+test('--new-id prints <date>-<time>-<task>-<4 hex> in local time; a name that is not lowercase with hyphens is refused', () => {
+  const dir = harness();
+  const before = new Date();
+  const r = check(dir, '--new-id', 'rate-limit');
+  assert.equal(r.code, 0, r.out);
+  const m = /^(\d{8})-(\d{6})-rate-limit-([0-9a-f]{4})$/.exec(r.out.trim());
+  assert.ok(m, r.out);
+  const p = (n) => String(n).padStart(2, '0');
+  assert.equal(m[1], `${before.getFullYear()}${p(before.getMonth() + 1)}${p(before.getDate())}`, 'the local date');
+  assert.notEqual(check(dir, '--new-id', 'rate-limit').out.trim(), r.out.trim(), 'the random part differs');
+  const bad = check(dir, '--new-id', 'Rate Limit');
+  assert.equal(bad.code, 2, bad.out);
+  assert.equal(check(dir, '--new-id').code, 2);
+});
+
+test('--tree prints the open state files as a tree and one Action line; several roots ask the owner', () => {
+  const dir = harness();
+  const root = '20261114-140614-rate-limit-231e';
+  const api = '20261114-141502-api-tests-9c0a';
+  put(dir, 'pan-harness/handoff-rate-limit.md', treeHandoff(root, 'owner', 'Wait for the children.'));
+  put(dir, 'pan-harness/handoff-api-tests.md', treeHandoff(api, root, 'Run the API tests.'));
+  put(dir, 'pan-harness/handoff-fixtures.md', treeHandoff('20261114-143010-fixtures-1b7f', api, 'The owner\'s answer on the test data.', 'waiting-owner'));
+  put(dir, 'pan-harness/handoff-docs.md', treeHandoff('20261114-142233-docs-44d2', root, 'The README section.'));
+  put(dir, 'pan-harness/handoff-old.md', treeHandoff('20261101-090000-old-0000', 'owner', 'Nothing.', 'none'));
+  put(dir, 'pan-harness/planning/search.md', '# Planning: search\n\n**Status:** planning\n');
+  const r = check(dir, '--tree');
+  assert.equal(r.code, 0, r.out);
+  assert.deepEqual(r.out.trimEnd().split('\n'), [
+    `${root}  active  handoff-rate-limit.md  (owner)`,
+    `├─ ${api}  active  handoff-api-tests.md  next: Run the API tests.`,
+    `│  └─ 20261114-143010-fixtures-1b7f  waiting-owner  handoff-fixtures.md  next: The owner's answer on the test data.`,
+    `└─ 20261114-142233-docs-44d2  active  handoff-docs.md  next: The README section.`,
+    'In planning, not in the tree: planning/search.md',
+    'Action: go on with handoff-rate-limit.md; open sessions again for: handoff-api-tests.md, handoff-docs.md.',
+  ]);
+  // a second task opened by the owner: two roots
+  put(dir, 'pan-harness/handoff.md', treeHandoff('20261114-150000-billing-77aa', 'owner', 'The invoice form.'));
+  assert.match(check(dir, '--tree').out, /^Action: several roots: ask the owner which to go on with: handoff\.md, handoff-rate-limit\.md\.$/m);
+  // an open file without the two lines is a root of its own
+  const plain = harness();
+  put(plain, 'pan-harness/handoff.md', activeHandoff());
+  assert.match(check(plain, '--tree').out, /^\(no Work ID\)  active  handoff\.md  \(owner\)\nAction: go on with handoff\.md\.$/m);
+  assert.equal(check(harness(), '--tree').out.trim(), 'Action: no open task.');
+});
+
+test('a broken sub-session tree: an opener without a Work ID, one Work ID twice, a parent that ended before its child', () => {
+  const dir = harness();
+  put(dir, 'pan-harness/handoff-a.md', treeHandoff('20261114-140614-a-1111', 'owner', 'A.'));
+  put(dir, 'pan-harness/handoff-b.md', treeHandoff('20261114-140614-a-1111', 'owner', 'B.'));
+  put(dir, 'pan-harness/handoff-c.md', treeHandoff('20261114-140614-c-2222', '20261114-130000-gone-3333', 'C.'));
+  put(dir, 'pan-harness/handoff-d.md', treeHandoff('X', '20261114-140614-c-2222', 'D.').replace(/^\*\*Work ID:\*\* X\n/m, ''));
+  const out = check(dir).out;
+  assert.match(out, /^WARN +pan-harness\/handoff-d\.md: '\*\*Opened by:\*\*' without '\*\*Work ID:\*\*' - /m);
+  assert.match(out, /^WARN +pan-harness\/handoff-b\.md: the Work ID 20261114-140614-a-1111 stands in handoff-a\.md too - /m);
+  assert.match(out, /^WARN +pan-harness\/handoff-c\.md: opened by 20261114-130000-gone-3333, which no open state file holds - /m);
+  assert.doesNotMatch(out, /handoff-a\.md: /, out);
+});
+
+test('handoff.md: waiting-owner is an open task checked like active, with its question in Open questions', () => {
+  const dir = harness();
+  const waiting = activeHandoff().replace('**Status:** active', '**Status:** waiting-owner');
+  put(dir, 'pan-harness/handoff.md', waiting);
+  const r = check(dir);
+  assert.doesNotMatch(r.out, /handoff\.md/, r.out);
+  put(dir, 'pan-harness/handoff.md', waiting.replace(/## Open questions\n\n[^\n]*\n/, '## Open questions\n\nNone.\n'));
+  assert.match(check(dir).out, /^WARN +pan-harness\/handoff\.md: waiting-owner without a question in '## Open questions' - /m);
+  put(dir, 'pan-harness/handoff.md', waiting.replace(/\n## Work files\n[\s\S]*$/, '\n'));
+  assert.match(check(dir).out, /^ERROR pan-harness\/handoff\.md: an open task without '## Work files'/m);
+});
+
+test('a Queue item that points to a part\'s plan.md: a waiting-owner task there is open', () => {
+  const dir = harness();
+  put(dir, 'backend/PAN-HARNESS.md', '# PAN-HARNESS\n\nStandard: pan-harness 3.13.9\n');
+  put(dir, 'backend/pan-harness/plan.md', '# Plan\n\n## 1. Queue\n');
+  put(dir, 'backend/pan-harness/handoff.md', '# Handoff\n\n**Status:** waiting-owner\n');
+  const item = '- **Rate limit** (part `backend`, large task, active): a limit on every route. Its state: `backend/pan-harness/plan.md`.\n';
+  edit(dir, 'pan-harness/plan.md', '## 1. Queue\n\n', `## 1. Queue\n\n${item}\n`);
+  const r = check(dir);
+  assert.match(r.out, /0 error\(s\), 0 warning\(s\)/, r.out);
 });
 
 test('co_change: an empty map gets a note for ph-doctor, a filled one none; check.json stays off the map', () => {

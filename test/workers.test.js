@@ -87,7 +87,9 @@ test('prepare: the worker folder equals the main folder and git sees it clean, n
   const folder = path.join(workers, 'TARS');
   assert.match(out, /on branch tars\/doc-a \(plain copy, 1 nested repo\(s\)\)/);
   assert.match(out, /^BRIEF\nYou are TARS, a worker-agent/m);
-  assert.ok(out.includes(`\n${LIMIT_LINE}\n- Task:`), 'the brief carries the usage-limit line of the large-task playbook');
+  assert.ok(out.includes(`\n${LIMIT_LINE}\n- Context refresh: brief in ${path.join(folder, 'pan-harness', 'brief.md')}. `), 'the brief carries the usage-limit line, then the refresh line with the worker brief file');
+  const refresh = /The brief carries the refresh line: "(- Context refresh: [^"]+)"/.exec(fs.readFileSync(path.join(ROOT, 'core', 'templates', 'pan-harness', 'playbooks', 'large-task.md.tmpl'), 'utf8'))[1];
+  assert.ok(out.includes(`\n${refresh.replace('<brief file>', path.join(folder, 'pan-harness', 'brief.md'))}\n- Task:`), 'the refresh line is the large-task playbook\'s own words');
   assert.deepEqual(list(folder), list(root));
   assert.equal(dirty(folder), '');
   assert.equal(dirty(path.join(folder, 'src')), '');
@@ -313,7 +315,7 @@ test('prepare --same-folder: the worker works in the main folder on the main bra
   const out = ok('prepare', '--root', root, '--name', 'TARS', '--task', 'doc-b', '--same-folder');
   assert.match(out, /TARS works in the main folder on main \(no folder, no branch of its own\)/);
   assert.match(out, /^BRIEF\nYou are TARS, a worker-agent/m);
-  assert.ok(out.includes(`\n${LIMIT_LINE}\n- Task:`), 'the brief carries the usage-limit line of the large-task playbook');
+  assert.ok(out.includes(`\n${LIMIT_LINE}\n- Context refresh: brief in ${path.join(root, 'pan-harness', 'brief-doc-b.md')}. `), 'the brief carries the usage-limit line, then the refresh line with the brief file of the task');
   assert.match(out, /Your folder: the main folder .*, branch main, shared with the other sessions/);
   assert.match(fs.readFileSync(path.join(root, 'pan-harness', 'workers.md'), 'utf8'), /^\| TARS \| working \| doc-b \| `main` \| `\.` \|/m);
   assert.equal(git(root, 'branch', '--list', 'tars/*').trim(), '', 'no branch made');

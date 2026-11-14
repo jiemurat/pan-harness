@@ -4,6 +4,36 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 3.16.9
+
+A session the main-agent started (a worker-agent, a part session or any other sub-session) stops past 500 thousand tokens of context with its state in files and no timer or background task running (the app does not clear a session with live work); the main-agent clears its conversation and tells it to go on, and it reads its brief file and state file back. The brief is kept in a brief file beside the state file. The clear offer starts at 300 thousand tokens, in every session.
+
+1. `mechanical` — `AGENTS.md` → `Working style`: the "Context refresh" item after "Usage limit" (`scripts/migrate.mjs`).
+2. `mechanical` — `playbooks/large-task.md`: the `## Context refresh` section after `## Usage limit`, and its `## Contents` line (`scripts/migrate.mjs`).
+3. `mechanical` — `playbooks/end-of-task.md` → `Context offer`: the offer from 300 thousand tokens, and a sub-session's offer is answered in that session (`scripts/migrate.mjs`).
+4. `mechanical` — `project/check.json` → `start_limit_bytes` grows by the added bytes (`scripts/migrate.mjs`).
+
+A task that waits for the owner's answer says `**Status:** waiting-owner` in its `handoff*.md`, and a bare "go on" resumes the one `active` task without a question; `pan-harness-check` reads `waiting-owner` as an open task. A part session under an approved umbrella plan gets the plan's goal, criteria and decisions in its brief and asks the owner only what they do not answer, in one round.
+
+5. `mechanical` — `handoff.md` (the intro), `playbooks/large-task.md` (the "Before each stop" item) and `AGENTS.md` (`Session start`, the own-harness rule): the `waiting-owner` status (`scripts/migrate.mjs`).
+6. `mechanical` — `AGENTS.md`, the own-harness rule: the umbrella plan's decisions go with a part's brief; `playbooks/large-task.md` → `Planning`: the part session's bullet (`scripts/migrate.mjs`).
+
+At the end of each stage of a large task, each of its steps keeps one line in `handoff.md` and its evidence goes only to the history entry. A planning file's copied paragraph leaves the status line, the plan and the approval to `playbooks/large-task.md` → `Planning`; `pan-harness-check` warns on a planning file without its status line, request line or one of its six sections.
+
+7. `mechanical` — `playbooks/large-task.md` → `Execution`: the stage-end bullet first, in place of a shorter one; the planning paragraph in `Planning` and in each `pan-harness/planning/*.md`: the two approval sentences give way to the pointer to `Planning` (`scripts/migrate.mjs`).
+
+A lesson whose failure came from a harness file (a stale, contradictory or missing text) has `Layer: files`; `pan-harness-check` accepts the sixth word.
+
+8. `mechanical` — `lessons.md`, the `Layer:` sentence: the `files` layer (`scripts/migrate.mjs`).
+9. `mechanical` — `project/check.json` → `start_limit_bytes` grows by the added bytes (`scripts/migrate.mjs`).
+
+An agent with the session tools hands work to a new sub-session, its state written first, at three signals: the same failure after two fixes (a fresh read-only sub-agent first), a large task's plan approved, and the next unit of work needing little of the conversation past 100 thousand tokens. Each state file of a sub-session tree carries `**Work ID:**` and `**Opened by:**`; `pan-harness-check --new-id <task>` makes the ID, `--tree` prints the open tree and the next action, and the check warns on a broken tree. `delegation.md`: work of about 10 tool calls is done yourself, and a sub-agent's result is checked against the task's goal and criteria.
+
+10. `mechanical` — `AGENTS.md` → `Working style`: the "New session" item after "Context refresh"; `Session start`: several open tasks and none named run `--tree` (`scripts/migrate.mjs`).
+11. `mechanical` — `playbooks/large-task.md`: the `## New session` section after `## Context refresh` and its `## Contents` line; `## Parallel tasks` covers two or more tasks in one folder (`scripts/migrate.mjs`).
+12. `mechanical` — `playbooks/delegation.md`: the 10-tool-call line in "Do it yourself" and the goal check in `## The result` (`scripts/migrate.mjs`).
+13. `mechanical` — `project/check.json` → `start_limit_bytes` grows by the added bytes (`scripts/migrate.mjs`).
+
 ## 3.15.9
 
 Before each bigger step of any task, not only a large one, an agent that can see the 5-hour usage limit reads it; at 90% used or more it saves the work in `handoff.md`, tells the owner another agent can go on from it, and asks whether to wait or go on. The Session start fast check item reads the limit too. A sub-agent hands its state back to the agent that started it; a session started in another folder or as a worker-agent gets the rule in its brief, and the umbrella's agent keeps it in a part.

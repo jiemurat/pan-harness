@@ -54,7 +54,7 @@ Done when: as step 4 of the `ph-doctor` skill says (its `SKILL.md`).
 - Check the `Where:` field of the decisions: is the named file or setting still so. When there are more than 30 D, check each D added in the last 30 days and each D that is the source (`← D…`) of a rule; each gets `ok`, `fail` or `not checked` in the conformance table.
 - Look at the items in `plan.md` whose term passed or which are done. Check that work written in `history/` is not left in `plan.md`. For each ⏳: has its event or date passed (the script shows a passed dated `Scheduled` row and the list of open ⏳); when it passed, find the evidence and close it, or tell the owner.
 - Check the `Remove when:` condition of the temporary rules (A41): when it is met, propose the removal.
-- When `handoff.md` says `**Status:** active` and the last commit that touched the files of its `Changed files` is older than 14 days (the history and `git log`), tell the owner: the work may be abandoned.
+- When `handoff.md` says `**Status:** active` or `waiting-owner` and the last commit that touched the files of its `Changed files` is older than 14 days (the history and `git log`), tell the owner: the work may be abandoned.
 
 Done when: as step 5 of the `ph-doctor` skill says (its `SKILL.md`).
 

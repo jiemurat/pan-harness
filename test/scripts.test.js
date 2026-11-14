@@ -604,8 +604,10 @@ test('migrate 3.10.7 -> current: the planning file rules go into the planning pl
   const lt = 'pan-harness/playbooks/large-task.md';
   const old = read(dir, lt).replace(`${rounds}\n`, '').replace(/ Before you give the plan, write it into .*$/m, ' Before the approval, only reading is allowed.');
   put(dir, lt, old);
-  const several = start.slice(start.indexOf(' When several tasks are active ('), start.indexOf(' A large task still in planning'));
-  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').replace(/ When several tasks are active \(.*$/m, '')
+  const several = start.slice(start.indexOf(' When several tasks are open ('), start.indexOf(' A large task still in planning'));
+  const waiting = start.slice(start.indexOf('; a `waiting-owner` task waits'), start.indexOf(' When several tasks are open ('));
+  assert.ok(several && waiting, 'the template has both sentences');
+  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').replace(/; a `waiting-owner` task waits .*$/m, '.')
     .replace("(a change on no active task's list is the owner's,", "(a change not on the list is the owner's,")
     .replace("(in `git status`, on no active task's list)", '(in `git status`, not on your list)'));
   const eot = 'pan-harness/playbooks/end-of-task.md';
@@ -620,11 +622,11 @@ test('migrate 3.10.7 -> current: the planning file rules go into the planning pl
   assert.match(r.stdout, /^done +3\.11\.7 step 1: playbooks\/large-task\.md: the rounds go into the planning file$/m);
   assert.match(r.stdout, /^done +3\.11\.7 step 2: AGENTS\.md: Session start points to the planning file of a named task$/m);
   assert.match(r.stdout, /^done +3\.11\.7 step 3: PAN-HARNESS\.md: the Map names the planning files$/m);
-  const added = Buffer.byteLength(start.slice(start.indexOf(' When several tasks are active ('))) + Buffer.byteLength(`${map}\n`)
+  const added = Buffer.byteLength(start.slice(start.indexOf(' When several tasks are open ('))) + Buffer.byteLength(`${map}\n`)
     + Buffer.byteLength("on no active task's list") * 2 - Buffer.byteLength('not on the list') - Buffer.byteLength('not on your list');
-  assert.equal(startSet(dir) - before, added + Buffer.byteLength(VERSION) - Buffer.byteLength('3.10.7'), 'the start set grows by the lines the steps add and the longer Standard line');
+  assert.equal(startSet(dir) - before, added + Buffer.byteLength(waiting) - 1 + Buffer.byteLength(VERSION) - Buffer.byteLength('3.10.7'), 'the start set grows by the lines the steps add, the waiting-owner sentence and the longer Standard line');
   assert.match(r.stdout, new RegExp(`^done +3\\.11\\.7 step 7: project/check\\.json: start_limit_bytes ${added} bytes higher`, 'm'));
-  assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${30000 + added}`));
+  assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${30000 + added + Buffer.byteLength(waiting) - 1}`));
   assert.match(r.stdout, /^done +3\.11\.7 step 4: playbooks\/large-task\.md: the Parallel tasks section$/m);
   assert.match(r.stdout, /^done +3\.11\.7 step 5: AGENTS\.md: Session start goes on only with the task the session names$/m);
   assert.match(r.stdout, /^done +3\.11\.7 step 5: AGENTS\.md: the commit rule leaves the files of every active task$/m);
@@ -679,7 +681,7 @@ test('migrate 3.11.7 -> current: Parallel tasks counts the checks in an overlap 
 test('migrate 3.13.9 -> current: a task left open in a part is found from the umbrella Queue, with the project\'s rule number', () => {
   const dir = current();
   const goOn = / A `plan\.md` item that points to a part's `plan\.md` .*? go on with its open task \(R26\)\./;
-  const write = / a task you leave open there \(a planning file or an active `handoff\*\.md`\) gets one item .*? so that a new session here finds it;/;
+  const write = / a task you leave open there \(a planning file or an active or waiting `handoff\*\.md`\) gets one item .*? so that a new session here finds it;/;
   let agents = read(dir, 'AGENTS.md');
   assert.match(agents, goOn, 'the template has the Session start sentence');
   assert.match(agents, write, 'the template has the own-harness sentence');
@@ -725,7 +727,7 @@ test('migrate 3.11.8 -> current: a stopped large task goes on after /clear from 
     [lt, / Before you give the plan, write it into the planning file's `## Plan`.*?; then move the planning file: /, ' On the approval, move the planning file: '],
     [lt, /^- Before each stop \(a question to the owner, .*\n/m, ''],
     [ho, /before each stop \(a question, a wait for the owner's word, a report\) and near/, 'before stopping to ask the owner a question and near'],
-    [ho, /When the owner's answer comes, the first file change, .*? it asks again only an open question\./, 'A new session goes on with the work from this file.'],
+    [ho, /When the owner's answer comes, the first file change, .*? it asks again only an open question\.( While the task waits .*? sets it back to `active`\.)?/, 'A new session goes on with the work from this file.'],
     [lt, / line, a request line, `\*\*Request:\*\* .*?, and these sections:/, ' line and these sections:'],
     [lt, /the request line into `Task` of `handoff\.md`, the answers and decisions into its `Decisions` section/, 'the answers and decisions into the `Decisions` section of `handoff.md`'],
     [ho, /Task \(task, the request line of the planning file, goal, not done, budget\)/, 'Task (task, goal, not done, budget)'],
@@ -810,7 +812,7 @@ test('migrate 3.14.9 -> current: the usage-limit rule in Working style, the own-
     added += Buffer.byteLength(newer) - Buffer.byteLength(older);
   }
   put(dir, 'AGENTS.md', agents.replaceAll('R26', 'R21'));
-  const contents = '## Contents\n- Planning\n- Execution\n- Usage limit\n- Parallel tasks\n\n';
+  const contents = '## Contents\n- Planning\n- Execution\n- Usage limit\n- Context refresh\n- New session\n- Parallel tasks\n\n';
   assert.ok(read(dir, lt).includes(contents), 'the template has the Contents list');
   put(dir, lt, read(dir, lt).replace(contents, ''));
   const playbook = read(dir, lt);
@@ -829,7 +831,7 @@ test('migrate 3.14.9 -> current: the usage-limit rule in Working style, the own-
   put(dir, 'pan-harness/project/check.json', '{\n  "start_limit_bytes": 30000\n}\n');
   const r = run('migrate.mjs', '--root', dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  const v = VERSION.replace(/\./g, '\\.');
+  const v = '3\\.15\\.9'; // the version that brought these steps
   assert.match(r.stdout, new RegExp(`^done +${v} step 1: AGENTS\\.md: Working style reads the 5-hour limit before each bigger step$`, 'm'));
   assert.match(r.stdout, new RegExp(`^done +${v} step 2: AGENTS\\.md: the own-harness rule carries the usage limit into a part$`, 'm'));
   assert.match(r.stdout, new RegExp(`^done +${v} step 3: playbooks/large-task\\.md: the Usage limit section, the budget bullets moved in$`, 'm'));
@@ -850,6 +852,216 @@ test('migrate 3.14.9 -> current: the usage-limit rule in Working style, the own-
   assert.match(h.stdout, new RegExp(`^by hand ${v} step 3: playbooks/large-task\\.md: `, 'm'));
 });
 
+
+test('migrate 3.15.9 -> current: the context refresh in Working style, large-task.md and the clear offer from 300K, once', () => {
+  const dir = current();
+  const lt = 'pan-harness/playbooks/large-task.md';
+  const eot = 'pan-harness/playbooks/end-of-task.md';
+  const agents = read(dir, 'AGENTS.md');
+  const item = agents.split('\n').find((l) => l.startsWith('- **Context refresh.** '));
+  assert.ok(item, 'the template has the Working style item');
+  const added = Buffer.byteLength(item) + 1;
+  put(dir, 'AGENTS.md', agents.replace(`${item}\n`, '').replaceAll('R26', 'R21'));
+  const playbook = read(dir, lt);
+  const section = /\n## Context refresh\n[\s\S]*?\n(?=## New session\n)/.exec(playbook);
+  assert.ok(section, 'the template has the Context refresh section before New session');
+  assert.ok(playbook.includes('- Usage limit\n- Context refresh\n'), 'the template Contents names the section');
+  put(dir, lt, playbook.replace(section[0], '\n').replace('- Usage limit\n- Context refresh\n', '- Usage limit\n'));
+  // the 3.15.9 offer: each pair is the newer text of the template and the older text it replaces
+  const offer = [
+    ['Past 300 thousand tokens, and again past each next 100 thousand (400, 500, …)', 'Past 400 thousand tokens, and again past each next 100 thousand (500, 600, …)'],
+    [' In a session the main-agent started, the owner answers the offer in that session; past 500 thousand the refresh of `playbooks/large-task.md` → `Context refresh` comes in its place.', ''],
+  ];
+  let end = read(dir, eot);
+  for (const [newer, older] of offer) {
+    assert.ok(end.includes(newer), `the template has: ${newer}`);
+    end = end.replace(newer, older);
+  }
+  put(dir, eot, end);
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 3.15.9'));
+  put(dir, 'pan-harness/project/check.json', '{\n  "start_limit_bytes": 30000\n}\n');
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const v = VERSION.replace(/\./g, '\\.');
+  assert.match(r.stdout, new RegExp(`^done +${v} step 1: AGENTS\\.md: Working style names the context refresh of a sub-session$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 2: playbooks/large-task\\.md: the Context refresh section and its Contents line$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 3: playbooks/end-of-task\\.md: the clear offer from 300K, in a sub-session too$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 4: project/check\\.json: start_limit_bytes ${added} bytes higher for the context-refresh item$`, 'm'));
+  assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${30000 + added}`));
+  assert.equal(read(dir, 'AGENTS.md'), read(current(), 'AGENTS.md').replaceAll('R26', 'R21'), 'AGENTS.md equals the template, the project\'s rule number kept');
+  for (const rel of [lt, eot]) assert.equal(read(dir, rel), read(current(), rel), `${rel} equals the template`);
+  const again = run('migrate.mjs', '--root', dir);
+  assert.doesNotMatch(again.stdout, new RegExp(`${v} step`), again.stdout);
+  // an offer in the project's own words is left to the agent
+  const other = current();
+  put(other, eot, read(other, eot).replace(offer[0][0], 'Past a big size'));
+  put(other, 'PAN-HARNESS.md', read(other, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 3.15.9'));
+  const h = run('migrate.mjs', '--root', other);
+  assert.match(h.stdout, new RegExp(`^by hand ${v} step 3: playbooks/end-of-task\\.md: `, 'm'));
+});
+test('migrate 3.15.9 -> current: waiting-owner in the handoff, large-task.md and Session start; the umbrella brief, once', () => {
+  const dir = current();
+  const lt = 'pan-harness/playbooks/large-task.md';
+  const ho = 'pan-harness/handoff.md';
+  const tmplHandoff = fs.readFileSync(path.join(SKILL, 'templates', 'pan-harness', 'handoff.md.tmpl'), 'utf8');
+  const waiting = /While the task waits[^]*?sets it back to `active`\./.exec(tmplHandoff)[0];
+  const umbrella = "; when this harness's approved plan covers that part, the brief also carries the plan's goal, criteria and decisions for the part and the line \"- Umbrella plan: approved. Ask the owner only what the brief does not answer, in one round; with questions, write only a planning file until the owner approves the plan given after the answers (`playbooks/large-task.md` → `Planning`).\"";
+  // each pair: the newer text of the template and the older text it replaces
+  const agentsPairs = [
+    ['says `**Status:** active` or `waiting-owner`, a task stopped midway:', 'says `**Status:** active`, a task stopped midway:'],
+    ["; a `waiting-owner` task waits for the owner: send its `Open questions` again unchanged and wait. When several tasks are open (`handoff.md` and `pan-harness/handoff-<task>.md`), go on with the one this session's first message names; with none named, go on with the one `active` task when exactly one is `active`; otherwise list them and ask the owner.", ". When several tasks are active (`handoff.md` and `pan-harness/handoff-<task>.md`), go on only with the one this session's first message names; with none named, list them and ask the owner."],
+    ['(no `active` or `waiting-owner` `handoff*.md`,', '(no active `handoff*.md`,'],
+    ['(a planning file or an active or waiting `handoff*.md`)', '(a planning file or an active `handoff*.md`)'],
+    [umbrella, ''],
+  ];
+  const tree = 'when exactly one is `active` and no open file has a `**Work ID:**` line; otherwise run `node pan-harness/scripts/pan-harness-check.mjs --tree` and do what its `Action:` line says.';
+  let agents = read(dir, 'AGENTS.md');
+  assert.ok(agents.includes(tree), 'the template has the --tree clause');
+  agents = agents.replace(tree, 'when exactly one is `active`; otherwise list them and ask the owner.'); // the 3.15.9 clause, before the new-session step
+  let added = 0;
+  for (const [newer, older] of agentsPairs) {
+    assert.ok(agents.includes(newer), `the template has: ${newer}`);
+    agents = agents.replace(newer, older);
+    added += Buffer.byteLength(newer) - Buffer.byteLength(older);
+  }
+  put(dir, 'AGENTS.md', agents.replaceAll('R26', 'R21'));
+  const handoff = read(dir, ho);
+  assert.ok(handoff.includes(` ${waiting}`), 'the handoff intro has the waiting sentence');
+  put(dir, ho, handoff.replace(` ${waiting}`, ''));
+  const playbook = read(dir, lt);
+  const part = playbook.split('\n').find((l) => l.startsWith('- A session whose brief says "- Umbrella plan: approved"'));
+  assert.ok(part && playbook.includes(`${waiting} When the owner's answer comes`), 'the template playbook has both texts');
+  put(dir, lt, playbook.replace(`${part}\n`, '').replace(`${waiting} When the owner's answer comes`, "When the owner's answer comes"));
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 3.15.9'));
+  put(dir, 'pan-harness/project/check.json', '{\n  "start_limit_bytes": 30000\n}\n');
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const v = VERSION.replace(/\./g, '\\.');
+  assert.match(r.stdout, new RegExp(`^done +${v} step 5: handoff\\.md, large-task\\.md, AGENTS\\.md: a task waiting for the owner says waiting-owner; "go on" resumes the one active task$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 6: AGENTS\\.md: the own-harness rule sends the umbrella plan's decisions with a part's brief$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 6: playbooks/large-task\\.md: a part session under an approved umbrella plan asks only what its brief does not answer$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 9: project/check\\.json: start_limit_bytes ${added} bytes higher for the waiting-owner and umbrella text$`, 'm'));
+  assert.equal(read(dir, 'AGENTS.md'), read(current(), 'AGENTS.md').replaceAll('R26', 'R21'), 'AGENTS.md equals the template, the project\'s rule number kept');
+  for (const rel of [lt, ho]) assert.equal(read(dir, rel), read(current(), rel), `${rel} equals the template`);
+  const again = run('migrate.mjs', '--root', dir);
+  assert.doesNotMatch(again.stdout, new RegExp(`${v} step`), again.stdout);
+  // a Session start in the project's own words is left to the agent
+  const other = current();
+  put(other, 'AGENTS.md', read(other, 'AGENTS.md').replace(agentsPairs[0][0], 'says it is busy, a task stopped midway:'));
+  put(other, 'PAN-HARNESS.md', read(other, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 3.15.9'));
+  const h = run('migrate.mjs', '--root', other);
+  assert.match(h.stdout, new RegExp(`^by hand ${v} step 5: AGENTS\\.md: `, 'm'));
+});
+test('migrate 3.15.9 -> current: the stage-end bullet first in Execution, the planning paragraph points to Planning, once', () => {
+  const dir = current();
+  const lt = 'pan-harness/playbooks/large-task.md';
+  const plan = 'pan-harness/planning/demo-task.md';
+  const older = "When the status line says `awaiting approval`, give the plan from `## Plan` and wait for the approval; on the approval, the first file change, before any other, sets the status line to `approved`. When it says `approved`, finish the move by `playbooks/large-task.md` → `Planning`, without asking again.";
+  const newer = 'The status line, the plan and the approval: `playbooks/large-task.md` → `Planning`.';
+  const playbook = read(dir, lt);
+  const stageEnd = playbook.split('\n').find((l) => l.startsWith('- At the end of each stage, write its history entry'));
+  assert.ok(stageEnd && playbook.includes(`## Execution\n\n${stageEnd}\n`) && playbook.includes(newer), 'the template has both texts');
+  // the older playbook: the paragraph's two approval sentences and a shorter stage-end bullet second in Execution
+  const ownBullet = '- At the end of each stage, write its history entry (`playbooks/end-of-task.md` → `End of task`) before the stage commit.';
+  const oldPlaybook = playbook.replace(newer, older).replace(`${stageEnd}\n`, '').replace(/(## Execution\n\n- [^\n]*\n)/, `$1${ownBullet}\n`);
+  put(dir, lt, oldPlaybook);
+  put(dir, plan, `# Planning: demo task\n\n**Status:** planning\n\n"A new session: ... in one edit. ${older}"\n\n**Request:** "a demo"\n`);
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 3.15.9'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const v = VERSION.replace(/\./g, '\\.');
+  assert.match(r.stdout, new RegExp(`^done +${v} step 7: playbooks/large-task\\.md, planning/demo-task\\.md: the planning paragraph points to Planning for the status line and the approval$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 7: playbooks/large-task\\.md: a finished stage keeps one line a step in handoff\\.md, its evidence in the history entry$`, 'm'));
+  assert.equal(read(dir, lt), playbook, 'large-task.md equals the template');
+  assert.ok(read(dir, plan).includes(`in one edit. ${newer}"`) && !read(dir, plan).includes(older), 'the planning file got the new sentence');
+  const again = run('migrate.mjs', '--root', dir);
+  assert.doesNotMatch(again.stdout, new RegExp(`${v} step 7`), again.stdout);
+  // no Execution heading: left to the agent
+  const other = current();
+  put(other, lt, read(other, lt).replace(`${stageEnd}\n`, '').replace('## Execution', '## Carrying out'));
+  put(other, 'PAN-HARNESS.md', read(other, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 3.15.9'));
+  const h = run('migrate.mjs', '--root', other);
+  assert.match(h.stdout, new RegExp(`^by hand ${v} step 7: playbooks/large-task\\.md: no \`## Execution\` heading`, 'm'));
+});
+test('migrate 3.15.9 -> current: lessons.md gets the files layer, once', () => {
+  const dir = current();
+  const ls = 'pan-harness/lessons.md';
+  const added = ', `files` (a harness file held a stale, contradictory or missing text)';
+  const lessons = read(dir, ls);
+  assert.ok(lessons.includes(`\`state\` (progress or a decision was lost)${added}; the fix`), 'the template has the files layer');
+  put(dir, ls, lessons.replace(added, ''));
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 3.15.9'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const v = VERSION.replace(/\./g, '\\.');
+  assert.match(r.stdout, new RegExp(`^done +${v} step 8: lessons\\.md: the files layer, a lesson whose failure came from a harness file$`, 'm'));
+  assert.equal(read(dir, ls), lessons, 'lessons.md equals the template');
+  const again = run('migrate.mjs', '--root', dir);
+  assert.doesNotMatch(again.stdout, new RegExp(`${v} step 8`), again.stdout);
+  // a Layer sentence in the project's own words is left to the agent
+  const other = current();
+  put(other, ls, read(other, ls).replace(added, '').replace('; the fix goes to that layer.', '; fix it there.'));
+  put(other, 'PAN-HARNESS.md', read(other, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 3.15.9'));
+  const h = run('migrate.mjs', '--root', other);
+  assert.match(h.stdout, new RegExp(`^by hand ${v} step 8: lessons\\.md: the Layer sentence is reworded; add to its list "\`files\` \\(a harness file held`, 'm'));
+});
+test('migrate 3.15.9 -> current: the new-session item, Session start --tree, the New session section, Parallel tasks for many and delegation.md, once', () => {
+  const dir = current();
+  const lt = 'pan-harness/playbooks/large-task.md';
+  const dg = 'pan-harness/playbooks/delegation.md';
+  let agents = read(dir, 'AGENTS.md');
+  const item = agents.split('\n').find((l) => l.startsWith('- **New session.** '));
+  const tree = 'when exactly one is `active` and no open file has a `**Work ID:**` line; otherwise run `node pan-harness/scripts/pan-harness-check.mjs --tree` and do what its `Action:` line says.';
+  assert.ok(item && agents.includes(tree), 'the template has the item and the --tree clause');
+  assert.match(item, /\(those the state file records count\).*An agent that can start sessions opens a sub-session; one that cannot tells the owner to open a new session in this folder and write "go on"/, 'the item holds for every agent');
+  const added = Buffer.byteLength(item) + 1 + Buffer.byteLength(tree) - Buffer.byteLength('when exactly one is `active`; otherwise list them and ask the owner.');
+  put(dir, 'AGENTS.md', agents.replace(`${item}\n`, '').replace(tree, 'when exactly one is `active`; otherwise list them and ask the owner.').replaceAll('R26', 'R21'));
+  let playbook = read(dir, lt);
+  const section = /\n## New session\n[\s\S]*?\n(?=## Parallel tasks\n)/.exec(playbook);
+  assert.ok(section && playbook.includes('- Context refresh\n- New session\n'), 'the template has the section and its Contents line');
+  assert.match(section[0], /after the second fix \(yours or one the state file records\)/, 'signal 1 counts the recorded fixes');
+  assert.match(section[0], /Without session tools, show the owner the tree and ask them to open a session in this folder for each open child, its first message naming the child's state file\./, 'a stopped tree without session tools');
+  playbook = playbook.replace(section[0], '\n').replace('- Context refresh\n- New session\n', '- Context refresh\n');
+  // each pair: the newer text of the template and the older text it replaces
+  const many = [
+    ['With two or more tasks active in one folder (the sub-sessions of `## New session` too):', 'With two tasks active in one folder:'],
+    ['(another session may have staged its own)', '(the other session may have staged its own)'],
+    ['`state.md` → `In progress` names each task.', '`state.md` → `In progress` names both tasks.'],
+    ['(another session is committing)', '(the other session is committing)'],
+  ];
+  for (const [newer, older] of many) { assert.ok(playbook.includes(newer), `the template has: ${newer}`); playbook = playbook.replace(newer, older); }
+  const signal2 = ' Then `## New session`, signal 2: open a sub-session for the work, or without session tools tell the owner to open a new session in this folder and write "go on"; write no code in this session.';
+  assert.ok(playbook.includes(`then remove the file (\`git rm\`).${signal2}`), 'the template Planning names signal 2 after the move');
+  playbook = playbook.replace(signal2, '');
+  put(dir, lt, playbook);
+  const goal = "- Check the result against the task's goal and criteria too, not only the brief: a summary can be right and miss the goal.\n";
+  const delegation = read(dir, dg);
+  assert.ok(delegation.includes(goal) && delegation.includes(', work you can finish in about 10 tool calls.'), 'the template has both delegation lines');
+  put(dir, dg, delegation.replace(goal, '').replace(', work you can finish in about 10 tool calls.', '.'));
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 3.15.9'));
+  put(dir, 'pan-harness/project/check.json', '{\n  "start_limit_bytes": 30000\n}\n');
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const v = VERSION.replace(/\./g, '\\.');
+  assert.match(r.stdout, new RegExp(`^done +${v} step 10: AGENTS\\.md: Working style names the three signals of a new sub-session$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 10: AGENTS\\.md: Session start runs --tree when several tasks are open and none is named$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 11: playbooks/large-task\\.md: the New session section and its Contents line$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 11: playbooks/large-task\\.md: Parallel tasks covers two or more tasks in one folder$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 11: playbooks/large-task\\.md: the approval move of Planning ends with the new-session signal$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 12: playbooks/delegation\\.md: about 10 tool calls are done yourself; a result is checked against the goal and criteria$`, 'm'));
+  assert.match(r.stdout, new RegExp(`^done +${v} step 13: project/check\\.json: start_limit_bytes ${added} bytes higher for the new-session text$`, 'm'));
+  assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${30000 + added}`));
+  assert.equal(read(dir, 'AGENTS.md'), read(current(), 'AGENTS.md').replaceAll('R26', 'R21'), 'AGENTS.md equals the template, the project\'s rule number kept');
+  for (const rel of [lt, dg]) assert.equal(read(dir, rel), read(current(), rel), `${rel} equals the template`);
+  const again = run('migrate.mjs', '--root', dir);
+  assert.doesNotMatch(again.stdout, new RegExp(`${v} step 1[0-3]`), again.stdout);
+  // a Session start in the project's own words is left to the agent
+  const other = current();
+  put(other, 'AGENTS.md', read(other, 'AGENTS.md').replace(tree, 'otherwise pick one.'));
+  put(other, 'PAN-HARNESS.md', read(other, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 3.15.9'));
+  const h = run('migrate.mjs', '--root', other);
+  assert.match(h.stdout, new RegExp(`^by hand ${v} step 10: AGENTS\\.md: Session start `, 'm'));
+});
 test('a harness without src/ gets no path error from the Parallel tasks example', () => {
   const dir = current();
   assert.ok(!fs.existsSync(path.join(dir, 'src')));

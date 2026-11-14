@@ -2,6 +2,20 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 3.16.9
+
+- A sub-session the main agent started (a worker-agent, a part session or any other) refreshes itself without you: past 500 thousand tokens of context it stops with its state in files, the main agent clears its conversation and tells it to go on, and it goes on from its brief file and state file.
+- The offer to clear a long conversation starts at 300 thousand tokens, in every session.
+- `/ph-update` brings the new text into `AGENTS.md`, `playbooks/large-task.md` and `playbooks/end-of-task.md`.
+- A task that waits for your answer says `**Status:** waiting-owner` in `pan-harness/handoff.md`; when several tasks are open and you only say "go on", the agent goes on with the one `active` task instead of asking which, and a waiting task sends its question again.
+- A part session started under an approved umbrella plan gets the plan's goal, criteria and decisions in its brief and asks you only what they do not answer, in one round; with nothing to ask it starts under the umbrella approval.
+- At the end of each stage of a large task, the stage keeps one line a step in `pan-harness/handoff.md` and its evidence goes to the history entry, so the handoff stays small.
+- `pan-harness-check` warns on a planning file without its status line, its `**Request:**` line or one of its six sections; the paragraph copied into each planning file now points to `playbooks/large-task.md` for the status line and the approval. `/ph-update` brings both into `playbooks/large-task.md` and the planning files.
+- A lesson whose mistake came from a harness file (a stale, contradictory or missing text) says `Layer: files`; `pan-harness-check` accepts it, and `/ph-update` adds the word to `lessons.md`.
+- In Claude Desktop the agent opens a new sub-session on its own and hands it the work, its state written first: when the same check fails after two fixes (it first asks a fresh read-only helper), when a large task's plan is approved, and when the next piece of work needs little of a conversation over 100 thousand tokens. You answer the sub-session's questions in that session; a finished one reports to the session that opened it, which checks it, archives it and, at the task's end, deletes the archived ones in one approval card. Without session tools the agent tells you a new session would work better.
+- Each state file of such a tree carries a Work ID and the ID of its opener; `pan-harness-check --tree` prints the stopped tree, so a bare "go on" resumes the whole of it, and `--new-id <task>` makes the ID.
+- A helper (sub-agent) is not started for work of about 10 tool calls, and its result is checked against the task's goal and criteria. `/ph-update` brings the new text into `AGENTS.md`, `playbooks/large-task.md` and `playbooks/delegation.md`.
+
 ## 3.15.9
 
 - Before each bigger step of any task (each large-task step, a sub-agent or sub-session start, a test or build run, a step of over 20 tool calls), an agent that can see the 5-hour usage limit (Claude Desktop) reads it. At 90% used or more it saves the work in `pan-harness/handoff.md`, tells the owner another agent can go on from it, and asks whether to wait or go on; after "go on" it asks again only after the limit resets. A sub-agent stops and hands its state back; a session started in a nested harness folder, and a worker-agent, get the rule in their brief. An agent that cannot see the limit goes on as before.

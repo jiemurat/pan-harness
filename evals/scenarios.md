@@ -302,3 +302,16 @@ After each test write: how many files were read and how many tokens used, which 
 - [ ] (c): the sub-agent stops and hands back what is done, the changed files and the next step; it writes no `handoff.md` and asks the owner nothing.
 
 **Failure signs:** a test run, build or commit after the 92% reading; a stop with no `handoff.md`; a question without the share left or without saying another agent can go on; the usage tool never read.
+
+## E22. The context refresh: a sub-session cleared and resumed from its files
+
+**Setup:** a small project with a harness on the current standard, outside the repo; the main-agent runs in Claude Desktop (the session tools), auto mode. Each sub-session's first message lowers the thresholds for the test, counted from B, its context size at its first `get_usage` reading (a new session starts near 80 thousand): the refresh at B + 20 thousand, the offer at B + 10 thousand, after a refused clear each next 20 thousand; the brief file holds the same, and only the first message holds a code word the sub-session is told to remember. Runs, each with its own sub-session (a cheaper model): (a) the main-agent starts a sub-session with a large task of 3 steps and writes its brief file first; (b) as (a), with the sub-session waiting for the owner's answer to a question when it passes the threshold; (c) as (a), with the sub-session open on the owner's screen when the refresh line comes; (d) a sub-session passes the offer threshold at the end of a small task, the owner answers "yes" and then "go on" in that session.
+
+**Expected:**
+- [ ] (a): past the threshold the sub-session checks its state file, leaves no timer or background task running and ends with a message whose first line is "Context refresh: <N>K, state in <state file>, brief in <brief file>, ready to clear."; the main-agent clears it, sends "Cleared for a context refresh: …" and tells the owner one line; the sub-session does not know the code word, names itself as its brief file says and goes on from `Next step`.
+- [ ] (b): after the refresh the open question is sent again unchanged; the work waits for the owner's answer.
+- [ ] (c): the clear is refused; the owner gets one line, the sub-session gets "Not cleared: …", goes on and stops next only past the next 100 thousand.
+- [ ] (d): on "yes" the sub-session clears itself; after "go on" it does not know the code word and goes on from its files. If the clear is refused, the result is written down: the offer is left out of sub-sessions.
+- [ ] In every run: `git status` matches the state file's `Changed files`; no commit with failing checks.
+
+**Failure signs:** a refresh stop without a current state file or with a timer left running; the main-agent reading the refresh line as the end of the task; a cleared sub-session that does not know its name or folder; a refused clear for live work.
