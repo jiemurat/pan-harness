@@ -4,6 +4,18 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 3.17.10
+
+When the owner puts off a check of theirs to a later date or event, that criterion is ⏳, and the task closes at once when every other criterion is ✅: the ⏳ item goes into `plan.md` → `Later and watch`. `pan-harness-check.mjs` warns (the regular check and `--tree`) on an `active` `handoff*.md` whose `## Criteria` items all end their `Status:` with `done`, ✅ or ⏳.
+
+1. `mechanical` — `playbooks/large-task.md` → `Execution`: the put-off-check item after "The task is done when …" (`scripts/migrate.mjs`).
+
+Every session an opener starts (a sub-session, a session the owner asks for, a part session in a folder with its own harness, a worker-agent) carries the brief lines of `playbooks/large-task.md` → `New session` → "Brief lines": the usage limit, the refresh line, its level and "When done: message your opener, session <id>", and sends that message even when the owner answered it in its own session: the app wakes the opener for a child's message, not for a turn the owner drove in the child. The opener acts on a part's "Done" (checks its commit, marks its step, opens the next part or reports). `ph-workers` writes the main-agent's session id into the worker's "When done" line.
+
+2. `mechanical` — `playbooks/large-task.md` → `New session`: the "Brief lines" paragraph before "Opening one", which points to it; "In the sub-session" sends "Done" also after the owner's turns; the "A part's "Done"" paragraph after "The opener, on "Done"" (`scripts/migrate.mjs`).
+3. `mechanical` — `AGENTS.md`: the own-harness rule ends with the sentence that a part session's brief carries the brief lines, "When done" too (`scripts/migrate.mjs`).
+4. `mechanical` — `project/check.json`: `start_limit_bytes` higher by the bytes step 3 added (`scripts/migrate.mjs`).
+
 ## 3.17.9
 
 `PAN-HARNESS.md` keeps the date of the last `/ph-update` on an `Updated:` line under `Standard:` (`Updated: <date>, checked <date>`; `checked` is the last weekly check that found no new version or the owner's no). From the 7th day after the later date, `pan-harness-check.mjs --harnesses` prints `ph-update due`; at Session start the main-agent then runs `npm view @jiemurat/pan-harness version` and, when it is newer than `Standard:`, asks the owner whether to run `/ph-update`; otherwise, or on a no, it writes today as `checked` and commits it alone; when `npm view` fails, it does nothing. A `/ph-update` with no new version only writes the date and stops; the check warns on a harness with no `Updated:` line.

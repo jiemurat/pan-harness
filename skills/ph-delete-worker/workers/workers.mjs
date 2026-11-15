@@ -50,6 +50,9 @@ const LIST = 'pan-harness/workers.md';
 const LIMIT_LINE = '- Usage limit: before each bigger step read the 5-hour limit; at under 10% left, write `pan-harness/handoff.md` of this folder, stop, tell the owner another agent can go on from it, and ask whether to wait or go on.';
 // the context-refresh line of a sub-session's brief, as the large-task playbook template words it
 const refreshLine = (brief) => `- Context refresh: brief in ${brief}. Before each bigger step read your context size; past 500 thousand tokens, check that your state file is current, leave no timer or background task running, and end the turn with a message whose first line is 'Context refresh: <N>K, state in <state file>, brief in <brief file>, ready to clear.' On 'Cleared for a context refresh', read the brief and state files and go on.`;
+// the "When done" line of a sub-session's brief, as the large-task playbook template words it; the main-agent
+// writes its own session id in place of <main-agent session id> (ph-workers, step 7)
+const doneLine = (name, task) => `- When done: message your opener, session <main-agent session id>: 'Done: ${name}, ${task}, <commit>'. Send it even when the owner answered you in your own session and saw your report: those turns do not wake your opener.`;
 const CLOUD = [/[\\/]Dropbox( \([^\\/]*\))?([\\/]|$)/i, /[\\/]Library[\\/]CloudStorage[\\/]/, /[\\/]Library[\\/]Mobile Documents[\\/]/,
   /[\\/]OneDrive( - [^\\/]*)?([\\/]|$)/i, /[\\/]Google ?Drive([\\/]|$)/i, /[\\/]iCloud ?Drive([\\/]|$)/i];
 
@@ -402,7 +405,7 @@ function cmdPrepare(root, a) {
     Object.assign(row, { Status: 'working', Task: a.task, Branch: here, Folder: '.' });
     writeList(root, rows, text);
     console.log(`${row.Name} works in the main folder on ${here} (no folder, no branch of its own)`);
-    console.log(`\nBRIEF\nYou are ${row.Name}, a worker-agent of this project; the main-agent ${mainAgent(root)} opened this session for one task, and the owner sees it.\n- Your folder: the main folder ${root}, branch ${here}, shared with the other sessions: commit only your task's files, as the "In the main folder" item of the ph-workers skill says.\n- Work as AGENTS.md says, with the worker lines there and the "Worker-agent" section of the ph-workers skill.\n- First set the task's type by the Workflow of AGENTS.md: this brief is not the owner's approval.\n${LIMIT_LINE}\n${refreshLine(path.join(root, 'pan-harness', `brief-${a.task}.md`))}\n- Task:`);
+    console.log(`\nBRIEF\nYou are ${row.Name}, a worker-agent of this project; the main-agent ${mainAgent(root)} opened this session for one task, and the owner sees it.\n- Your folder: the main folder ${root}, branch ${here}, shared with the other sessions: commit only your task's files, as the "In the main folder" item of the ph-workers skill says.\n- Work as AGENTS.md says, with the worker lines there and the "Worker-agent" section of the ph-workers skill.\n- First set the task's type by the Workflow of AGENTS.md: this brief is not the owner's approval.\n${LIMIT_LINE}\n${refreshLine(path.join(root, 'pan-harness', `brief-${a.task}.md`))}\n${doneLine(row.Name, a.task)}\n- Task:`);
     return;
   }
   const branch = `${row.Name.toLowerCase()}/${a.task}`;
@@ -471,7 +474,7 @@ function cmdPrepare(root, a) {
   freeTasks(root, folder, row.Name);
   Object.assign(row, { Status: 'working', Task: a.task, Branch: branch, Folder: shorten(folder) });
   writeList(root, rows, text);
-  console.log(`\nBRIEF\nYou are ${row.Name}, a worker-agent of this project; the main-agent ${mainAgent(root)} opened this session for one task, and the owner sees it.\n- Your folder: ${folder}, branch ${branch}. Work only there; the main folder ${root} and the other worker folders are not yours.\n- Work as AGENTS.md says, with the worker lines there and the "Worker-agent" section of the ph-workers skill.\n- First set the task's type by the Workflow of AGENTS.md: this brief is not the owner's approval.\n${LIMIT_LINE}\n${refreshLine(path.join(folder, 'pan-harness', 'brief.md'))}\n- Task:`);
+  console.log(`\nBRIEF\nYou are ${row.Name}, a worker-agent of this project; the main-agent ${mainAgent(root)} opened this session for one task, and the owner sees it.\n- Your folder: ${folder}, branch ${branch}. Work only there; the main folder ${root} and the other worker folders are not yours.\n- Work as AGENTS.md says, with the worker lines there and the "Worker-agent" section of the ph-workers skill.\n- First set the task's type by the Workflow of AGENTS.md: this brief is not the owner's approval.\n${LIMIT_LINE}\n${refreshLine(path.join(folder, 'pan-harness', 'brief.md'))}\n${doneLine(row.Name, a.task)}\n- Task:`);
 }
 
 /** The worker folder starts with no task of the main folder: its handoff.md says

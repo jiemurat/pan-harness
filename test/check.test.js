@@ -885,6 +885,26 @@ test('handoff.md: waiting-owner is an open task checked like active, with its qu
   assert.match(check(dir).out, /^ERROR pan-harness\/handoff\.md: an open task without '## Work files'/m);
 });
 
+test('handoff.md: an active task whose criteria are all done or ⏳ gets a warning to close it, in the check and in --tree', () => {
+  const dir = harness();
+  const crit = (marks) => marks.map((m, i) => `- K${i + 1} the outcome, checked by a test. Status: ${m}`).join('\n');
+  const withCrit = (marks) => activeHandoff().replace(/## Criteria\n\n[^\n]*\n/, `## Criteria\n\n${crit(marks)}\n`);
+  const warn = /^WARN +pan-harness\/handoff\.md: active, but every criterion is done or ⏳ - close the task now /m;
+  put(dir, 'pan-harness/handoff.md', withCrit(['✅ (test passed)', '⏳ (the owner checks it after the next release)', '`done` (12/12)']));
+  assert.match(check(dir).out, warn);
+  assert.match(check(dir, '--tree').out, /^Warning: handoff\.md: every criterion is done or ⏳ - close the task now [^\n]*\nAction: go on with handoff\.md\.$/m);
+  // silent on a failed, open or unmarked criterion, on the marks outside the Criteria section and on waiting-owner
+  for (const marks of [['✅', '❌ (2 tests fail)'], ['✅', 'todo'], ['✅', '`active`']]) {
+    put(dir, 'pan-harness/handoff.md', withCrit(marks));
+    assert.doesNotMatch(check(dir).out, warn, marks.join());
+    assert.doesNotMatch(check(dir, '--tree').out, /^Warning:/m, marks.join());
+  }
+  put(dir, 'pan-harness/handoff.md', withCrit(['✅']).replace(/(## Criteria\n\n[^\n]*)\n/, '$1\n- K2 the docs are read by the owner ✅ later\n'));
+  assert.doesNotMatch(check(dir).out, warn);
+  put(dir, 'pan-harness/handoff.md', withCrit(['✅']).replace('**Status:** active', '**Status:** waiting-owner'));
+  assert.doesNotMatch(check(dir).out, /every criterion is done/);
+});
+
 test('a Queue item that points to a part\'s plan.md: a waiting-owner task there is open', () => {
   const dir = harness();
   put(dir, 'backend/PAN-HARNESS.md', '# PAN-HARNESS\n\nStandard: pan-harness 3.13.9\n');

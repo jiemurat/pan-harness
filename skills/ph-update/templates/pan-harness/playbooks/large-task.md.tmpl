@@ -42,6 +42,7 @@ Ask the questions with the `ph-grilling` skill. If it is not installed (a new cl
 - If the budget doubles, stop and ask the owner.
 - Check each criterion with evidence: if it can be reached within the plan, fix and go on; if it needs leaving the plan or the criterion turns out wrong, stop and ask the owner. Only the owner changes a criterion.
 - The task is done when its own checks pass, there is no new error and each criterion is ✅ or ⏳.
+- When the owner puts off a check of theirs to a later date or event, that criterion is ⏳: if every other criterion is ✅, close the task now (`playbooks/end-of-task.md`), with the ⏳ item in `plan.md` → `Later and watch`.
 
 ## Usage limit
 
@@ -82,18 +83,26 @@ For every task, in an agent with the session tools (Claude Desktop: `mcp__ccd_se
 2. A large task's plan is approved: after the move of `## Planning`, open a sub-session for the work; write no code in this session.
 3. The next unit of work (the next task or stage) needs little of this conversation, its state is in files, and your context is over 100 thousand tokens.
 
+**Brief lines.** The brief of every session you open (a sub-session, a session the owner asks for, a part session in a folder with its own harness, a worker-agent) carries these lines, with your values:
+- the usage-limit line of `## Usage limit` (in a sub-session of this folder, its state file in place of `pan-harness/handoff.md`);
+- the refresh line of `## Context refresh` → "The brief file";
+- "- Level: <your level + 1>";
+- "- When done: message your opener, session <your session id>: 'Done: <Work ID or task>, <commit>'. Send it even when the owner answered you in your own session and saw your report: those turns do not wake your opener." Your session id: `get_session` with `self` (Claude Desktop).
+
 **Opening one.** Done when the child runs and the owner has the line.
 - Your own work needs a state file with a Work ID: a small task writes a short `pan-harness/handoff-<task>.md` first (`**Status:** active`, Task, Changed files, Next step).
-- Make the child's Work ID: `node pan-harness/scripts/pan-harness-check.mjs --new-id <child-task>`. Write its state file `pan-harness/handoff-<child-task>.md` (the sections of `handoff.md`) with `**Work ID:**` and `**Opened by:** <your Work ID>`, and its brief file `brief-<child-task>.md` (`## Context refresh` → "The brief file"), which adds: "- Level: <your level + 1>" and "- When done: message your opener, session <your session id>: 'Done: <Work ID>, <commit>'."
-- A session the owner asks for (the app's offer card, or in words) gets a brief file too, `pan-harness/brief-<task>.md`: the task, "- Level: <your level + 1>" and "- When done: message your opener, session <your session id>: 'Done: <task>, <commit>'."; the session writes its own state file as its task needs. On its "Done", act as `The opener, on "Done"` says.
+- Make the child's Work ID: `node pan-harness/scripts/pan-harness-check.mjs --new-id <child-task>`. Write its state file `pan-harness/handoff-<child-task>.md` (the sections of `handoff.md`) with `**Work ID:**` and `**Opened by:** <your Work ID>`, and its brief file `brief-<child-task>.md` (`## Context refresh` → "The brief file") with the `Brief lines` ('Done: <Work ID>, <commit>').
+- A session the owner asks for (the app's offer card, or in words) gets a brief file too, `pan-harness/brief-<task>.md`: the task and the `Brief lines` ('Done: <task>, <commit>'); the session writes its own state file as its task needs. On its "Done", act as `The opener, on "Done"` says.
 - A child that writes files lists them before it starts (`## Parallel tasks`); a child that only reads (a search, a review) runs beside others freely.
 - Pick the child's model and effort by `playbooks/delegation.md` → `Model and effort` and write them and why into the brief file.
 - Commit the two files and open the sub-session with the brief's text, the model and the effort; one above your step starts at yours and is raised as that section says. Check with `get_session` and write `**Session:** <id>, <model>, <effort>` as it shows them under `**Opened by:**` in the child's state file. Tell the owner one line: the signal, the session's link, "the work goes on there".
 - At most 2 levels below the owner's session: a child at `Level: 2` opens no sub-session and works on itself.
 
-**In the sub-session.** The owner answers its questions in its own session. When its work is done (its checks pass, its commit made), it messages its opener as the brief says and waits.
+**In the sub-session.** The owner answers its questions in its own session. When its work is done (its checks pass, its commit made), it messages its opener as the brief's "When done" line says and waits, also when the owner answered it there and saw its report: the app wakes the opener for that message, not for a turn the owner drove in the child (the note of such a turn waits for the opener's next turn).
 
 **The opener, on "Done".** Check the result against the task's goal and criteria, not only the child's word (its diff and checks, `playbooks/delegation.md` → `The result`); remove the child's state and brief files, commit, report up (to the owner, or "Done" to your own opener), and archive the child at once (`archive_session`). A sub-session deletes no session: an approval card would stop the work while the owner is away. Only the owner's session deletes, once, as the very last step of the whole work: after its final report, when no session of the tree still works, it deletes every archived session of the tree in one approval card (`delete_session` with their ids from the app's session list). Done when each child is archived; in the owner's session, when the card is sent.
+
+**A part's "Done".** A part session works in another folder by that folder's harness, and its state and brief files stay there. Check its commit there (`git -C <folder> log --oneline -3`, its diff and checks), mark its step in your state file as done, archive it, then open the session of the next part or, with none left, report the parts together. A worker-agent's "Done": `ph-workers` → `The worker is done`.
 
 **Without session tools.** At a signal, write the state file and add one sentence: the work goes better in a new session; open one in this folder and write "go on".
 

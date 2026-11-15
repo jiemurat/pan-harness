@@ -48,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9', '3.13.9', '3.14.9', '3.15.9', '3.16.9', '3.17.9']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9', '3.13.9', '3.14.9', '3.15.9', '3.16.9', '3.17.9', '3.17.10']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -1509,6 +1509,73 @@ function step15DeleteAtEnd() {
   done.push('3.17.9 step 15: playbooks/large-task.md: only the owner\'s session deletes sub-sessions, at the end');
 }
 
+// ---------------------------------------------------------------- 3.17.10 (a put-off owner check closes the task)
+const PUT_OFF = LARGE_TASK_TMPL.find((l) => l.startsWith('- When the owner puts off a check of theirs ')) || '';
+
+function step1PutOffCheck() {
+  const f = file(LARGE_TASK);
+  if (!f || !PUT_OFF || f.lines.includes(PUT_OFF)) return;
+  const at = f.lines.findIndex((l) => l.startsWith('- The task is done when its own checks pass'));
+  if (at < 0) { byHand.push(`3.17.10 step 1: playbooks/large-task.md: no "The task is done when" item in Execution; add "${PUT_OFF}" at the end of Execution`); return; }
+  f.lines.splice(at + 1, 0, PUT_OFF);
+  f.changed = true;
+  done.push('3.17.10 step 1: playbooks/large-task.md: a put-off owner check is ⏳ and the task closes');
+}
+
+// a child session tells its opener it is done: every brief carries the brief lines, "When done" too; a part's
+// "Done" has its own opener paragraph
+const BRIEF_LINES = (() => { const a = LARGE_TASK_TMPL.findIndex((l) => l.startsWith('**Brief lines.** ')); const b = LARGE_TASK_TMPL.findIndex((l, i) => i > a && l === ''); return a < 0 || b < a ? [] : LARGE_TASK_TMPL.slice(a, b); })();
+const PART_DONE = LARGE_TASK_TMPL.find((l) => l.startsWith('**A part\'s "Done".** ')) || '';
+const BRIEF_SWAPS = [
+  [", which adds: \"- Level: <your level + 1>\" and \"- When done: message your opener, session <your session id>: 'Done: <Work ID>, <commit>'.\"", " with the `Brief lines` ('Done: <Work ID>, <commit>')."],
+  [": the task, \"- Level: <your level + 1>\" and \"- When done: message your opener, session <your session id>: 'Done: <task>, <commit>'.\";", ": the task and the `Brief lines` ('Done: <task>, <commit>');"],
+  ['it messages its opener as the brief says and waits.', 'it messages its opener as the brief\'s "When done" line says and waits, also when the owner answered it there and saw its report: the app wakes the opener for that message, not for a turn the owner drove in the child (the note of such a turn waits for the opener\'s next turn).'],
+];
+const PART_BRIEF = (() => { const l = AGENTS_TMPL.find((x) => x.includes(' A part session\'s brief carries all the brief lines ')) || ''; const a = l.indexOf(' A part session\'s brief carries'); const b = l.lastIndexOf(' ← '); return a < 0 || b < a ? '' : l.slice(a, b); })();
+let briefBytes = 0;
+
+function step2BriefLines() {
+  const f = file(LARGE_TASK);
+  if (!f || !f.lines.includes('## New session') || BRIEF_LINES.length !== 5 || !PART_DONE) return;
+  const ok = [];
+  if (!f.lines.includes(BRIEF_LINES[0])) {
+    const at = f.lines.findIndex((l) => l.startsWith('**Opening one.** '));
+    if (at < 0) byHand.push(`3.17.10 step 2: playbooks/large-task.md: no "Opening one" paragraph in New session; add the template's "Brief lines" paragraph and list before it`);
+    else { f.lines.splice(at, 0, ...BRIEF_LINES, ''); f.changed = true; ok.push(true); }
+  }
+  const r = BRIEF_SWAPS.map(([older, newer]) => swap(f, older, newer));
+  if (r.includes(false)) byHand.push('3.17.10 step 2: playbooks/large-task.md: "Opening one" or "In the sub-session" is reworded; take their brief-lines and "When done" words from templates/pan-harness/playbooks/large-task.md.tmpl');
+  if (!f.lines.includes(PART_DONE)) {
+    const at = f.lines.findIndex((l) => l.startsWith('**The opener, on "Done".**'));
+    if (at < 0) byHand.push(`3.17.10 step 2: playbooks/large-task.md: no "The opener, on "Done"" paragraph; add "${PART_DONE}" to New session`);
+    else { f.lines.splice(at + 1, 0, '', PART_DONE); f.changed = true; ok.push(true); }
+  }
+  if (ok.length || r.includes('changed')) done.push('3.17.10 step 2: playbooks/large-task.md: every brief carries the brief lines, "When done" too; the opener acts on a part\'s "Done"');
+}
+
+function step3PartBrief() {
+  const f = file(AGENTS);
+  if (!f || !PART_BRIEF || !ownHarnessRule(f)) return;
+  const at = f.lines.findIndex((l) => /\*\*R\d+\. A folder with its own harness is worked by its harness\.\*\*/.test(l));
+  if (f.lines[at].includes(PART_BRIEF)) return;
+  const end = f.lines[at].lastIndexOf(' ← ');
+  if (end < 0) { byHand.push(`3.17.10 step 3: AGENTS.md: the own-harness rule has no "← " source; end it with "${PART_BRIEF.trim()}"`); return; }
+  f.lines[at] = f.lines[at].slice(0, end) + PART_BRIEF + f.lines[at].slice(end);
+  f.changed = true;
+  briefBytes += Buffer.byteLength(PART_BRIEF);
+  done.push('3.17.10 step 3: AGENTS.md: a part session\'s brief carries the brief lines, "When done" too');
+}
+
+function step4BriefBytes() {
+  const f = file('pan-harness/project/check.json');
+  if (!f || briefBytes === 0) return;
+  const at = f.lines.findIndex((l) => /"start_limit_bytes":\s*\d+/.test(l));
+  if (at < 0) return;
+  f.lines[at] = f.lines[at].replace(/("start_limit_bytes":\s*)(\d+)/, (_, k, v) => `${k}${Number(v) + briefBytes}`);
+  f.changed = true;
+  done.push(`3.17.10 step 4: project/check.json: start_limit_bytes ${briefBytes} bytes higher for the part brief sentence`);
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
@@ -1532,6 +1599,7 @@ const STEPS = {
   '3.16.9': [step1RefreshItem, step2RefreshSection, step3Offer300, step4RefreshBytes, step5WaitingStatus, step6UmbrellaBrief, step7StageEnd, step8FilesLayer, step9ReportBytes, step10NewSessionItem, step11NewSessionSection, step12DelegationGoal, step13NewSessionBytes],
   '3.17.9': [step1UpdatedLine, step2DueSentence, step3UpdateBytes, step4DepthTwo, step5OwnerSession, step6LimitList, step7StartLink, step8LimitListBytes,
     step9ModelSection, step10ModelBrief, step11ModelAgents, step12ModelBytes, step13SessionOpen, step14SessionTree, step15DeleteAtEnd],
+  '3.17.10': [step1PutOffCheck, step2BriefLines, step3PartBrief, step4BriefBytes],
 };
 
 // ---------------------------------------------------------------- run

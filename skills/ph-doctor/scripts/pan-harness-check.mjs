@@ -136,7 +136,7 @@ import { spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
-const VERSION = '3.17.9';
+const VERSION = '3.17.10';
 
 // Sizes in bytes. 25 KB fits the start set of a complex project written
 // compactly; 40 KB keeps any doc readable in one go. An agent reads a doc over
@@ -431,6 +431,18 @@ function section(body, heading) {
   return out;
 }
 
+/** An open task whose criteria are all closed: each `- ` line of `## Criteria` ends its `Status:` with `done`, ✅ or ⏳
+ * (the handoff template's place for the marks; free text elsewhere is not read). False with no criterion or an unmarked one. */
+function criteriaClosed(t) {
+  const items = section(t, '## Criteria').filter((l) => l.startsWith('- '));
+  return items.length > 0 && items.every((l) => {
+    const at = l.lastIndexOf('Status:');
+    return at >= 0 && /^\s*`?(done|✅|⏳)/u.test(l.slice(at + 7));
+  });
+}
+const CLOSED_HINT = 'every criterion is done or ⏳ - close the task now (playbooks/large-task.md -> Execution, playbooks/end-of-task.md), '
+  + "a ⏳ item goes into plan.md -> 'Later and watch'; an open task makes the next large task ask about parallel work";
+
 /** The open state files (Status active or waiting-owner): [{file, rel, status, id, openedBy, session, next}], handoff.md first. */
 function openStates() {
   const line = (t, name) => { const m = new RegExp(`^\\*\\*${name}:\\*\\*[ \\t]*(.*)$`, 'm').exec(t); return m ? m[1].replace(/`/g, '').trim() || null : null; };
@@ -442,7 +454,7 @@ function openStates() {
     if (!st || !['active', 'waiting-owner'].includes(st[1])) continue;
     const next = (section(t, '## Next step').find((l) => l.trim()) || '').trim();
     out.push({ file: path.basename(f), rel: rel(f), status: st[1], id: line(t, 'Work ID'), openedBy: line(t, 'Opened by'), session: line(t, 'Session'),
-      next: next.length > 80 ? `${next.slice(0, 79)}…` : next });
+      next: next.length > 80 ? `${next.slice(0, 79)}…` : next, closed: st[1] === 'active' && criteriaClosed(t) });
   }
   return out;
 }
@@ -472,6 +484,7 @@ if (args.tree) {
   }
   const planning = glob(path.join(H, 'planning'), '*.md').map((f) => `planning/${path.basename(f)}`);
   if (planning.length) console.log(`In planning, not in the tree: ${planning.join(', ')}`);
+  for (const s of states.filter((x) => x.closed)) console.log(`Warning: ${s.file}: ${CLOSED_HINT}`);
   if (!roots.length) console.log('Action: no open task.');
   else if (roots.length > 1) console.log(`Action: several roots: ask the owner which to go on with: ${roots.map((r) => r.file).join(', ')}.`);
   else {
@@ -1103,6 +1116,7 @@ for (const HF of [HANDOFF, ...glob(H, 'handoff-*.md').filter((f) => HANDOFF_TASK
           + 'the task from this file; add the section (template handoff.md.tmpl)');
       }
     }
+    if (st[1] === 'active' && criteriaClosed(ht)) warnings.push(`${hn}: active, but ${CLOSED_HINT}`);
     if (st[1] === 'waiting-owner' && !section(ht, '## Open questions').some((line) => line.trim() && !/^None\.?$/i.test(line.trim()))) {
       warnings.push(`${hn}: waiting-owner without a question in '## Open questions' - a new session has nothing to send `
         + 'again; write the question there, or set the status line back to active');

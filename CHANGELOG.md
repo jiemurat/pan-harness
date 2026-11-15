@@ -2,6 +2,11 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 3.17.10
+
+- When you put off a check of yours to a later date, the agent now closes the task at once (the check waits in `plan.md` → `Later and watch`), so the next large task no longer asks about running two tasks at once. The harness check warns on an open task whose criteria are all done or put off. `/ph-update` adds the line to `playbooks/large-task.md`.
+- A session the agent opens for you (a sub-session, a part in a folder with its own harness, a worker-agent) now always messages the agent that opened it when it is done, also after you answered it in its own session, so a task with several stages goes on without your "go on". `/ph-update` adds the lines to `playbooks/large-task.md` and `AGENTS.md`.
+
 ## 3.17.9
 
 - The harness remembers when `/ph-update` last ran (`PAN-HARNESS.md` → `Updated:`). From the 7th day after it, the main agent checks npm at session start: when a newer version is out, it asks you once whether to run `/ph-update` and runs it on your yes; otherwise, or on your no, it writes the check date and asks again 7 days later.
