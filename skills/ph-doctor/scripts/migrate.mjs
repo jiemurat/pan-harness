@@ -48,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9', '3.13.9', '3.14.9', '3.15.9', '3.16.9', '3.17.9', '3.17.10']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9', '3.13.9', '3.14.9', '3.15.9', '3.16.9', '3.17.9', '3.17.10', '3.17.11']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -1497,7 +1497,7 @@ const ON_DONE_NEW_END = "A sub-session deletes no session: an approval card woul
 
 function step15DeleteAtEnd() {
   const f = file('pan-harness/playbooks/large-task.md');
-  if (!f || f.lines.some((l) => l.includes(ON_DONE_NEW_END))) return;
+  if (!f || f.lines.some((l) => l.includes(ON_DONE_NEW_END) || l.includes(CARD_NEWER))) return;
   const at = f.lines.findIndex((l) => l.startsWith('**The opener, on "Done".**'));
   if (at < 0) return;
   if (!f.lines[at].includes(ON_DONE_OLD_END)) {
@@ -1531,7 +1531,7 @@ const BRIEF_SWAPS = [
   [": the task, \"- Level: <your level + 1>\" and \"- When done: message your opener, session <your session id>: 'Done: <task>, <commit>'.\";", ": the task and the `Brief lines` ('Done: <task>, <commit>');"],
   ['it messages its opener as the brief says and waits.', 'it messages its opener as the brief\'s "When done" line says and waits, also when the owner answered it there and saw its report: the app wakes the opener for that message, not for a turn the owner drove in the child (the note of such a turn waits for the opener\'s next turn).'],
 ];
-const PART_BRIEF = (() => { const l = AGENTS_TMPL.find((x) => x.includes(' A part session\'s brief carries all the brief lines ')) || ''; const a = l.indexOf(' A part session\'s brief carries'); const b = l.lastIndexOf(' ← '); return a < 0 || b < a ? '' : l.slice(a, b); })();
+const PART_BRIEF = (() => { const l = AGENTS_TMPL.find((x) => x.includes(' A part session\'s brief carries all the brief lines ')) || ''; const a = l.indexOf(' A part session\'s brief carries'); const e = 'the part is done.'; const b = l.indexOf(e, a); return a < 0 || b < 0 ? '' : l.slice(a, b + e.length); })(); // its own sentence: a later version adds after it
 let briefBytes = 0;
 
 function step2BriefLines() {
@@ -1576,6 +1576,51 @@ function step4BriefBytes() {
   done.push(`3.17.10 step 4: project/check.json: start_limit_bytes ${briefBytes} bytes higher for the part brief sentence`);
 }
 
+// ---------------------------------------------------------------- 3.17.11 (the opener archives each part; the final report names the delete card)
+const CARD_OLDER = 'as the very last step of the whole work: after its final report, when no session';
+const CARD_NEWER = 'as the very last step of the whole work: its final report names the delete card as its next step, and after that report, when no session';
+
+function step1CardInReport() {
+  const f = file(LARGE_TASK);
+  if (!f || !f.lines.some((l) => l.startsWith('**The opener, on "Done".**'))) return;
+  const r = swap(f, CARD_OLDER, CARD_NEWER);
+  if (!r) byHand.push(`3.17.11 step 1: playbooks/large-task.md: "The opener, on "Done"" is reworded; let the owner's final report name the delete card as its next step ("${CARD_NEWER}")`);
+  if (r === 'changed') done.push('3.17.11 step 1: playbooks/large-task.md: the final report names the delete card as its next step');
+}
+
+const PART_ARCHIVE = (() => { const l = AGENTS_TMPL.find((x) => x.includes(' On a part\'s "Done", check its commit there ')) || ''; const a = l.indexOf(' On a part\'s "Done", check its commit there '); const b = l.lastIndexOf(' ← '); return a < 0 || b < a ? '' : l.slice(a, b); })();
+let archiveBytes = 0;
+
+// the own-harness rule stands in AGENTS.md or, moved, in a playbook's Domain rules
+function step2PartArchive() {
+  if (!PART_ARCHIVE) return;
+  const dirs = ['pan-harness/playbooks', 'pan-harness/project/playbooks'];
+  const places = ['AGENTS.md', ...dirs.flatMap((d) => { const p = path.join(root, ...d.split('/')); return fs.existsSync(p) ? fs.readdirSync(p).filter((n) => n.endsWith('.md')).sort().map((n) => `${d}/${n}`) : []; })];
+  for (const rel of places) {
+    const f = file(rel);
+    if (!f || !ownHarnessRule(f)) continue;
+    const at = f.lines.findIndex((l) => /\*\*R\d+\. A folder with its own harness is worked by its harness\.\*\*/.test(l));
+    if (f.lines[at].includes(PART_ARCHIVE)) return;
+    const end = f.lines[at].lastIndexOf(' ← ');
+    if (end < 0) { byHand.push(`3.17.11 step 2: ${rel}: the own-harness rule has no "← " source; end it with "${PART_ARCHIVE.trim()}"`); return; }
+    f.lines[at] = f.lines[at].slice(0, end) + PART_ARCHIVE + f.lines[at].slice(end);
+    f.changed = true;
+    if (rel === AGENTS) archiveBytes += Buffer.byteLength(PART_ARCHIVE);
+    done.push(`3.17.11 step 2: ${rel}: the own-harness rule: on a part's "Done", check its commit and archive its session`);
+    return;
+  }
+}
+
+function step3ArchiveBytes() {
+  const f = file('pan-harness/project/check.json');
+  if (!f || archiveBytes === 0) return;
+  const at = f.lines.findIndex((l) => /"start_limit_bytes":\s*\d+/.test(l));
+  if (at < 0) return;
+  f.lines[at] = f.lines[at].replace(/("start_limit_bytes":\s*)(\d+)/, (_, k, v) => `${k}${Number(v) + archiveBytes}`);
+  f.changed = true;
+  done.push(`3.17.11 step 3: project/check.json: start_limit_bytes ${archiveBytes} bytes higher for the part archive sentence`);
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
@@ -1600,6 +1645,7 @@ const STEPS = {
   '3.17.9': [step1UpdatedLine, step2DueSentence, step3UpdateBytes, step4DepthTwo, step5OwnerSession, step6LimitList, step7StartLink, step8LimitListBytes,
     step9ModelSection, step10ModelBrief, step11ModelAgents, step12ModelBytes, step13SessionOpen, step14SessionTree, step15DeleteAtEnd],
   '3.17.10': [step1PutOffCheck, step2BriefLines, step3PartBrief, step4BriefBytes],
+  '3.17.11': [step1CardInReport, step2PartArchive, step3ArchiveBytes],
 };
 
 // ---------------------------------------------------------------- run

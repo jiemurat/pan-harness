@@ -3,7 +3,7 @@ name: ph-update
 description: Updates the pan-harness package (@jiemurat/pan-harness), migrates the harness to the new standard and runs ph-doctor after a new version. Use it when asked to update the pan-harness package or its ph-* skills, when a new version is out, or when PAN-HARNESS.md names an older standard.
 license: MIT
 metadata:
-  version: "3.17.10"
+  version: "3.17.11"
   package: "@jiemurat/pan-harness"
 ---
 
@@ -46,7 +46,7 @@ While working with a skill, these rules apply even before the target project's r
 
 Updating the pan-harness package and migrating the harness are one task: after a new version a full `ph-doctor` runs at the end. The migration rules are in `references/doctor.md` → "3. Migration" and "6. Fix", the steps of the versions in the newly installed `references/changelog.md`. Go to the next step once a step's "Done when" condition holds:
 
-1. **Harnesses below.** Run `node <skill>/scripts/pan-harness-check.mjs --root . --harnesses`. A `ph-update due` line is not a folder. When it lists folders, ask the owner once whether to update them too; on a yes, run steps 2–7 in each of them first (a commit by its own rule, its own report), then go on here. Done when: the list is empty, the owner said no, or each one is reported.
+1. **Harnesses below.** Run `node <skill>/scripts/pan-harness-check.mjs --root . --harnesses`. A `ph-update due` line is not a folder. When it lists folders, ask the owner once whether to update them too; on a yes, run steps 2–7 in each of them first (a commit by its own rule, its own report), then go on here. Where you can open sessions, each one runs as a part session (the own-harness rule of `AGENTS.md`): open it with the brief lines (`pan-harness/playbooks/large-task.md` → `New session` → "Brief lines"; a harness before step 4 may lack them: `<skill>/templates/pan-harness/playbooks/large-task.md.tmpl`); on its "Done" act as `A part's "Done"` says there (check its commit, archive its session); your step 7 report names the delete card as its next step, and the card follows it (`The opener, on "Done"`). Done when: the list is empty, the owner said no, or each one is reported and its session archived.
 2. **Versions.** Compare three versions:
    - the installed skills: `.agents/skills/.pan-harness.json` or `.claude/skills/.pan-harness.json` → `version` (when installed without the CLI, that skill's `SKILL.md` → `metadata.version`);
    - the newest on npm: `npm view @jiemurat/pan-harness version`;

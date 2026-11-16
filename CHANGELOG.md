@@ -2,6 +2,10 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 3.17.11
+
+- `/ph-update` that also updates the folders below with their own harness now opens each part session with the brief lines (so it says when it is done), checks each part's commit and archives its session, and its final report names the card that deletes the finished sessions, which follows it. The own-harness rule of `AGENTS.md` says the part's session is archived on its "Done". `/ph-update` adds the sentence to the rule (in `AGENTS.md` or in the playbook it moved to) and the report line to `playbooks/large-task.md`.
+
 ## 3.17.10
 
 - When you put off a check of yours to a later date, the agent now closes the task at once (the check waits in `plan.md` → `Later and watch`), so the next large task no longer asks about running two tasks at once. The harness check warns on an open task whose criteria are all done or put off. `/ph-update` adds the line to `playbooks/large-task.md`.

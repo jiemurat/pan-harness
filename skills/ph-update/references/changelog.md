@@ -4,6 +4,14 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 3.17.11
+
+The opener of a part session (a folder with its own harness), on its "Done", checks its commit there and archives its session; the owner's final report names the delete card as its next step, and the card follows it. `ph-update` step 1 names these actions for the harnesses below.
+
+1. `mechanical` — `playbooks/large-task.md` → `The opener, on "Done"`: the final report names the delete card as its next step (`scripts/migrate.mjs`).
+2. `mechanical` — the own-harness rule (in `AGENTS.md`, or moved into a playbook's `Domain rules`): the sentence "On a part's "Done", check its commit there and archive its session" before its "← " source (`scripts/migrate.mjs`).
+3. `mechanical` — `project/check.json`: `start_limit_bytes` higher by the bytes step 2 added to `AGENTS.md` (`scripts/migrate.mjs`).
+
 ## 3.17.10
 
 When the owner puts off a check of theirs to a later date or event, that criterion is ⏳, and the task closes at once when every other criterion is ✅: the ⏳ item goes into `plan.md` → `Later and watch`. `pan-harness-check.mjs` warns (the regular check and `--tree`) on an `active` `handoff*.md` whose `## Criteria` items all end their `Status:` with `done`, ✅ or ⏳.
