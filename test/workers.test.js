@@ -20,6 +20,10 @@ const LIMIT_LINE = (fs.readFileSync(path.join(ROOT, 'core', 'templates', 'pan-ha
 const DONE_TAIL = (fs.readFileSync(path.join(ROOT, 'core', 'templates', 'pan-harness', 'playbooks', 'large-task.md.tmpl'), 'utf8')
   .match(/"- When done: message your opener, session <your session id>: 'Done: <Work ID or task>, <commit>'\. ([^"]+)"/) || [])[1];
 const doneLine = (name, task) => `- When done: message your opener, session <main-agent session id>: 'Done: ${name}, ${task}, <commit>'. ${DONE_TAIL}`;
+// the "When waiting" line, the template's own words with the main-agent's slot and the worker's name and task
+const WAIT_TMPL = (fs.readFileSync(path.join(ROOT, 'core', 'templates', 'pan-harness', 'playbooks', 'large-task.md.tmpl'), 'utf8')
+  .split('\n').find((l) => l.startsWith('- When waiting: ')));
+const waitLine = (name, task) => WAIT_TMPL.replace('session <your session id>', 'session <main-agent session id>').replace('<Work ID or task>', `${name}, ${task}`);
 
 // every commit, a submodule's too, has an author where git has no global identity (CI)
 const GIT_ENV = { ...process.env, GIT_AUTHOR_NAME: 'Test', GIT_AUTHOR_EMAIL: 'test@example.com', GIT_COMMITTER_NAME: 'Test', GIT_COMMITTER_EMAIL: 'test@example.com' };
@@ -94,7 +98,7 @@ test('prepare: the worker folder equals the main folder and git sees it clean, n
   assert.ok(out.includes(`\n${LIMIT_LINE}\n- Context refresh: brief in ${path.join(folder, 'pan-harness', 'brief.md')}. `), 'the brief carries the usage-limit line, then the refresh line with the worker brief file');
   const refresh = /The brief carries the refresh line: "(- Context refresh: [^"]+)"/.exec(fs.readFileSync(path.join(ROOT, 'core', 'templates', 'pan-harness', 'playbooks', 'large-task.md.tmpl'), 'utf8'))[1];
   assert.ok(DONE_TAIL, 'the template has the When done line of the brief lines');
-  assert.ok(out.includes(`\n${refresh.replace('<brief file>', path.join(folder, 'pan-harness', 'brief.md'))}\n${doneLine('TARS', 'doc-a')}\n- Task:`), 'the refresh line is the large-task playbook\'s own words, then the When done line with the main-agent\'s slot');
+  assert.ok(out.includes(`\n${refresh.replace('<brief file>', path.join(folder, 'pan-harness', 'brief.md'))}\n${doneLine('TARS', 'doc-a')}\n${waitLine('TARS', 'doc-a')}\n- Task:`), 'the refresh line is the large-task playbook\'s own words, then the When done line with the main-agent\'s slot');
   assert.deepEqual(list(folder), list(root));
   assert.equal(dirty(folder), '');
   assert.equal(dirty(path.join(folder, 'src')), '');
@@ -321,7 +325,7 @@ test('prepare --same-folder: the worker works in the main folder on the main bra
   assert.match(out, /TARS works in the main folder on main \(no folder, no branch of its own\)/);
   assert.match(out, /^BRIEF\nYou are TARS, a worker-agent/m);
   assert.ok(out.includes(`\n${LIMIT_LINE}\n- Context refresh: brief in ${path.join(root, 'pan-harness', 'brief-doc-b.md')}. `), 'the brief carries the usage-limit line, then the refresh line with the brief file of the task');
-  assert.ok(out.includes(`\n${doneLine('TARS', 'doc-b')}\n- Task:`), 'the brief carries the When done line with the main-agent\'s slot');
+  assert.ok(out.includes(`\n${doneLine('TARS', 'doc-b')}\n${waitLine('TARS', 'doc-b')}\n- Task:`), 'the brief carries the When done line with the main-agent\'s slot');
   assert.match(out, /Your folder: the main folder .*, branch main, shared with the other sessions/);
   assert.match(fs.readFileSync(path.join(root, 'pan-harness', 'workers.md'), 'utf8'), /^\| TARS \| working \| doc-b \| `main` \| `\.` \|/m);
   assert.equal(git(root, 'branch', '--list', 'tars/*').trim(), '', 'no branch made');

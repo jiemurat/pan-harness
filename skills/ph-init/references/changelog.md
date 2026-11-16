@@ -4,6 +4,14 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 3.19.11
+
+Every wait reaches the owner's session. A session that stops for the owner (a `❓`, `⚠️` or `👉` closing line) messages its opener the full text unchanged ("Waiting: …"); each opener passes it up, the owner's session asks the owner word for word, and the answer goes back down quoted ('Owner: "…"'). `playbooks/large-task.md` → `New session` carries the rule: a "When waiting" brief line, the paragraph `The opener, on "Waiting"`, and a new first sentence of `In the sub-session`. Steps 1–3 add it to existing harnesses; a reworded place is `by hand`. `start_limit_bytes` does not change (`large-task.md` is not in the start set).
+
+1. `mechanical` — `playbooks/large-task.md` → `New session` → `Brief lines`: the line "- When waiting: …" goes after the "When done" line (a missing "When done" line is `by hand`; `scripts/migrate.mjs`).
+2. `mechanical` — `playbooks/large-task.md` → `New session`: the paragraph `The opener, on "Waiting".` goes after `In the sub-session` (a missing paragraph is `by hand`; `scripts/migrate.mjs`).
+3. `mechanical` — `playbooks/large-task.md` → `In the sub-session`: the first sentence "The owner answers its questions in its own session." becomes the relayed-answer sentences (a reworded paragraph is `by hand`; `scripts/migrate.mjs`).
+
 ## 3.18.11
 
 A harness without the rule on folders with their own harness no longer gets the sentence about a part's `plan.md` (`3.11.7` step 2 appended it with the template's rule number), and its Session start has an item that runs `--harnesses`, so the `ph-update due` line is acted on there. A repair step removes the stray sentence from harnesses migrated before (and a second copy where the own-harness rule has another number). `playbooks/large-task.md` defines "child" at its first use. A message to the owner that awaits the owner, names a problem, sends the owner elsewhere, or says the work goes on or is done now ends with one line that starts with a marker (`❓`, `⚠️`, `👉`, `⏳`, `✅`); a plain answer has none. Steps 5–7 add the rule to existing harnesses. A session's state (waits for the owner, works, done) is read in the same turn from the session and the git log of its folder, not repeated from a note; a state taken only from a note says `unverified`: `AGENTS.md` → "Check every claim" and `playbooks/large-task.md` → `New session` carry the rule, and steps 8–10 add it to existing harnesses. A project extension that checks the `handoff.md` intro (its own wording or a check script) is updated by hand after a step rewrites the intro (`3.12.8` step 4 and later): the steps change only the template's own text.

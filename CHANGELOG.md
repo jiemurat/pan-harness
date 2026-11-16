@@ -2,6 +2,10 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 3.19.11
+
+- Every wait reaches the owner's session: a session that stops for the owner (`❓`, `⚠️`, `👉`) messages its opener the full text ("Waiting: …"), each opener passes it up, the owner's session asks the owner word for word, and the answer goes back down quoted. `playbooks/large-task.md` gets a "When waiting" brief line, the paragraph `The opener, on "Waiting"` and a relayed-answer first sentence in `In the sub-session`; `ph-workers` points to it. `/ph-update` adds the text to an existing harness.
+
 ## 3.18.11
 
 - A harness whose owner declined the rule on folders with their own harness no longer gets the sentence about a part's `plan.md` (with the template's rule number) in `AGENTS.md`, and its Session start now runs `--harnesses`, so the weekly `ph-update` check runs there too. `/ph-update` removes the stray sentence from a harness migrated before, and a second copy where the rule has another number.

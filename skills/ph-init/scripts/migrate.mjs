@@ -48,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9', '3.13.9', '3.14.9', '3.15.9', '3.16.9', '3.17.9', '3.17.10', '3.17.11', '3.18.11']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9', '3.13.9', '3.14.9', '3.15.9', '3.16.9', '3.17.9', '3.17.10', '3.17.11', '3.18.11', '3.19.11']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -1572,7 +1572,7 @@ let briefBytes = 0;
 
 function step2BriefLines() {
   const f = file(LARGE_TASK);
-  if (!f || !f.lines.includes('## New session') || BRIEF_LINES.length !== 5 || !PART_DONE) return;
+  if (!f || !f.lines.includes('## New session') || BRIEF_LINES.length < 5 || !PART_DONE) return;
   const ok = [];
   if (!f.lines.includes(BRIEF_LINES[0])) {
     const at = f.lines.findIndex((l) => l.startsWith('**Opening one.** '));
@@ -1801,6 +1801,40 @@ function step10StatusBytes() {
   done.push(`3.18.11 step 10: project/check.json: start_limit_bytes ${statusBytes} bytes higher for the session-state sentence`);
 }
 
+// ---------------------------------------------------------------- 3.19.11 (every wait reaches the owner's session)
+const WAIT_LINE = LARGE_TASK_TMPL.find((l) => l.startsWith('- When waiting: ')) || '';
+const WAIT_PARA = LARGE_TASK_TMPL.find((l) => l.startsWith('**The opener, on "Waiting".** ')) || '';
+const SUB_OLD = 'The owner answers its questions in its own session.';
+const SUB_NEW = (() => { const l = LARGE_TASK_TMPL.find((x) => x.startsWith('**In the sub-session.** ')) || ''; const a = '**In the sub-session.** '.length; const b = l.indexOf(' When its work is done'); return b < 0 ? '' : l.slice(a, b); })();
+
+function step1WaitingLine() {
+  const f = file(LARGE_TASK);
+  if (!f || !WAIT_LINE || !f.lines.includes('## New session') || f.lines.some((l) => l.startsWith('- When waiting: '))) return;
+  const at = f.lines.findIndex((l) => l.startsWith('- "- When done: message your opener'));
+  if (at < 0) { byHand.push(`3.19.11 step 1: playbooks/large-task.md: no "When done" brief line in New session; add "${WAIT_LINE}" after it`); return; }
+  f.lines.splice(at + 1, 0, WAIT_LINE);
+  f.changed = true;
+  done.push('3.19.11 step 1: playbooks/large-task.md: the brief lines have the "When waiting" line');
+}
+
+function step2WaitingParagraph() {
+  const f = file(LARGE_TASK);
+  if (!f || !WAIT_PARA || !f.lines.includes('## New session') || f.lines.some((l) => l.startsWith('**The opener, on "Waiting".**'))) return;
+  const at = f.lines.findIndex((l) => l.startsWith('**In the sub-session.** '));
+  if (at < 0) { byHand.push(`3.19.11 step 2: playbooks/large-task.md: no "In the sub-session" paragraph in New session; add "${WAIT_PARA}" after it`); return; }
+  f.lines.splice(at + 1, 0, '', WAIT_PARA);
+  f.changed = true;
+  done.push('3.19.11 step 2: playbooks/large-task.md: New session has the paragraph The opener, on "Waiting"');
+}
+
+function step3RelayedAnswer() {
+  const f = file(LARGE_TASK);
+  if (!f || !SUB_NEW || !f.lines.includes('## New session') || f.lines.some((l) => l.includes(SUB_NEW))) return;
+  const r = swap(f, SUB_OLD, SUB_NEW);
+  if (!r) byHand.push(`3.19.11 step 3: playbooks/large-task.md: "In the sub-session" is reworded; start it with "${SUB_NEW}"`);
+  if (r === 'changed') done.push('3.19.11 step 3: playbooks/large-task.md: In the sub-session says the answer comes relayed from the main session');
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
@@ -1826,6 +1860,7 @@ const STEPS = {
     step9ModelSection, step10ModelBrief, step11ModelAgents, step12ModelBytes, step13SessionOpen, step14SessionTree, step15DeleteAtEnd],
   '3.17.10': [step1PutOffCheck, step2BriefLines, step3PartBrief, step4BriefBytes],
   '3.17.11': [step1CardInReport, step2PartArchive, step3ArchiveBytes],
+  '3.19.11': [step1WaitingLine, step2WaitingParagraph, step3RelayedAnswer],
   '3.18.11': [step1PartSentenceRepair, step2ChildDefined, step3DueItem, step4NetBytes, step5ClosingItem, step6ClosingSection, step7ClosingBytes, step8StateSentence, step9StatusParagraph, step10StatusBytes],
 };
 

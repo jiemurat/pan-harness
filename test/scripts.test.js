@@ -1329,8 +1329,8 @@ test('migrate 3.17.9 -> current: every brief carries the brief lines, the opener
   const lt = 'pan-harness/playbooks/large-task.md';
   const tmpl = read(dir, lt);
   const agentsTmpl = read(dir, 'AGENTS.md');
-  const block = /\n\*\*Brief lines\.\*\* [^\n]*\n(- [^\n]*\n){4}\n/.exec(tmpl);
-  assert.ok(block, 'the template has the Brief lines paragraph and its four lines');
+  const block = /\n\*\*Brief lines\.\*\* [^\n]*\n(- [^\n]*\n){5}\n/.exec(tmpl);
+  assert.ok(block, 'the template has the Brief lines paragraph and its five lines');
   const part = /\n\n\*\*A part's "Done"\.\*\* [^\n]*/.exec(tmpl);
   assert.ok(part, 'the template has the part paragraph');
   // the 3.17.9 text: each pair is the newer text of the template and the older text it replaces
@@ -1529,7 +1529,7 @@ test('K5: "child" is defined once at its first use in large-task.md.tmpl and mig
   assert.equal(read(dir, lt), tmpl, 'the playbook equals the template');
   assert.doesNotMatch(run('migrate.mjs', '--root', dir).stdout, /3\.18\.11 step/);
   const changelog = fs.readFileSync(path.join(SKILL, 'references', 'changelog.md'), 'utf8');
-  const section = changelog.split(/^## /m).find((s) => s.startsWith('3.18.11'));
+  const section = changelog.split(/^## /m).find((s) => s.startsWith('3.18.11\n'));
   assert.ok(section, 'the changelog has the 3.18.11 section');
   assert.match(section, /extension[^\n]*`handoff\.md` intro|`handoff\.md` intro[^\n]*extension/);
 });
@@ -1684,4 +1684,67 @@ test('K2: a reworded Check every claim item or a missing opener paragraph gives 
   assert.doesNotMatch(read(dir, 'AGENTS.md'), /A session's state \(/);
   assert.doesNotMatch(read(dir, LT), /\*\*Session status\.\*\*/);
   assert.match(read(dir, 'pan-harness/project/check.json'), /"start_limit_bytes": 30000/);
+});
+
+// ---- every wait reaches the owner's session (3.19.11)
+const WAIT_LINE = "- When waiting: before you end a turn with a `❓`, `⚠️` or `👉` closing line, message your opener, session <your session id>: 'Waiting: <Work ID or task> — <the question blocks, the plan or the action, unchanged>'. When the owner answers in your own window first, message your opener 'Answered here: <the owner's words>'.";
+const WAIT_PARA = '**The opener, on "Waiting".** Pass the message on to your own opener unchanged, with the child\'s session link added. The owner\'s session puts the question blocks, the plan or the action to the owner word for word, names the session and links it. Send the owner\'s answer down to the waiting session as \'Owner: "<the owner\'s words>"\', through each level. An \'Answered here\' drops the question. A step the permission system blocks when relayed (a deploy, a restart) goes to the owner as `👉` with the session\'s link and the exact text to type. Done when the owner\'s answer reached the waiting session, or the owner has the link and the text.';
+const SUB_NEW = 'The owner answers in the main session: the answer reaches you as \'Owner: "<the owner\'s words>"\' and counts as the owner\'s, a plan approval and a "chop et" too when the plan went up with your \'Waiting\'. The owner may also answer in your window: then send \'Answered here\'.';
+const SUB_OLD = 'The owner answers its questions in its own session.';
+const DONE_LINE_START = '- "- When done: message your opener';
+const WORKERS_WAIT = 'A worker\'s \'Waiting\' message goes to the owner, and the answer back, as the paragraph `The opener, on "Waiting"` in the `## New session` section of the project\'s `playbooks/large-task.md` says.';
+const stripWait = (dir) => {
+  let lt = read(dir, LT);
+  lt = lt.split('\n').filter((l) => !l.startsWith('- When waiting: ')).join('\n').replace(`${WAIT_PARA}\n\n`, '').replace(SUB_NEW, SUB_OLD);
+  put(dir, LT, lt);
+  toStandard(dir, '3.18.11');
+};
+
+test('K1: a harness built from the templates has the When waiting brief line, the Waiting paragraph and the relayed answer', () => {
+  const dir = repo();
+  assert.equal(run('scaffold.mjs', '--root', dir).status, 0);
+  const lt = read(dir, LT);
+  assert.equal(lt.split('\n').filter((l) => l.startsWith('- When waiting: ')).length, 1, 'the brief line stands once');
+  const lines = lt.split('\n');
+  const done = lines.findIndex((l) => l.startsWith(DONE_LINE_START));
+  assert.equal(lines[done + 1], WAIT_LINE, 'the line is right after When done');
+  assert.equal(lt.split('**The opener, on "Waiting".**').length - 1, 1, 'the paragraph stands once');
+  assert.ok(lt.includes(`${WAIT_PARA}\n\n`), 'the paragraph text');
+  const sub = lt.indexOf('**In the sub-session.**');
+  assert.ok(sub < lt.indexOf(WAIT_PARA) && lt.indexOf(WAIT_PARA) < lt.indexOf('**Session status.**'), 'after In the sub-session');
+  assert.ok(lt.includes(`**In the sub-session.** ${SUB_NEW} When its work is done`), 'the relayed answer opens In the sub-session');
+  assert.ok(!lt.includes(SUB_OLD));
+  const workers = fs.readFileSync(path.join(ROOT, 'skills-src', 'ph-workers', 'SKILL.md'), 'utf8');
+  assert.ok(workers.includes(WORKERS_WAIT), 'ph-workers carries the sentence');
+  const limit = Number(/"start_limit_bytes":\s*(\d+)/.exec(read(dir, 'pan-harness/project/check.json'))[1]);
+  assert.equal(limit, 25600 + Buffer.byteLength(`${read(dir, 'AGENTS.md').split('\n').find((l) => l.startsWith(CLOSING_ITEM_START))}\n`) + Buffer.byteLength(` ${STATE_SENTENCE}`), 'large-task.md is not in the start set: the limit is unchanged');
+});
+
+test('K2: migrate adds the brief line, the paragraph and the relayed answer once; start_limit_bytes stays', () => {
+  const dir = current();
+  const tmplLt = read(dir, LT);
+  stripWait(dir);
+  put(dir, 'pan-harness/project/check.json', '{\n  "start_limit_bytes": 30000\n}\n');
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^done +3\.19\.11 step 1: playbooks\/large-task\.md: .*When waiting/m);
+  assert.match(r.stdout, /^done +3\.19\.11 step 2: playbooks\/large-task\.md: .*Waiting/m);
+  assert.match(r.stdout, /^done +3\.19\.11 step 3: playbooks\/large-task\.md: .*sub-session/m);
+  assert.equal(read(dir, LT), tmplLt, 'large-task.md equals the template');
+  assert.match(read(dir, 'pan-harness/project/check.json'), /"start_limit_bytes": 30000/);
+  const again = run('migrate.mjs', '--root', dir);
+  assert.doesNotMatch(again.stdout, /3\.19\.11 step/);
+  assert.equal(read(dir, LT), tmplLt, 'a second run changes nothing');
+});
+
+test('K2: reworded text gives by hand lines and no change', () => {
+  const dir = current();
+  stripWait(dir);
+  put(dir, LT, read(dir, LT).replace(DONE_LINE_START, '- "- Done: message your opener').replace('**In the sub-session.**', '**In the child.**').replace(SUB_OLD, 'Answers come to its own session.').replace('**Session status.**', '**State.**').replace('**The opener, on "Done".**', '**The opener, done.**'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^by hand 3\.19\.11 step 1: playbooks\/large-task\.md: /m);
+  assert.match(r.stdout, /^by hand 3\.19\.11 step 2: playbooks\/large-task\.md: /m);
+  assert.match(r.stdout, /^by hand 3\.19\.11 step 3: playbooks\/large-task\.md: /m);
+  assert.doesNotMatch(read(dir, LT), /When waiting/);
 });

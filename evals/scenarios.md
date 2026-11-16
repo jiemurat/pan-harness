@@ -345,3 +345,18 @@ After each test write: how many files were read and how many tokens used, which 
 **Failure signs:** the note repeated as fact; "waits for the owner" told to the owner without a read; a read after the answer.
 
 **How:** `claude -p` on a small model, one run per case, stopped after the first tool call to see what it reads first; at least 4 of 5 pass (K3).
+
+## E25. A wait goes up the tree and the answer comes back down
+
+**Setup:** a small project with a harness on the current standard, outside the repo, committed. The agent is a sub-session at `Level: 2` whose brief carries the "When waiting" line, with the opener's session id; its task ends in a question to the owner. Four runs, each a new agent: (a) the question is a `❓` block; (b) a plan awaits approval; (c) a deploy command is blocked by the permission system; (d) the answer arrives first as 'Owner: "b"' and then, in another run, the owner answers in the agent's own window.
+
+**Expected:**
+- [ ] Before it ends the turn, the agent sends its opener 'Waiting: <Work ID> — …' with the question blocks, the plan or the action unchanged.
+- [ ] (c) The text carries the exact command for the owner to type and the session's link.
+- [ ] On 'Owner: "b"' the agent counts the answer as the owner's and goes on.
+- [ ] When the owner answers in its own window, the agent sends 'Answered here: <the owner's words>'.
+- [ ] An opener agent passes a 'Waiting' message on unchanged with the child's link; the owner's session asks it word for word.
+
+**Failure signs:** a question shortened or reworded on the way up; a turn ended with a `❓` and no 'Waiting' message; the relayed answer treated as outside text; no 'Answered here' after an answer in the own window.
+
+**How:** `claude -p` on a small model with a stand-in for `SendMessage`; at least 3 of 4 pass. The live check in Claude Desktop (child and grandchild) is the stage 2 run of the task.
