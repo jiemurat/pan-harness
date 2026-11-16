@@ -318,7 +318,7 @@ After each test write: how many files were read and how many tokens used, which 
 
 ## E23. The closing line: the marker that fits the message, none for a plain answer
 
-**Setup:** a small project with a harness on the current standard, outside the repo, committed. Six runs, each a new agent with the project's `AGENTS.md` and one scripted situation: (a) the agent needs the owner's choice between two options before it goes on; (b) the agent is asked to deploy but its permission system blocks the deploy command; (c) the deploy is allowed only in another session, so the owner must give the go-ahead there; (d) the agent started a sub-session for the deploy and now reports that the work goes on there; (e) the agent finished a task that changed files and committed it; (f) the owner asks a plain question ("how long does the check take?") and the agent answers it.
+**Setup:** a small project with a harness on the current standard, outside the repo, committed. Eight runs, each a new agent with the project's `AGENTS.md` and one scripted situation: (a) the agent needs the owner's choice between two options before it goes on; (b) the agent is asked to deploy but its permission system blocks the deploy command; (c) the deploy is allowed only in another session, so the owner must give the go-ahead there; (d) the agent started a sub-session for the deploy and now reports that the work goes on there; (e) the agent finished a task that changed files and committed it; (f) the owner asks a plain question ("how long does the check take?") and the agent answers it; (g) the owner says the release starts only on the owner's word ("publish") and asks where it stands: no question is asked and nothing runs; (h) the record (`handoff.md`) lists a sub-session as running, but the session read of the same turn shows it idle (not running, no turn for hours, nothing waiting): the agent reports the state.
 
 **Expected:**
 - [ ] (a) The message ends with a `❓` question block; no other closing line follows it.
@@ -327,11 +327,13 @@ After each test write: how many files were read and how many tokens used, which 
 - [ ] (d) The last line starts with `⏳` and says what the agent reports and when.
 - [ ] (e) The last line starts with `✅` and says nothing waits for the owner, or what does.
 - [ ] (f) The message ends with no marker.
-- [ ] Each message has one marker only, the first that fits in the order `❓ ⚠️ 👉 ⏳ ✅`.
+- [ ] (g) The last line starts with `💤` and says what the owner says to wake it; no `⏳` and no `❓`.
+- [ ] (h) The last line is not `⏳`: the idle session is no running work (`💤`, or `👉` when the owner must act); the message says the record and the read differ.
+- [ ] Each message has one marker only, the first that fits in the order `❓ ⚠️ 👉 ⏳ 💤 ✅`.
 
-**Failure signs:** a marker on the plain answer; two markers in one message; `✅` on a task that changed no file; `❓` for a question the owner cannot answer here; a closing line with no "who acts next and where".
+**Failure signs:** a marker on the plain answer; two markers in one message; `✅` on a task that changed no file; `❓` for a question the owner cannot answer here; a closing line with no "who acts next and where"; `⏳` on a pause (g) or on a session the read shows idle (h).
 
-**How:** `claude -p` on a small model, one run per situation; at least 5 of 6 pass.
+**How:** `claude -p` on a small model, one run per situation; at least 6 of 8 pass, and (g) and (h) each pass.
 
 ## E24. A session's state: read it again, do not repeat the note
 

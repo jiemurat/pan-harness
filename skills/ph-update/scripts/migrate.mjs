@@ -48,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9', '3.13.9', '3.14.9', '3.15.9', '3.16.9', '3.17.9', '3.17.10', '3.17.11', '3.18.11', '3.19.11']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9', '3.13.9', '3.14.9', '3.15.9', '3.16.9', '3.17.9', '3.17.10', '3.17.11', '3.18.11', '3.19.11', '3.20.11']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -1835,6 +1835,73 @@ function step3RelayedAnswer() {
   if (r === 'changed') done.push('3.19.11 step 3: playbooks/large-task.md: In the sub-session says the answer comes relayed from the main session');
 }
 
+// ---------------------------------------------------------------- 3.20.11 (the closing line by who acts next, and 💤)
+// the texts of 3.19.11, replaced only when the project still holds them word for word
+const CLOSING_ITEM_OLD = "  - **Closing line.** End a message with one line, a marker and one sentence that says the main point and who acts next and where, in these cases: `❓` the owner's answer is awaited (a message that ends with `❓` question blocks needs no other line: nothing follows the last block, no `⚠️` or `👉` line, no \"reply with\" line); `⚠️` a problem or a limit stops the work, a command the permission system blocked included, and you cannot go on until the owner acts; `👉` the owner acts elsewhere, not by answering here; `⏳` the work goes on without the owner, a sub-session that `handoff.md` lists as running included, even if you cannot check it: say what the record says; `✅` a task that changed files is finished (no file changed: no `✅`). One marker a message, the first that fits in this order, and no other marker line in it; the closing line is the last line. Any other message ends with no marker. Examples: `playbooks/questions.md` → `The closing line`.";
+const CLOSING_SECTION_OLD = ["## The closing line", "", "A message to the owner that awaits the owner, names a problem, sends the owner elsewhere, or says the work goes on or is done ends with one line: a marker, then one sentence that says the main point and who acts next and where. Use one marker a message, the first that fits in this order, and no other marker line in it. The closing line is the last line of the message: nothing follows it.", "", "When you ask the owner to run a command or approve a blocked command, the work is stopped: that is `⚠️`, not `❓`. `❓` is for a choice or an answer you need to go on.", "", "- `❓` The owner's answer is awaited. A message that ends with `❓` question blocks needs no other line: the last block is the closing line, and nothing follows it: no `⚠️`, `👉` or `⏳` line, no \"reply with a) or b)\" line. State a problem or a blocked step before the blocks, in the body.", "- `⚠️` A problem or a limit stops the work, such as a command the permission system blocked.", "- `👉` The owner acts elsewhere, not by answering here.", "- `⏳` The work goes on without the owner, a sub-session that `handoff.md` lists as running included, even if you cannot check it: say what the record says.", "- `✅` A task that changed files is finished. A message that changed no file never ends with `✅`.", "", "```text", "⚠️ I cannot deploy from this session: the deploy runs in the sub-session.", "👉 Give the go-ahead for the deploy in the session \"Bug fix\": <link>.", "⏳ The session \"Bug fix\" is deploying; I report when it sends \"Done\".", "✅ The fix is committed (`a1b2c3d`); nothing waits for you.", "```", "", "Any other message, such as a plain answer, ends with no marker:", "", "```text", "The check takes 40 seconds; the tests are the slow step.", "```", "", "Done when the message ends with the one line its case asks for, or with none."];
+const WAIT_LINE_OLD = "- When waiting: before you end a turn with a `❓`, `⚠️` or `👉` closing line, message your opener, session <your session id>: 'Waiting: <Work ID or task> — <the question blocks, the plan or the action, unchanged>'. When the owner answers in your own window first, message your opener 'Answered here: <the owner's words>'.";
+const SUB_PAUSE = (() => { const l = LARGE_TASK_TMPL.find((x) => x.startsWith('**In the sub-session.** ')) || ''; const a = '**In the sub-session.** '.length; const b = l.indexOf(' The owner answers in the main session'); return b < 0 ? '' : l.slice(a, b); })();
+let whoBytes = 0;
+
+function step1WhoItem() {
+  const f = file(AGENTS);
+  if (!f) return;
+  const at = f.lines.findIndex((l) => l.startsWith('  - **Closing line.** '));
+  if (at < 0 || f.lines[at] === CLOSING_ITEM) return;
+  if (f.lines[at] !== CLOSING_ITEM_OLD) { byHand.push(`3.20.11 step 1: AGENTS.md: the closing line item is reworded; write it as "${CLOSING_ITEM}"`); return; }
+  whoBytes += Buffer.byteLength(CLOSING_ITEM + f.eol) - Buffer.byteLength(f.lines[at] + f.eol);
+  f.lines[at] = CLOSING_ITEM;
+  f.changed = true;
+  done.push('3.20.11 step 1: AGENTS.md: the closing line item defines each marker by who acts next and adds 💤');
+}
+
+function step2WhoSection() {
+  const f = file(QUESTIONS);
+  if (!f) return;
+  const at = f.lines.indexOf('## The closing line');
+  if (at < 0) return;
+  let end = f.lines.findIndex((l, i) => i > at && l.startsWith('## '));
+  if (end < 0) { end = f.lines.length; while (end > at && f.lines[end - 1] === '') end--; }
+  const cur = f.lines.slice(at, end);
+  while (cur.length && cur[cur.length - 1] === '') cur.pop();
+  if (cur.join('\n') === CLOSING_SECTION.join('\n')) return;
+  if (cur.join('\n') !== CLOSING_SECTION_OLD.join('\n')) { byHand.push('3.20.11 step 2: playbooks/questions.md: the section "The closing line" is reworded; write it as the template does (playbooks/questions.md.tmpl)'); return; }
+  f.lines.splice(at, cur.length, ...CLOSING_SECTION);
+  f.changed = true;
+  done.push('3.20.11 step 2: playbooks/questions.md: the section "The closing line" defines each marker by who acts next and adds 💤');
+}
+
+function step3WhoWaiting() {
+  const f = file(LARGE_TASK);
+  if (!f || !WAIT_LINE) return;
+  const at = f.lines.findIndex((l) => l.startsWith('- When waiting: '));
+  if (at < 0 || f.lines[at] === WAIT_LINE) return;
+  if (f.lines[at] !== WAIT_LINE_OLD) { byHand.push(`3.20.11 step 3: playbooks/large-task.md: the "When waiting" brief line is reworded; write it as "${WAIT_LINE}"`); return; }
+  f.lines[at] = WAIT_LINE;
+  f.changed = true;
+  done.push('3.20.11 step 3: playbooks/large-task.md: the "When waiting" line lists 💤');
+}
+
+function step4WhoSubSession() {
+  const f = file(LARGE_TASK);
+  if (!f || !SUB_PAUSE || !f.lines.includes('## New session') || f.lines.some((l) => l.includes(SUB_PAUSE))) return;
+  const at = f.lines.findIndex((l) => l.startsWith('**In the sub-session.** '));
+  if (at < 0) return;
+  f.lines[at] = f.lines[at].replace('**In the sub-session.** ', `**In the sub-session.** ${SUB_PAUSE} `);
+  f.changed = true;
+  done.push('3.20.11 step 4: playbooks/large-task.md: In the sub-session says a 💤 turn sends "Waiting"');
+}
+
+function step5WhoBytes() {
+  const f = file('pan-harness/project/check.json');
+  if (!f || whoBytes === 0) return;
+  const at = f.lines.findIndex((l) => /"start_limit_bytes":\s*\d+/.test(l));
+  if (at < 0) return;
+  f.lines[at] = f.lines[at].replace(/("start_limit_bytes":\s*)(\d+)/, (_, k, v) => `${k}${Number(v) + whoBytes}`);
+  f.changed = true;
+  done.push(`3.20.11 step 5: project/check.json: start_limit_bytes ${whoBytes} bytes ${whoBytes < 0 ? 'lower' : 'higher'} for the closing line item`);
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
@@ -1861,6 +1928,7 @@ const STEPS = {
   '3.17.10': [step1PutOffCheck, step2BriefLines, step3PartBrief, step4BriefBytes],
   '3.17.11': [step1CardInReport, step2PartArchive, step3ArchiveBytes],
   '3.19.11': [step1WaitingLine, step2WaitingParagraph, step3RelayedAnswer],
+  '3.20.11': [step1WhoItem, step2WhoSection, step3WhoWaiting, step4WhoSubSession, step5WhoBytes],
   '3.18.11': [step1PartSentenceRepair, step2ChildDefined, step3DueItem, step4NetBytes, step5ClosingItem, step6ClosingSection, step7ClosingBytes, step8StateSentence, step9StatusParagraph, step10StatusBytes],
 };
 

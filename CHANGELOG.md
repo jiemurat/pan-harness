@@ -2,6 +2,10 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 3.20.11
+
+- The closing line says who acts next: each marker (`❓`, `⚠️`, `👉`, `⏳`, `✅`) is defined by who acts next, and a new marker `💤` marks a pause (nothing runs, no question asked, the work waits for the owner's word). Before `⏳` the session or process is read in the same turn. The sub-session's "Waiting" message covers a `💤` turn. `ph-init` and `ph-update` print a one-time marker legend. `/ph-update` replaces the old closing-line texts, and `start_limit_bytes` follows the real change (7 bytes lower).
+
 ## 3.19.11
 
 - Every wait reaches the owner's session: a session that stops for the owner (`❓`, `⚠️`, `👉`) messages its opener the full text ("Waiting: …"), each opener passes it up, the owner's session asks the owner word for word, and the answer goes back down quoted. `playbooks/large-task.md` gets a "When waiting" brief line, the paragraph `The opener, on "Waiting"` and a relayed-answer first sentence in `In the sub-session`; `ph-workers` points to it. `/ph-update` adds the text to an existing harness.

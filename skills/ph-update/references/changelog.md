@@ -4,6 +4,16 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 3.20.11
+
+The closing line says who acts next. Each marker is defined by who acts next (`❓` the owner answers now, `⚠️` a problem stops the work and the owner acts, `👉` the owner acts elsewhere, `⏳` an agent works now, `✅` the task is finished), and a new marker `💤` covers a pause: nothing runs and no question is asked, the work waits for the owner's word. Before `⏳` the session or process is read in the same turn; a task closed with a later owner check ends with `✅` naming the check. The sub-session's 'Waiting' message covers a `💤` turn too. The start set shrinks by 7 bytes. `ph-init` and `ph-update` print a one-time marker legend (`references/closing-legend.md`).
+
+1. `mechanical` — `AGENTS.md`, the chat rule: the "Closing line." item is replaced by the new text when it still holds the 3.19.11 text word for word (reworded: `by hand`; `scripts/migrate.mjs`).
+2. `mechanical` — `playbooks/questions.md`: the section "The closing line" is replaced by the new section when it still holds the 3.19.11 text word for word (reworded: `by hand`; `scripts/migrate.mjs`).
+3. `mechanical` — `playbooks/large-task.md` → `New session` → `Brief lines`: the "When waiting" line lists `💤` and the pause line (reworded: `by hand`; `scripts/migrate.mjs`).
+4. `mechanical` — `playbooks/large-task.md` → `In the sub-session`: a first sentence says a `💤` turn sends 'Waiting' too (`scripts/migrate.mjs`).
+5. `mechanical` — `pan-harness/project/check.json`: `start_limit_bytes` changes by the real change of the item (`scripts/migrate.mjs`).
+
 ## 3.19.11
 
 Every wait reaches the owner's session. A session that stops for the owner (a `❓`, `⚠️` or `👉` closing line) messages its opener the full text unchanged ("Waiting: …"); each opener passes it up, the owner's session asks the owner word for word, and the answer goes back down quoted ('Owner: "…"'). `playbooks/large-task.md` → `New session` carries the rule: a "When waiting" brief line, the paragraph `The opener, on "Waiting"`, and a new first sentence of `In the sub-session`. Steps 1–3 add it to existing harnesses; a reworded place is `by hand`. `start_limit_bytes` does not change (`large-task.md` is not in the start set).

@@ -147,3 +147,19 @@ test('the approval of a plan is a question block too: the playbook shows it, ph-
 test('the check lists the questions playbook as a standard file', () => {
   assert.match(read(ROOT, 'core', 'scripts', 'pan-harness-check.mjs'), /const PLAYBOOKS = \[[^\]]*'questions\.md'/);
 });
+
+test('closing line: each marker is defined by who acts next, 💤 covers the pause, the item stays within its size', () => {
+  const item = AGENTS.split('\n').find((l) => l.startsWith('  - **Closing line.** '));
+  assert.ok(Buffer.byteLength(`${item}\n`) <= 1081, `the item stays within 1081 bytes (${Buffer.byteLength(`${item}\n`)})`);
+  const order = ['`❓`', '`⚠️`', '`👉`', '`⏳`', '`💤`', '`✅`'];
+  const at = order.map((m) => item.indexOf(m));
+  assert.ok(at.every((i, k) => i >= 0 && (k === 0 || i > at[k - 1])), 'the item names the markers in the order ❓ ⚠️ 👉 ⏳ 💤 ✅');
+  for (const part of ['who acts next', 'in the same turn', '`unverified`', 'until the owner wakes it', 'a later owner check']) assert.ok(item.includes(part), `the item has "${part}"`);
+  const text = playbook();
+  const section = text.slice(text.indexOf('## The closing line'));
+  for (const part of ['The marker is who acts next', 'A plan that awaits approval', 'a record that says "running" is not a running session', 'use `💤`',
+    'if no decision is asked, `💤`', 'When the owner still checks the result later, name that check']) {
+    assert.ok(section.includes(part.replace('A plan', 'a plan')) || section.includes(part), `the section has "${part}"`);
+  }
+  assert.match(section, /^💤 .+ sleeps until you wake it: /m, 'an example shows the pause line');
+});

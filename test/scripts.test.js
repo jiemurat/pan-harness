@@ -1562,13 +1562,13 @@ test('K1: a harness built from the templates has the closing-line item in AGENTS
   const items = lines.filter((l) => l.startsWith(CLOSING_ITEM_START));
   assert.equal(items.length, 1, 'the item stands once');
   assert.equal(lines.findIndex((l) => l.startsWith(CLOSING_ITEM_START)), lines.findIndex((l) => l.startsWith('  - **Questions.** ')) + 1, 'right after the Questions item');
-  for (const m of ['`❓`', '`⚠️`', '`👉`', '`⏳`', '`✅`']) assert.ok(items[0].includes(m), `the item names ${m}`);
+  for (const m of ['`❓`', '`⚠️`', '`👉`', '`⏳`', '`💤`', '`✅`']) assert.ok(items[0].includes(m), `the item names ${m}`);
   assert.ok(items[0].includes('Any other message ends with no marker.'));
   assert.ok(items[0].endsWith('`playbooks/questions.md` → `The closing line`.'), 'the item links to the section');
   const q = read(dir, QS);
   assert.ok(q.indexOf('## A long message') < q.indexOf('## The closing line'), 'the section follows "A long message"');
   const section = closingSection(q);
-  for (const m of ['❓', '⚠️', '👉', '⏳', '✅']) assert.ok(section.includes(m), `the section shows ${m}`);
+  for (const m of ['❓', '⚠️', '👉', '⏳', '💤', '✅']) assert.ok(section.includes(m), `the section shows ${m}`);
   assert.ok(section.includes('Done when the message ends with the one line its case asks for, or with none'));
   const limit = Number(/"start_limit_bytes":\s*(\d+)/.exec(read(dir, 'pan-harness/project/check.json'))[1]);
   assert.equal(limit, 25600 + Buffer.byteLength(`${items[0]}\n`) + Buffer.byteLength(` ${STATE_SENTENCE}`), 'the start limit is raised by the item and the session-state sentence');
@@ -1687,9 +1687,9 @@ test('K2: a reworded Check every claim item or a missing opener paragraph gives 
 });
 
 // ---- every wait reaches the owner's session (3.19.11)
-const WAIT_LINE = "- When waiting: before you end a turn with a `❓`, `⚠️` or `👉` closing line, message your opener, session <your session id>: 'Waiting: <Work ID or task> — <the question blocks, the plan or the action, unchanged>'. When the owner answers in your own window first, message your opener 'Answered here: <the owner's words>'.";
+const WAIT_LINE = "- When waiting: before you end a turn with a `❓`, `⚠️`, `👉` or `💤` closing line, message your opener, session <your session id>: 'Waiting: <Work ID or task> — <the question blocks, the plan, the action or the pause line, unchanged>'. When the owner answers in your own window first, message your opener 'Answered here: <the owner's words>'.";
 const WAIT_PARA = '**The opener, on "Waiting".** Pass the message on to your own opener unchanged, with the child\'s session link added. The owner\'s session puts the question blocks, the plan or the action to the owner word for word, names the session and links it. Send the owner\'s answer down to the waiting session as \'Owner: "<the owner\'s words>"\', through each level. An \'Answered here\' drops the question. A step the permission system blocks when relayed (a deploy, a restart) goes to the owner as `👉` with the session\'s link and the exact text to type. Done when the owner\'s answer reached the waiting session, or the owner has the link and the text.';
-const SUB_NEW = 'The owner answers in the main session: the answer reaches you as \'Owner: "<the owner\'s words>"\' and counts as the owner\'s, a plan approval and a "chop et" too when the plan went up with your \'Waiting\'. The owner may also answer in your window: then send \'Answered here\'.';
+const SUB_NEW = 'A turn that ends with `💤` sends \'Waiting\' too: the pause line says what the owner says to wake it. The owner answers in the main session: the answer reaches you as \'Owner: "<the owner\'s words>"\' and counts as the owner\'s, a plan approval and a "chop et" too when the plan went up with your \'Waiting\'. The owner may also answer in your window: then send \'Answered here\'.';
 const SUB_OLD = 'The owner answers its questions in its own session.';
 const DONE_LINE_START = '- "- When done: message your opener';
 const WORKERS_WAIT = 'A worker\'s \'Waiting\' message goes to the owner, and the answer back, as the paragraph `The opener, on "Waiting"` in the `## New session` section of the project\'s `playbooks/large-task.md` says.';
@@ -1747,4 +1747,52 @@ test('K2: reworded text gives by hand lines and no change', () => {
   assert.match(r.stdout, /^by hand 3\.19\.11 step 2: playbooks\/large-task\.md: /m);
   assert.match(r.stdout, /^by hand 3\.19\.11 step 3: playbooks\/large-task\.md: /m);
   assert.doesNotMatch(read(dir, LT), /When waiting/);
+});
+
+// ---- the closing line by who acts next (3.20.11)
+const WHO_ITEM_OLD = "  - **Closing line.** End a message with one line, a marker and one sentence that says the main point and who acts next and where, in these cases: `❓` the owner's answer is awaited (a message that ends with `❓` question blocks needs no other line: nothing follows the last block, no `⚠️` or `👉` line, no \"reply with\" line); `⚠️` a problem or a limit stops the work, a command the permission system blocked included, and you cannot go on until the owner acts; `👉` the owner acts elsewhere, not by answering here; `⏳` the work goes on without the owner, a sub-session that `handoff.md` lists as running included, even if you cannot check it: say what the record says; `✅` a task that changed files is finished (no file changed: no `✅`). One marker a message, the first that fits in this order, and no other marker line in it; the closing line is the last line. Any other message ends with no marker. Examples: `playbooks/questions.md` → `The closing line`.";
+const WHO_SECTION_OLD = ["## The closing line", "", "A message to the owner that awaits the owner, names a problem, sends the owner elsewhere, or says the work goes on or is done ends with one line: a marker, then one sentence that says the main point and who acts next and where. Use one marker a message, the first that fits in this order, and no other marker line in it. The closing line is the last line of the message: nothing follows it.", "", "When you ask the owner to run a command or approve a blocked command, the work is stopped: that is `⚠️`, not `❓`. `❓` is for a choice or an answer you need to go on.", "", "- `❓` The owner's answer is awaited. A message that ends with `❓` question blocks needs no other line: the last block is the closing line, and nothing follows it: no `⚠️`, `👉` or `⏳` line, no \"reply with a) or b)\" line. State a problem or a blocked step before the blocks, in the body.", "- `⚠️` A problem or a limit stops the work, such as a command the permission system blocked.", "- `👉` The owner acts elsewhere, not by answering here.", "- `⏳` The work goes on without the owner, a sub-session that `handoff.md` lists as running included, even if you cannot check it: say what the record says.", "- `✅` A task that changed files is finished. A message that changed no file never ends with `✅`.", "", "```text", "⚠️ I cannot deploy from this session: the deploy runs in the sub-session.", "👉 Give the go-ahead for the deploy in the session \"Bug fix\": <link>.", "⏳ The session \"Bug fix\" is deploying; I report when it sends \"Done\".", "✅ The fix is committed (`a1b2c3d`); nothing waits for you.", "```", "", "Any other message, such as a plain answer, ends with no marker:", "", "```text", "The check takes 40 seconds; the tests are the slow step.", "```", "", "Done when the message ends with the one line its case asks for, or with none."].join('\n');
+const WHO_WAIT_OLD = "- When waiting: before you end a turn with a `❓`, `⚠️` or `👉` closing line, message your opener, session <your session id>: 'Waiting: <Work ID or task> — <the question blocks, the plan or the action, unchanged>'. When the owner answers in your own window first, message your opener 'Answered here: <the owner's words>'.";
+const WHO_SUB_PAUSE = 'A turn that ends with `💤` sends \'Waiting\' too: the pause line says what the owner says to wake it. ';
+const oldWho = (dir) => {
+  const tmplItem = read(dir, 'AGENTS.md').split('\n').find((l) => l.startsWith(CLOSING_ITEM_START));
+  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').replace(tmplItem, WHO_ITEM_OLD));
+  const q = read(dir, QS);
+  put(dir, QS, q.replace(closingSection(q).replace(/\n+$/, ''), WHO_SECTION_OLD));
+  const lt = read(dir, LT).split('\n').map((l) => (l.startsWith('- When waiting: ') ? WHO_WAIT_OLD : l)).join('\n').replace(WHO_SUB_PAUSE, '');
+  put(dir, LT, lt);
+  put(dir, 'pan-harness/project/check.json', '{\n  "start_limit_bytes": 30000\n}\n');
+  toStandard(dir, '3.19.11');
+  return tmplItem;
+};
+
+test('K4: migrate 3.19.11 -> next rewrites the item, the section, the Waiting line and the sub-session sentence, lowers start_limit_bytes by the real change, once', () => {
+  const dir = current();
+  const tmplItem = oldWho(dir);
+  const tmpl = [read(current(), 'AGENTS.md'), read(current(), QS), read(current(), LT)];
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  for (const n of [1, 2, 3, 4, 5]) assert.match(r.stdout, new RegExp(`^done +3\\.20\\.11 step ${n}: `, 'm'));
+  assert.equal(read(dir, 'AGENTS.md'), tmpl[0], 'AGENTS.md equals the template');
+  assert.equal(read(dir, QS), tmpl[1], 'questions.md equals the template');
+  assert.equal(read(dir, LT), tmpl[2], 'large-task.md equals the template');
+  const change = Buffer.byteLength(tmplItem) - Buffer.byteLength(WHO_ITEM_OLD);
+  assert.ok(change < 0 && change >= -100, `the item changed by ${change} bytes`);
+  assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${30000 + change}`));
+  const text = [read(dir, 'AGENTS.md'), read(dir, QS), read(dir, LT), read(dir, 'pan-harness/project/check.json')];
+  assert.doesNotMatch(run('migrate.mjs', '--root', dir).stdout, /3\.20\.11 step/);
+  assert.deepEqual([read(dir, 'AGENTS.md'), read(dir, QS), read(dir, LT), read(dir, 'pan-harness/project/check.json')], text, 'a second run changes nothing');
+});
+
+test('K4: reworded 3.19.11 texts give by hand lines and no change', () => {
+  const dir = current();
+  oldWho(dir);
+  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').replace('End a message with one line', 'Finish a message with one line'));
+  put(dir, QS, read(dir, QS).replace('The owner\'s answer is awaited.', 'The owner must answer.'));
+  const before = [read(dir, 'AGENTS.md'), read(dir, QS), read(dir, 'pan-harness/project/check.json')];
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^by hand 3\.20\.11 step 1: AGENTS\.md: /m);
+  assert.match(r.stdout, /^by hand 3\.20\.11 step 2: playbooks\/questions\.md: /m);
+  assert.deepEqual([read(dir, 'AGENTS.md'), read(dir, QS), read(dir, 'pan-harness/project/check.json')], before, 'nothing changed');
 });

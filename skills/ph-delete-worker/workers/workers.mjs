@@ -54,7 +54,7 @@ const refreshLine = (brief) => `- Context refresh: brief in ${brief}. Before eac
 // writes its own session id in place of <main-agent session id> (ph-workers, step 7)
 const doneLine = (name, task) => `- When done: message your opener, session <main-agent session id>: 'Done: ${name}, ${task}, <commit>'. Send it even when the owner answered you in your own session and saw your report: those turns do not wake your opener.`;
 // the "When waiting" line next to it, as the same template words it
-const waitLine = (name, task) => `- When waiting: before you end a turn with a \`❓\`, \`⚠️\` or \`👉\` closing line, message your opener, session <main-agent session id>: 'Waiting: ${name}, ${task} — <the question blocks, the plan or the action, unchanged>'. When the owner answers in your own window first, message your opener 'Answered here: <the owner\'s words>'.`;
+const waitLine = (name, task) => `- When waiting: before you end a turn with a \`❓\`, \`⚠️\`, \`👉\` or \`💤\` closing line, message your opener, session <main-agent session id>: 'Waiting: ${name}, ${task} — <the question blocks, the plan, the action or the pause line, unchanged>'. When the owner answers in your own window first, message your opener 'Answered here: <the owner\'s words>'.`;
 const CLOUD = [/[\\/]Dropbox( \([^\\/]*\))?([\\/]|$)/i, /[\\/]Library[\\/]CloudStorage[\\/]/, /[\\/]Library[\\/]Mobile Documents[\\/]/,
   /[\\/]OneDrive( - [^\\/]*)?([\\/]|$)/i, /[\\/]Google ?Drive([\\/]|$)/i, /[\\/]iCloud ?Drive([\\/]|$)/i];
 

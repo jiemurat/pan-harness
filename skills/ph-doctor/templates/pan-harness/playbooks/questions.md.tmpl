@@ -85,21 +85,25 @@ Done when each item of a long message starts with a bold label and no sentence i
 
 ## The closing line
 
-A message to the owner that awaits the owner, names a problem, sends the owner elsewhere, or says the work goes on or is done ends with one line: a marker, then one sentence that says the main point and who acts next and where. Use one marker a message, the first that fits in this order, and no other marker line in it. The closing line is the last line of the message: nothing follows it.
+A message to the owner that awaits the owner, names a problem, sends the owner elsewhere, or says the work goes on, sleeps or is done ends with one line: a marker, then one sentence that says the main point and who acts next and where. The marker is who acts next. Use one marker a message, the first that fits in this order, and no other marker line in it. The closing line is the last line of the message: nothing follows it.
 
 When you ask the owner to run a command or approve a blocked command, the work is stopped: that is `⚠️`, not `❓`. `❓` is for a choice or an answer you need to go on.
 
-- `❓` The owner's answer is awaited. A message that ends with `❓` question blocks needs no other line: the last block is the closing line, and nothing follows it: no `⚠️`, `👉` or `⏳` line, no "reply with a) or b)" line. State a problem or a blocked step before the blocks, in the body.
-- `⚠️` A problem or a limit stops the work, such as a command the permission system blocked.
-- `👉` The owner acts elsewhere, not by answering here.
-- `⏳` The work goes on without the owner, a sub-session that `handoff.md` lists as running included, even if you cannot check it: say what the record says.
-- `✅` A task that changed files is finished. A message that changed no file never ends with `✅`.
+- `❓` **The owner, now, by answering here.** A decision is asked and you go on the moment it comes; a plan that awaits approval is such a decision. A message that ends with `❓` question blocks needs no other line: the last block is the closing line, and nothing follows it: no `⚠️`, `👉`, `⏳` or `💤` line, no "reply with a) or b)" line. State a problem or a blocked step before the blocks, in the body.
+- `⚠️` **The owner, now, because a problem or a limit stops the work,** such as a command the permission system blocked.
+- `👉` **The owner, elsewhere,** not by answering here.
+- `⏳` **An agent, now.** Something runs: before you write `⏳`, read the session or the process in the same turn (`get_session`, `list_events`, the process list). When you have no tool to read it, write what the record says and mark it `unverified`; a record that says "running" is not a running session. If nothing runs, `⏳` is wrong: use `💤`.
+- `💤` **The owner, later, at the owner's own time.** No question is asked and nothing runs: the work sleeps until the owner wakes it with the owner's own word, such as "start X only on my word" or a task put off. The sentence says what sleeps and what the owner says or does to wake it.
+- `✅` **No one: a task that changed files is finished.** A message that changed no file never ends with `✅`. When the owner still checks the result later, name that check in the sentence.
+
+`❓` or `💤`: if a decision is asked and you are ready to go on the moment it comes, `❓`; if no decision is asked, `💤`.
 
 ```text
 ⚠️ I cannot deploy from this session: the deploy runs in the sub-session.
 👉 Give the go-ahead for the deploy in the session "Bug fix": <link>.
-⏳ The session "Bug fix" is deploying; I report when it sends "Done".
-✅ The fix is committed (`a1b2c3d`); nothing waits for you.
+⏳ The session "Bug fix" is deploying (read just now: running); I report when it sends "Done".
+💤 The release sleeps until you wake it: say "publish" when you want it.
+✅ The fix is committed (`a1b2c3d`); you check it on the staging server tomorrow.
 ```
 
 Any other message, such as a plain answer, ends with no marker:
