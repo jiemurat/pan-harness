@@ -48,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9', '3.13.9', '3.14.9', '3.15.9', '3.16.9', '3.17.9', '3.17.10', '3.17.11']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9', '3.13.9', '3.14.9', '3.15.9', '3.16.9', '3.17.9', '3.17.10', '3.17.11', '3.18.11']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -549,7 +549,9 @@ const APPROVAL_TEXT = APPROVAL_LINE.slice(APPROVAL_LINE.indexOf(APPROVAL_MARK));
 const ONLY_READING = ' Before the approval, only reading is allowed.';
 const PLANNING_START = (() => {
   const l = AGENTS_TMPL.find((x) => x.includes(' A large task still in planning has its file in ')) || '';
-  return l.slice(l.indexOf(' A large task still in planning has its file in '));
+  const from = l.indexOf(' A large task still in planning has its file in ');
+  const mark = '`Next question`.'; // the sentence about a part's plan.md that follows belongs to the own-harness rule (3.14.9)
+  return from < 0 ? '' : l.slice(from, l.indexOf(mark, from) + mark.length);
 })();
 const PLANNING_MAP = tmplLines('PAN-HARNESS.md.tmpl').find((l) => l.startsWith('- `planning/<task>.md` — ')) || '';
 
@@ -885,10 +887,23 @@ function ownHarnessRule(f) {
   return m ? `R${m[1]}` : null;
 }
 
+// the rule stands in AGENTS.md or, moved, in a playbook's Domain rules
+function ownHarnessRuleAnywhere() {
+  for (const rel of [AGENTS, ...['pan-harness/playbooks', 'pan-harness/project/playbooks'].flatMap((d) => {
+    const p = path.join(root, ...d.split('/'));
+    return fs.existsSync(p) ? fs.readdirSync(p).filter((n) => n.endsWith('.md')).sort().map((n) => `${d}/${n}`) : [];
+  })]) {
+    const f = file(rel);
+    const r = f && ownHarnessRule(f);
+    if (r) return r;
+  }
+  return null;
+}
+
 function step1PointerGoOn() {
   const f = file(AGENTS);
   if (!f || !POINTER_GO_ON) return;
-  const rule = ownHarnessRule(f);
+  const rule = ownHarnessRuleAnywhere();
   if (!rule) return; // no own-harness rule: the project has no part to point to
   const text = POINTER_GO_ON.replace(/\(R\d+\)/, `(${rule})`);
   if (f.lines.some((l) => l.includes(text))) return;
@@ -1293,6 +1308,7 @@ const DUE_TEXT = (() => {
   const from = l.indexOf(DUE_MARK);
   return from < 0 ? '' : l.slice(from);
 })();
+const DUE_SHORT = 'Run `node pan-harness/scripts/pan-harness-check.mjs --harnesses`.';
 const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -1308,10 +1324,30 @@ function step1UpdatedLine() {
   done.push(`3.17.9 step 1: PAN-HARNESS.md: ${line} under Standard:`);
 }
 
+// a short item after the handoff item, for a harness with no folder-list item in any wording; returns the bytes added, 0 when nothing was placed
+function addShortDueItem(f) {
+  if (!DUE_TEXT || f.lines.some((l) => /^\d+\. List the folders below this one with their own harness: /.test(l))) return 0;
+  const h = f.lines.findIndex((l) => /^\d+\. When `pan-harness\/handoff\.md` says/.test(l));
+  if (h < 0) return 0;
+  const size = () => Buffer.byteLength(f.lines.join(f.eol));
+  const before = size();
+  let n = Number(/^(\d+)\./.exec(f.lines[h])[1]) + 1;
+  f.lines.splice(h + 1, 0, `${n}. ${DUE_SHORT}${DUE_TEXT}`);
+  for (let i = h + 2; i < f.lines.length && /^\d+\. /.test(f.lines[i]); i++) f.lines[i] = f.lines[i].replace(/^\d+/, String(++n));
+  f.changed = true;
+  return size() - before;
+}
+
 function step2DueSentence() {
   const f = file(AGENTS);
   if (!f || f.lines.some((l) => l.includes('`ph-update due`'))) return;
   const at = f.lines.findIndex((l) => /^\d+\. List the folders below this one with their own harness: /.test(l) && l.includes('--harnesses` (no output: none).'));
+  const added = addShortDueItem(f); // no folder-list item (a harness without the own-harness rule): a short item of its own
+  if (added > 0) {
+    updateBytes += added;
+    done.push('3.17.9 step 2: AGENTS.md: Session start runs --harnesses and acts on the ph-update due line');
+    return;
+  }
   if (at < 0 || !DUE_TEXT) {
     byHand.push(`3.17.9 step 2: AGENTS.md: Session start has no item that runs --harnesses with "(no output: none)."; add to it "${DUE_TEXT.trim()}"`);
     return;
@@ -1621,6 +1657,150 @@ function step3ArchiveBytes() {
   done.push(`3.17.11 step 3: project/check.json: start_limit_bytes ${archiveBytes} bytes higher for the part archive sentence`);
 }
 
+// ---------------------------------------------------------------- 3.18.11 (repair of the part sentence, "child" defined)
+// 3.11.7 step 2 appended the sentence about a part's plan.md (with the template's rule number) to harnesses
+// without the own-harness rule, and a second one to harnesses whose rule has another number
+const PART_SENTENCE = / A `plan\.md` item that points to a part's `plan\.md` .*?go on with its open task \(R\d+\)\./g;
+let repairBytes = 0;
+
+function step1PartSentenceRepair() {
+  const f = file(AGENTS);
+  if (!f) return;
+  const rule = ownHarnessRuleAnywhere();
+  const at = f.lines.findIndex((l) => /^\d+\. When `pan-harness\/handoff\.md` says/.test(l));
+  if (at < 0) return;
+  const found = f.lines[at].match(PART_SENTENCE) || [];
+  const keep = rule ? found.find((x) => x.endsWith(`(${rule}).`)) || found[0] : null; // no rule: none stays
+  if (!found.length || (found.length === 1 && found[0] === keep && (!rule || keep.endsWith(`(${rule}).`)))) return;
+  const want = keep && keep.replace(/\(R\d+\)\.$/, `(${rule}).`);
+  let used = false;
+  const line = f.lines[at].replace(PART_SENTENCE, (x) => (want && !used && x === keep && (used = true) ? want : ''));
+  repairBytes += Buffer.byteLength(f.lines[at]) - Buffer.byteLength(line);
+  f.lines[at] = line;
+  f.changed = true;
+  done.push(rule ? `3.18.11 step 1: AGENTS.md: Session start has the sentence about a part's plan.md once, with ${rule}`
+    : "3.18.11 step 1: AGENTS.md: Session start loses the sentence about a part's plan.md (no own-harness rule here)");
+}
+
+const CHILD_OLD = 'Done when the child runs and the owner has the line.';
+const CHILD_NEW = 'Done when the child (the sub-session you open) runs and the owner has the line.';
+
+function step2ChildDefined() {
+  const f = file(LARGE_TASK);
+  if (!f || !f.lines.some((l) => l.startsWith('**Opening one.**'))) return;
+  const r = swap(f, CHILD_OLD, CHILD_NEW);
+  if (!r) byHand.push(`3.18.11 step 2: playbooks/large-task.md: "Opening one" is reworded; define "child" at its first use there ("${CHILD_NEW}")`);
+  if (r === 'changed') done.push('3.18.11 step 2: playbooks/large-task.md: "child" is defined at its first use');
+}
+
+// a harness already past 3.17.9 without the folder-list item never ran the 3.17.9 step again
+let dueNextBytes = 0;
+function step3DueItem() {
+  const f = file(AGENTS);
+  if (!f || f.lines.some((l) => l.includes('`ph-update due`'))) return;
+  const added = addShortDueItem(f);
+  if (added <= 0) return; // a reworded folder-list item, or no handoff item: the 3.17.9 step has already said "by hand"
+  dueNextBytes = added;
+  done.push('3.18.11 step 3: AGENTS.md: Session start runs --harnesses and acts on the ph-update due line');
+}
+
+function step4NetBytes() {
+  const f = file('pan-harness/project/check.json');
+  const net = dueNextBytes - repairBytes;
+  if (!f || net === 0) return;
+  const at = f.lines.findIndex((l) => /"start_limit_bytes":\s*\d+/.test(l));
+  if (at < 0) return;
+  f.lines[at] = f.lines[at].replace(/("start_limit_bytes":\s*)(\d+)/, (_, k, v) => `${k}${Math.max(0, Number(v) + net)}`);
+  f.changed = true;
+  done.push(`3.18.11 step 4: project/check.json: start_limit_bytes ${Math.abs(net)} bytes ${net > 0 ? 'higher' : 'lower'} (the update check item, the removed sentence)`);
+}
+
+// the closing line: the sub-item after "Questions." and the section after "A long message"
+const CLOSING_ITEM = AGENTS_TMPL.find((l) => l.startsWith('  - **Closing line.** ')) || '';
+const CLOSING_SECTION = (() => {
+  const lines = tmplLines('pan-harness/playbooks/questions.md.tmpl');
+  const at = lines.indexOf('## The closing line');
+  const end = lines.findIndex((l, i) => i > at && l.startsWith('## '));
+  const part = lines.slice(at, end < 0 ? lines.length : end);
+  while (part.length && part[part.length - 1] === '') part.pop();
+  return part;
+})();
+let closingBytes = 0;
+
+function step5ClosingItem() {
+  const f = file(AGENTS);
+  if (!f || f.lines.some((l) => l.startsWith('  - **Closing line.** '))) return;
+  const at = f.lines.findIndex((l) => l.startsWith('  - **Questions.** '));
+  if (at < 0) { byHand.push(`3.18.11 step 5: AGENTS.md: no "Questions." item in the chat rule; add "${CLOSING_ITEM}" under the chat rule`); return; }
+  f.lines.splice(at + 1, 0, CLOSING_ITEM);
+  f.changed = true;
+  closingBytes = Buffer.byteLength(CLOSING_ITEM + f.eol);
+  done.push('3.18.11 step 5: AGENTS.md: the chat rule gets the closing line item');
+}
+
+function step6ClosingSection() {
+  const f = file(QUESTIONS);
+  if (!f || f.lines.includes('## The closing line')) return;
+  const at = f.lines.indexOf('## A long message');
+  if (at < 0) { byHand.push(`3.18.11 step 6: playbooks/questions.md: no "A long message" section; add the section "The closing line" (template: playbooks/questions.md.tmpl) at the end`); return; }
+  let end = f.lines.findIndex((l, i) => i > at && l.startsWith('## '));
+  if (end < 0) { end = f.lines.length; while (end > at && f.lines[end - 1] === '') end--; }
+  f.lines.splice(end, 0, '', ...CLOSING_SECTION, ...(end === f.lines.length ? [] : ['']));
+  if (f.lines[f.lines.length - 1] !== '') f.lines.push('');
+  f.changed = true;
+  done.push('3.18.11 step 6: playbooks/questions.md: the section "The closing line" is added');
+}
+
+function step7ClosingBytes() {
+  const f = file('pan-harness/project/check.json');
+  if (!f || closingBytes === 0) return;
+  const at = f.lines.findIndex((l) => /"start_limit_bytes":\s*\d+/.test(l));
+  if (at < 0) return;
+  f.lines[at] = f.lines[at].replace(/("start_limit_bytes":\s*)(\d+)/, (_, k, v) => `${k}${Number(v) + closingBytes}`);
+  f.changed = true;
+  done.push(`3.18.11 step 7: project/check.json: start_limit_bytes ${closingBytes} bytes higher for the closing line item`);
+}
+
+// the session status rule: a session's state is read in the same turn, not taken from a note
+const STATE_CLAIM = AGENTS_TMPL.find((l) => l.startsWith('- **Check every claim.** ')) || '';
+const STATE_SENTENCE = STATE_CLAIM.slice(STATE_CLAIM.indexOf("A session's state ("));
+const STATUS_PARA = LARGE_TASK_TMPL.find((l) => l.startsWith('**Session status.** ')) || '';
+let statusBytes = 0;
+
+function step8StateSentence() {
+  const f = file(AGENTS);
+  if (!f || !STATE_SENTENCE || f.lines.some((l) => l.includes("A session's state ("))) return;
+  const at = f.lines.findIndex((l) => l.startsWith('- **Check every claim.** '));
+  if (at < 0 || !f.lines[at].endsWith('`unverified` apart.')) {
+    byHand.push(`3.18.11 step 8: AGENTS.md: the "Check every claim" item is missing or reworded; add the sentence "${STATE_SENTENCE}" at its end`);
+    return;
+  }
+  f.lines[at] += ` ${STATE_SENTENCE}`;
+  f.changed = true;
+  statusBytes = Buffer.byteLength(` ${STATE_SENTENCE}`);
+  done.push('3.18.11 step 8: AGENTS.md: "Check every claim" names a session\'s state (read it in the same turn)');
+}
+
+function step9StatusParagraph() {
+  const f = file(LARGE_TASK);
+  if (!f || !STATUS_PARA || f.lines.some((l) => l.startsWith('**Session status.**'))) return;
+  const at = f.lines.findIndex((l) => l.startsWith('**The opener, on "Done".**'));
+  if (at < 0) { byHand.push(`3.18.11 step 9: playbooks/large-task.md: no "The opener, on "Done"" paragraph; add "${STATUS_PARA}" before it, in New session`); return; }
+  f.lines.splice(at, 0, STATUS_PARA, '');
+  f.changed = true;
+  done.push('3.18.11 step 9: playbooks/large-task.md: New session has the Session status paragraph');
+}
+
+function step10StatusBytes() {
+  const f = file('pan-harness/project/check.json');
+  if (!f || statusBytes === 0) return;
+  const at = f.lines.findIndex((l) => /"start_limit_bytes":\s*\d+/.test(l));
+  if (at < 0) return;
+  f.lines[at] = f.lines[at].replace(/("start_limit_bytes":\s*)(\d+)/, (_, k, v) => `${k}${Number(v) + statusBytes}`);
+  f.changed = true;
+  done.push(`3.18.11 step 10: project/check.json: start_limit_bytes ${statusBytes} bytes higher for the session-state sentence`);
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
@@ -1646,6 +1826,7 @@ const STEPS = {
     step9ModelSection, step10ModelBrief, step11ModelAgents, step12ModelBytes, step13SessionOpen, step14SessionTree, step15DeleteAtEnd],
   '3.17.10': [step1PutOffCheck, step2BriefLines, step3PartBrief, step4BriefBytes],
   '3.17.11': [step1CardInReport, step2PartArchive, step3ArchiveBytes],
+  '3.18.11': [step1PartSentenceRepair, step2ChildDefined, step3DueItem, step4NetBytes, step5ClosingItem, step6ClosingSection, step7ClosingBytes, step8StateSentence, step9StatusParagraph, step10StatusBytes],
 };
 
 // ---------------------------------------------------------------- run

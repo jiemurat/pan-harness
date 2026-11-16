@@ -2,6 +2,13 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 3.18.11
+
+- A harness whose owner declined the rule on folders with their own harness no longer gets the sentence about a part's `plan.md` (with the template's rule number) in `AGENTS.md`, and its Session start now runs `--harnesses`, so the weekly `ph-update` check runs there too. `/ph-update` removes the stray sentence from a harness migrated before, and a second copy where the rule has another number.
+- `playbooks/large-task.md` says once what "child" means: the sub-session you open.
+- A message to the owner that awaits the owner, names a problem, sends the owner elsewhere, or says the work goes on or is done ends with one line that starts with a marker (`❓`, `⚠️`, `👉`, `⏳`, `✅`); a plain answer has no marker. `AGENTS.md` gets the "Closing line." item, `playbooks/questions.md` the section `## The closing line`; `/ph-update` adds both to an existing harness and raises `start_limit_bytes` by the added bytes.
+- An agent no longer tells the owner a session's state (waits for the owner, works, done) from an old note: it reads the session and the git log of its folder in the same turn, and marks a state taken only from a note `unverified`. `AGENTS.md` ("Check every claim"), `playbooks/large-task.md` ("Session status") and `ph-workers` ("Status") carry the rule; `/ph-update` adds it to an existing harness and raises `start_limit_bytes` by the added bytes.
+
 ## 3.17.11
 
 - `/ph-update` that also updates the folders below with their own harness now opens each part session with the brief lines (so it says when it is done), checks each part's commit and archives its session, and its final report names the card that deletes the finished sessions, which follows it. The own-harness rule of `AGENTS.md` says the part's session is archived on its "Done". `/ph-update` adds the sentence to the rule (in `AGENTS.md` or in the playbook it moved to) and the report line to `playbooks/large-task.md`.

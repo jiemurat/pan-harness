@@ -89,7 +89,7 @@ For every task, in an agent with the session tools (Claude Desktop: `mcp__ccd_se
 - "- Level: <your level + 1>";
 - "- When done: message your opener, session <your session id>: 'Done: <Work ID or task>, <commit>'. Send it even when the owner answered you in your own session and saw your report: those turns do not wake your opener." Your session id: `get_session` with `self` (Claude Desktop).
 
-**Opening one.** Done when the child runs and the owner has the line.
+**Opening one.** Done when the child (the sub-session you open) runs and the owner has the line.
 - Your own work needs a state file with a Work ID: a small task writes a short `pan-harness/handoff-<task>.md` first (`**Status:** active`, Task, Changed files, Next step).
 - Make the child's Work ID: `node pan-harness/scripts/pan-harness-check.mjs --new-id <child-task>`. Write its state file `pan-harness/handoff-<child-task>.md` (the sections of `handoff.md`) with `**Work ID:**` and `**Opened by:** <your Work ID>`, and its brief file `brief-<child-task>.md` (`## Context refresh` → "The brief file") with the `Brief lines` ('Done: <Work ID>, <commit>').
 - A session the owner asks for (the app's offer card, or in words) gets a brief file too, `pan-harness/brief-<task>.md`: the task and the `Brief lines` ('Done: <task>, <commit>'); the session writes its own state file as its task needs. On its "Done", act as `The opener, on "Done"` says.
@@ -99,6 +99,8 @@ For every task, in an agent with the session tools (Claude Desktop: `mcp__ccd_se
 - At most 2 levels below the owner's session: a child at `Level: 2` opens no sub-session and works on itself.
 
 **In the sub-session.** The owner answers its questions in its own session. When its work is done (its checks pass, its commit made), it messages its opener as the brief's "When done" line says and waits, also when the owner answered it there and saw its report: the app wakes the opener for that message, not for a turn the owner drove in the child (the note of such a turn waits for the opener's next turn).
+
+**Session status.** When the owner asks for the state, or before a line that says a session waits for the owner, list the sessions you started and the ones they started (`list_sessions` with `linked`) and read each one's last rows (`list_events`) and the git log of its folder. A line taken only from a note says `unverified`. Without session tools, read the state files and the git log. Done when each line rests on a read of this turn.
 
 **The opener, on "Done".** Check the result against the task's goal and criteria, not only the child's word (its diff and checks, `playbooks/delegation.md` → `The result`); remove the child's state and brief files, commit, report up (to the owner, or "Done" to your own opener), and archive the child at once (`archive_session`). A sub-session deletes no session: an approval card would stop the work while the owner is away. Only the owner's session deletes, once, as the very last step of the whole work: its final report names the delete card as its next step, and after that report, when no session of the tree still works, it deletes every archived session of the tree in one approval card (`delete_session` with their ids from the app's session list). Done when each child is archived; in the owner's session, when the card is sent.
 

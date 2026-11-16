@@ -4,6 +4,23 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 3.18.11
+
+A harness without the rule on folders with their own harness no longer gets the sentence about a part's `plan.md` (`3.11.7` step 2 appended it with the template's rule number), and its Session start has an item that runs `--harnesses`, so the `ph-update due` line is acted on there. A repair step removes the stray sentence from harnesses migrated before (and a second copy where the own-harness rule has another number). `playbooks/large-task.md` defines "child" at its first use. A message to the owner that awaits the owner, names a problem, sends the owner elsewhere, or says the work goes on or is done now ends with one line that starts with a marker (`❓`, `⚠️`, `👉`, `⏳`, `✅`); a plain answer has none. Steps 5–7 add the rule to existing harnesses. A session's state (waits for the owner, works, done) is read in the same turn from the session and the git log of its folder, not repeated from a note; a state taken only from a note says `unverified`: `AGENTS.md` → "Check every claim" and `playbooks/large-task.md` → `New session` carry the rule, and steps 8–10 add it to existing harnesses. A project extension that checks the `handoff.md` intro (its own wording or a check script) is updated by hand after a step rewrites the intro (`3.12.8` step 4 and later): the steps change only the template's own text.
+
+1. `mechanical` — `AGENTS.md` → Session start, the handoff item: the sentence "A `plan.md` item that points to a part's `plan.md` …" is removed when the harness has no own-harness rule, and stands once with the project's rule number when it has one (`scripts/migrate.mjs`).
+2. `mechanical` — `playbooks/large-task.md` → `Opening one`: "the child" becomes "the child (the sub-session you open)" (`scripts/migrate.mjs`).
+3. `mechanical` — `AGENTS.md` → Session start: with no `ph-update due` sentence and no "List the folders below this one …" item, the item "Run `node pan-harness/scripts/pan-harness-check.mjs --harnesses`." with the template's `ph-update due` sentence goes after the handoff item (a reworded folder-list item stays by hand; `scripts/migrate.mjs`).
+4. `mechanical` — `project/check.json`: `start_limit_bytes` changed by the bytes steps 1 and 3 removed and added (`scripts/migrate.mjs`).
+5. `mechanical` — `AGENTS.md` → Communication: the sub-item "Closing line." goes after the "Questions." item (a reworded or missing "Questions." item is `by hand`; `scripts/migrate.mjs`).
+6. `mechanical` — `playbooks/questions.md`: the section `## The closing line` goes after "A long message" (a missing "A long message" section is `by hand`; `scripts/migrate.mjs`).
+7. `mechanical` — `project/check.json`: `start_limit_bytes` raised by the bytes step 5 added (`scripts/migrate.mjs`).
+8. `mechanical` — `AGENTS.md` → Working style, "Check every claim.": the sentence "A session's state (waits for the owner, works, done) is such a claim: …" goes at the end of the item (a missing or reworded item is `by hand`; `scripts/migrate.mjs`).
+9. `mechanical` — `playbooks/large-task.md` → `New session`: the paragraph "Session status." goes before `The opener, on "Done"` (a missing opener paragraph is `by hand`; `scripts/migrate.mjs`).
+10. `mechanical` — `project/check.json`: `start_limit_bytes` raised by the bytes step 8 added (`scripts/migrate.mjs`).
+
+For a harness without the own-harness rule, `3.17.9` step 2 (and, for a harness already past 3.17.9, step 3 above) adds the item "Run `node pan-harness/scripts/pan-harness-check.mjs --harnesses`." with the template's `ph-update due` sentence after the handoff item of Session start.
+
 ## 3.17.11
 
 The opener of a part session (a folder with its own harness), on its "Done", checks its commit there and archives its session; the owner's final report names the delete card as its next step, and the card follows it. `ph-update` step 1 names these actions for the harnesses below.

@@ -15,6 +15,7 @@ const SKILL = path.join(ROOT, 'skills', 'ph-update');
 const VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
 const DAY = new Date().toISOString().slice(0, 10);
 const MONTH = DAY.slice(0, 7);
+const TEMPLATE_LIMIT = Number(/"start_limit_bytes":\s*(\d+)/.exec(fs.readFileSync(path.join(ROOT, 'core', 'templates', 'pan-harness', 'project', 'check.json.tmpl'), 'utf8'))[1]);
 
 function git(dir, ...args) {
   const r = spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
@@ -427,7 +428,7 @@ test('migrate 2.10.4 -> 2.10.5: AGENTS.md gets the question rule, the questions 
   const dir = current();
   const tmplRule = fs.readFileSync(path.join(SKILL, 'templates', 'AGENTS.md.tmpl'), 'utf8').split('\n').find((l) => l.startsWith('  - **Questions.** '));
   assert.ok(tmplRule, 'the template has the rule');
-  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').split('\n').filter((l) => !l.startsWith('  - **Questions.** ')).join('\n'));
+  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').split('\n').filter((l) => !l.startsWith('  - **Questions.** ') && !l.startsWith('  - **Closing line.** ')).join('\n'));
   fs.rmSync(path.join(dir, 'pan-harness', 'playbooks', 'questions.md'));
   put(dir, 'pan-harness/playbooks/large-task.md', read(dir, 'pan-harness/playbooks/large-task.md')
     .replace(/- each question in the form of `playbooks\/questions\.md` \(the `ph-grilling` skill writes it too\): options a\), b\), c\)/, '- each question in the `ph-grilling` format: options a/b/c'));
@@ -480,17 +481,19 @@ test('migrate 2.10.4 -> 2.10.5: a chat rule that already has the ❓/➡️ form
 test('migrate 2.10.4 -> 2.10.5: the start set limit grows by the bytes the steps add, the size is printed', () => {
   const dir = current();
   const rule = read(dir, 'AGENTS.md').split('\n').find((l) => l.startsWith('  - **Questions.** '));
+  const closing = read(dir, 'AGENTS.md').split('\n').find((l) => l.startsWith('  - **Closing line.** '));
   const mapLine = read(dir, 'PAN-HARNESS.md').split('\n').find((l) => l.startsWith('- `playbooks/questions.md` — '));
-  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').split('\n').filter((l) => l !== rule).join('\n'));
+  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').split('\n').filter((l) => l !== rule && l !== closing).join('\n'));
   put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace(`${mapLine}\n`, '').replace(/^Standard: pan-harness .*$/m, 'Standard: pan-harness 2.10.4'));
   put(dir, 'pan-harness/project/check.json', read(dir, 'pan-harness/project/check.json').replace(/"start_limit_bytes": \d+/, '"start_limit_bytes": 20480'));
   const before = startSet(dir);
   const r = run('migrate.mjs', '--root', dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
   const added = Buffer.byteLength(`${rule}\n${mapLine}\n`);
-  assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${20480 + added}`));
+  const limit = 20480 + added + Buffer.byteLength(`${closing}\n`); // the closing line item (3.18.11 step 7) comes with the same run
+  assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${limit}`));
   assert.match(r.stdout, /^done +2\.10\.5 step 4: project\/check\.json: start_limit_bytes \d+ bytes higher for the question form$/m);
-  assert.ok(r.stdout.includes(`start set: ${before} -> ${startSet(dir)} bytes (limit ${20480 + added})`), r.stdout);
+  assert.ok(r.stdout.includes(`start set: ${before} -> ${startSet(dir)} bytes (limit ${limit})`), r.stdout);
 
   const over = current();
   put(over, 'pan-harness/project/check.json', read(over, 'pan-harness/project/check.json').replace(/"start_limit_bytes": \d+/, '"start_limit_bytes": 1000'));
@@ -600,7 +603,7 @@ test('migrate 2.9.4 -> current: a commit rule the step cannot place still gets t
   const r = run('migrate.mjs', '--root', dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(r.stdout, /^by hand 2\.10\.4 step 3: AGENTS\.md: the commit rule is reworded/m);
-  assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${25600 + Buffer.byteLength(trailer)}`));
+  assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${TEMPLATE_LIMIT + Buffer.byteLength(trailer)}`));
 });
 
 test('migrate 3.10.7 -> current: the planning file rules go into the planning playbook, Session start and the map, once; the limit grows by their bytes', () => {
@@ -637,7 +640,8 @@ test('migrate 3.10.7 -> current: the planning file rules go into the planning pl
   const added = Buffer.byteLength(start.slice(start.indexOf(' When several tasks are open ('))) + Buffer.byteLength(`${map}\n`)
     + Buffer.byteLength("on no active task's list") * 2 - Buffer.byteLength('not on the list') - Buffer.byteLength('not on your list');
   assert.equal(startSet(dir) - before, added + Buffer.byteLength(waiting) - 1 + Buffer.byteLength(VERSION) - Buffer.byteLength('3.10.7'), 'the start set grows by the lines the steps add, the waiting-owner sentence and the longer Standard line');
-  assert.match(r.stdout, new RegExp(`^done +3\\.11\\.7 step 7: project/check\\.json: start_limit_bytes ${added} bytes higher`, 'm'));
+  const pointer = Buffer.byteLength(start.slice(start.indexOf(" A `plan.md` item that points to a part's `plan.md`"))); // 3.14.9 adds it, not 3.11.7
+  assert.match(r.stdout, new RegExp(`^done +3\\.11\\.7 step 7: project/check\\.json: start_limit_bytes ${added - pointer} bytes higher`, 'm'));
   assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${30000 + added + Buffer.byteLength(waiting) - 1}`));
   assert.match(r.stdout, /^done +3\.11\.7 step 4: playbooks\/large-task\.md: the Parallel tasks section$/m);
   assert.match(r.stdout, /^done +3\.11\.7 step 5: AGENTS\.md: Session start goes on only with the task the session names$/m);
@@ -1413,4 +1417,271 @@ test('migrate 3.17.10 -> current: the part archive sentence in AGENTS.md or a pl
   const h = run('migrate.mjs', '--root', other);
   assert.match(h.stdout, new RegExp(`^by hand ${v} step 1: playbooks/large-task\\.md: `, 'm'));
   assert.match(h.stdout, new RegExp(`^by hand ${v} step 2: AGENTS\\.md: `, 'm'));
+});
+
+// a harness whose owner declined the own-harness rule: no rule, no folder-list item, no part sentences
+const PART_SENTENCE = / A `plan\.md` item that points to a part's `plan\.md` .*?go on with its open task \(R\d+\)\./g;
+function withoutOwnHarness(dir) {
+  let lines = read(dir, 'AGENTS.md').split('\n').filter((l) => !l.includes('A folder with its own harness is worked by its harness.**'));
+  const list = lines.findIndex((l) => /^\d+\. List the folders below this one with their own harness: /.test(l));
+  assert.ok(list > 0, 'the template has the folder-list item');
+  lines.splice(list, 1);
+  for (let i = list, n = Number(/^(\d+)\./.exec(lines[list - 1])[1]); i < lines.length && /^\d+\. /.test(lines[i]); i++) lines[i] = lines[i].replace(/^\d+/, String(++n));
+  lines = lines.map((l) => (/^\d+\. When `pan-harness\/handoff\.md` says/.test(l) ? l.slice(0, l.indexOf(' A large task still in planning')) : l));
+  put(dir, 'AGENTS.md', lines.join('\n'));
+  put(dir, 'pan-harness/project/check.json', '{\n  "start_limit_bytes": 30000\n}\n');
+  return dir;
+}
+const toStandard = (d, v) => put(d, 'PAN-HARNESS.md', read(d, 'PAN-HARNESS.md').replace(/^Standard: pan-harness .*$/m, `Standard: pan-harness ${v}`).replace(/^Updated: .*\n/m, ''));
+
+test('migrate 3.10.7 -> current, no own-harness rule: no sentence about parts, no (R26); Session start runs --harnesses and acts on ph-update due; a second run changes nothing', () => {
+  const dir = withoutOwnHarness(current());
+  toStandard(dir, '3.10.7');
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const agents = read(dir, 'AGENTS.md');
+  assert.doesNotMatch(agents, /points to a part's `plan\.md`/, 'K1: no part-pointer sentence');
+  assert.doesNotMatch(agents, /R26/, 'K1: no template rule number');
+  assert.ok(agents.includes(' A large task still in planning has its file in '), 'the planning sentence is there');
+  const item = agents.split('\n').find((l) => /^\d+\. Run `node pan-harness\/scripts\/pan-harness-check\.mjs --harnesses`\./.test(l));
+  assert.ok(item && item.endsWith(` ${DUE}`), `K3: the short item acts on ph-update due: ${item}`);
+  const nums = agents.split('## Session start')[1].split('\n## ')[0].split('\n').filter((l) => /^\d+\. /.test(l)).map((l) => Number(/^(\d+)\./.exec(l)[1]));
+  assert.deepEqual(nums, nums.map((_, i) => i + 1), 'the Session start items are numbered in order');
+  assert.doesNotMatch(r.stdout, /^by hand .*(ph-update|3\.17\.9 step 2)/m, 'K3: no by hand line for the update check');
+  const again = run('migrate.mjs', '--root', dir);
+  assert.ok(again.stdout.includes('0 by hand') || !/^done +[0-9]/m.test(again.stdout), again.stdout);
+  assert.equal(read(dir, 'AGENTS.md'), agents, 'a second run changes nothing');
+});
+
+test('migrate 3.10.7 -> current, own-harness rule under another number: the part sentence stands once, with the project\'s number', () => {
+  const dir = current();
+  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').replaceAll('R26', 'R21').split('\n')
+    .map((l) => (/^\d+\. When `pan-harness\/handoff\.md` says/.test(l) ? l.slice(0, l.indexOf(' A large task still in planning')) : l)).join('\n'));
+  put(dir, 'pan-harness/project/check.json', '{\n  "start_limit_bytes": 30000\n}\n');
+  toStandard(dir, '3.10.7');
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const found = read(dir, 'AGENTS.md').match(PART_SENTENCE) || [];
+  assert.equal(found.length, 1, `K2: one part sentence, got ${found.length}`);
+  assert.ok(found[0].endsWith('(R21).'), found[0]);
+  assert.doesNotMatch(read(dir, 'AGENTS.md'), /R26/);
+});
+
+// a harness migrated by 3.11.7-3.17.11 with the defect: the stray part sentence stays until the next migration removes it
+test('migrate 3.17.11 -> current: the stray part sentences are removed where there is no own-harness rule, the duplicate where there is one; once', () => {
+  const tmplLine = read(current(), 'AGENTS.md').split('\n').find((l) => l.includes(' A large task still in planning has its file in '));
+  const planning = tmplLine.slice(tmplLine.indexOf(' A large task still in planning has its file in '));
+  const stray = planning.slice(planning.indexOf(" A `plan.md` item that points to a part's `plan.md`"));
+  assert.ok(stray.endsWith('(R26).'), 'the template tail is the part sentence');
+  const first = planning.slice(0, planning.indexOf(stray));
+  const sess = (l) => /^\d+\. When `pan-harness\/handoff\.md` says/.test(l);
+  const cut = (s) => s.split('\n').map((l) => (sess(l) ? l.slice(0, l.indexOf(' A large task still in planning')) : l)).join('\n');
+
+  // no rule: the reporter's state
+  const dir = withoutOwnHarness(current());
+  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').split('\n').map((l) => (sess(l) ? l + planning : l)).join('\n'));
+  put(dir, 'pan-harness/project/check.json', '{\n  "start_limit_bytes": 30000\n}\n');
+  toStandard(dir, '3.17.11');
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const agents = read(dir, 'AGENTS.md');
+  assert.doesNotMatch(agents, /points to a part's `plan\.md`/, 'K4: the stray sentence is gone');
+  assert.doesNotMatch(agents, /R26/);
+  assert.ok(agents.includes(first), 'the planning sentence stays');
+  assert.match(r.stdout, /^done +3\.18\.11 step 1: AGENTS\.md: /m);
+  const item = agents.split('\n').filter((l) => l.startsWith('4. Run `node pan-harness/scripts/pan-harness-check.mjs --harnesses`.'));
+  assert.equal(item.length, 1, 'the update check item stands once');
+  assert.ok(item[0].endsWith(` ${DUE}`), item[0]);
+  assert.match(r.stdout, /^done +3\.18\.11 step 3: AGENTS\.md: Session start runs --harnesses/m);
+  const itemBytes = Buffer.byteLength(`${item[0]}\n`);
+  assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${30000 - Buffer.byteLength(stray) + itemBytes}`), 'the limit nets the removed sentence and the added item');
+  assert.equal(run('migrate.mjs', '--root', dir).status, 0);
+  assert.equal(read(dir, 'AGENTS.md'), agents, 'K4: a second run changes nothing');
+
+  // a rule under another number: the pointer 3.14.9 inserted and the stray one stand together
+  const own = current();
+  const r21 = (s) => s.replaceAll('R26', 'R21');
+  put(own, 'AGENTS.md', r21(read(own, 'AGENTS.md')).split('\n').map((l) => (sess(l) ? cut(l) + first + r21(stray) + stray : l)).join('\n'));
+  put(own, 'pan-harness/project/check.json', '{\n  "start_limit_bytes": 30000\n}\n');
+  toStandard(own, '3.17.11');
+  const o = run('migrate.mjs', '--root', own);
+  assert.equal(o.status, 0, o.stdout + o.stderr);
+  const found = read(own, 'AGENTS.md').match(PART_SENTENCE) || [];
+  assert.equal(found.length, 1, `one part sentence, got ${found.length}`);
+  assert.ok(found[0].endsWith('(R21).'), found[0]);
+  const text = read(own, 'AGENTS.md');
+  assert.equal(run('migrate.mjs', '--root', own).status, 0);
+  assert.equal(read(own, 'AGENTS.md'), text, 'a second run changes nothing');
+});
+
+test('K5: "child" is defined once at its first use in large-task.md.tmpl and migrated; the changelog names the handoff.md intro extension', () => {
+  const tmpl = read(current(), 'pan-harness/playbooks/large-task.md');
+  const DEF = 'the child (the sub-session you open)';
+  assert.equal(tmpl.split(DEF).length - 1, 1, 'defined once');
+  const lines = tmpl.split('\n');
+  assert.ok(lines.find((l) => /\bchild\b/.test(l)).includes(DEF), 'at its first use');
+  const dir = current();
+  const lt = 'pan-harness/playbooks/large-task.md';
+  put(dir, lt, tmpl.replace(DEF, 'the child'));
+  toStandard(dir, '3.17.11');
+  const r = run('migrate.mjs', '--root', dir);
+  assert.match(r.stdout, /^done +3\.18\.11 step 2: playbooks\/large-task\.md: /m);
+  assert.equal(read(dir, lt), tmpl, 'the playbook equals the template');
+  assert.doesNotMatch(run('migrate.mjs', '--root', dir).stdout, /3\.18\.11 step/);
+  const changelog = fs.readFileSync(path.join(SKILL, 'references', 'changelog.md'), 'utf8');
+  const section = changelog.split(/^## /m).find((s) => s.startsWith('3.18.11'));
+  assert.ok(section, 'the changelog has the 3.18.11 section');
+  assert.match(section, /extension[^\n]*`handoff\.md` intro|`handoff\.md` intro[^\n]*extension/);
+});
+
+// ---- the closing line (3.18.11)
+const CLOSING_ITEM_START = '  - **Closing line.** ';
+const closingSection = (text) => {
+  const lines = text.split('\n');
+  const at = lines.indexOf('## The closing line');
+  if (at < 0) return null;
+  const end = lines.findIndex((l, i) => i > at && l.startsWith('## '));
+  return lines.slice(at, end < 0 ? lines.length : end).join('\n').replace(/\n+$/, '\n');
+};
+const QS = 'pan-harness/playbooks/questions.md';
+const stripClosing = (dir) => {
+  const item = read(dir, 'AGENTS.md').split('\n').filter((l) => l.startsWith(CLOSING_ITEM_START));
+  assert.equal(item.length, 1, 'the harness has the closing-line item once before the strip');
+  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').replace(`${item[0]}\n`, ''));
+  const q = read(dir, QS);
+  put(dir, QS, q.replace(`\n${closingSection(q)}`, ''));
+  put(dir, 'pan-harness/project/check.json', '{\n  "start_limit_bytes": 30000\n}\n');
+  toStandard(dir, '3.17.11');
+  return item[0];
+};
+
+test('K1: a harness built from the templates has the closing-line item in AGENTS.md and the section The closing line in questions.md', () => {
+  const dir = repo();
+  assert.equal(run('scaffold.mjs', '--root', dir).status, 0);
+  const lines = read(dir, 'AGENTS.md').split('\n');
+  const items = lines.filter((l) => l.startsWith(CLOSING_ITEM_START));
+  assert.equal(items.length, 1, 'the item stands once');
+  assert.equal(lines.findIndex((l) => l.startsWith(CLOSING_ITEM_START)), lines.findIndex((l) => l.startsWith('  - **Questions.** ')) + 1, 'right after the Questions item');
+  for (const m of ['`❓`', '`⚠️`', '`👉`', '`⏳`', '`✅`']) assert.ok(items[0].includes(m), `the item names ${m}`);
+  assert.ok(items[0].includes('Any other message ends with no marker.'));
+  assert.ok(items[0].endsWith('`playbooks/questions.md` → `The closing line`.'), 'the item links to the section');
+  const q = read(dir, QS);
+  assert.ok(q.indexOf('## A long message') < q.indexOf('## The closing line'), 'the section follows "A long message"');
+  const section = closingSection(q);
+  for (const m of ['❓', '⚠️', '👉', '⏳', '✅']) assert.ok(section.includes(m), `the section shows ${m}`);
+  assert.ok(section.includes('Done when the message ends with the one line its case asks for, or with none'));
+  const limit = Number(/"start_limit_bytes":\s*(\d+)/.exec(read(dir, 'pan-harness/project/check.json'))[1]);
+  assert.equal(limit, 25600 + Buffer.byteLength(`${items[0]}\n`) + Buffer.byteLength(` ${STATE_SENTENCE}`), 'the start limit is raised by the item and the session-state sentence');
+});
+
+test('K2: migrate adds the closing-line item and section once, raises start_limit_bytes by the added start-set bytes', () => {
+  const dir = current();
+  const item = stripClosing(dir);
+  const section = closingSection(read(current(), QS));
+  const before = Buffer.byteLength(read(dir, 'AGENTS.md'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^done +3\.18\.11 step 5: AGENTS\.md: .*closing line/m);
+  assert.match(r.stdout, /^done +3\.18\.11 step 6: playbooks\/questions\.md: .*closing line/m);
+  const lines = read(dir, 'AGENTS.md').split('\n');
+  assert.equal(lines.filter((l) => l.startsWith(CLOSING_ITEM_START)).length, 1);
+  assert.equal(lines[lines.findIndex((l) => l.startsWith('  - **Questions.** ')) + 1], item, 'the item equals the template, right after Questions');
+  assert.equal(closingSection(read(dir, QS)), section, 'the section equals the template');
+  const added = Buffer.byteLength(read(dir, 'AGENTS.md')) - before;
+  assert.equal(added, Buffer.byteLength(`${item}\n`));
+  assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${30000 + added}`));
+  assert.match(r.stdout, /^done +3\.18\.11 step 7: project\/check\.json: start_limit_bytes \d+ bytes higher/m);
+  const text = [read(dir, 'AGENTS.md'), read(dir, QS), read(dir, 'pan-harness/project/check.json')];
+  const again = run('migrate.mjs', '--root', dir);
+  assert.doesNotMatch(again.stdout, /3\.18\.11 step [567]/);
+  assert.deepEqual([read(dir, 'AGENTS.md'), read(dir, QS), read(dir, 'pan-harness/project/check.json')], text, 'a second run changes nothing');
+});
+
+test('K2: a reworded Questions item or a missing "A long message" section gives a by hand line', () => {
+  const a = current();
+  stripClosing(a);
+  const questions = read(a, 'AGENTS.md').split('\n').find((l) => l.startsWith('  - **Questions.** '));
+  put(a, 'AGENTS.md', read(a, 'AGENTS.md').replace(questions, '  - **Asking.** Ask the owner in the form of `playbooks/questions.md`.'));
+  const ra = run('migrate.mjs', '--root', a);
+  assert.equal(ra.status, 0, ra.stdout + ra.stderr);
+  assert.match(ra.stdout, /^by hand 3\.18\.11 step 5: AGENTS\.md: /m);
+  assert.doesNotMatch(read(a, 'AGENTS.md'), /\*\*Closing line\.\*\*/);
+  assert.match(read(a, 'pan-harness/project/check.json'), /"start_limit_bytes": 30000/, 'no bytes added, no limit change');
+
+  const b = current();
+  stripClosing(b);
+  put(b, QS, read(b, QS).replace('## A long message', '## Many items'));
+  const rb = run('migrate.mjs', '--root', b);
+  assert.equal(rb.status, 0, rb.stdout + rb.stderr);
+  assert.match(rb.stdout, /^by hand 3\.18\.11 step 6: playbooks\/questions\.md: /m);
+  assert.doesNotMatch(read(b, QS), /## The closing line/);
+});
+
+// ---- the session status rule (3.18.11)
+const STATE_SENTENCE = "A session's state (waits for the owner, works, done) is such a claim: read it in the same turn (`get_session` or `list_events`, and the git log of its folder) before you report it.";
+const STATUS_PARA = '**Session status.** When the owner asks for the state, or before a line that says a session waits for the owner, list the sessions you started and the ones they started (`list_sessions` with `linked`) and read each one\'s last rows (`list_events`) and the git log of its folder. A line taken only from a note says `unverified`. Without session tools, read the state files and the git log. Done when each line rests on a read of this turn.';
+const WORKERS_SENTENCE = "Before you tell it, read each busy worker's session (`list_events`, a few rows) and the git log of its branch: the `status` line and a note show the state at their time only.";
+const CLAIM_START = '- **Check every claim.** ';
+const LT = 'pan-harness/playbooks/large-task.md';
+const OPENER = '**The opener, on "Done".**';
+const stripStatus = (dir) => {
+  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').replace(` ${STATE_SENTENCE}`, ''));
+  put(dir, LT, read(dir, LT).replace(`${STATUS_PARA}\n\n`, ''));
+  put(dir, 'pan-harness/project/check.json', '{\n  "start_limit_bytes": 30000\n}\n');
+  toStandard(dir, '3.17.11');
+};
+
+test('K1: a harness built from the templates has the session-state sentence in Check every claim and the Session status paragraph in large-task.md', () => {
+  const dir = repo();
+  assert.equal(run('scaffold.mjs', '--root', dir).status, 0);
+  const claim = read(dir, 'AGENTS.md').split('\n').filter((l) => l.startsWith(CLAIM_START));
+  assert.equal(claim.length, 1);
+  assert.ok(claim[0].endsWith(` ${STATE_SENTENCE}`), 'the sentence ends the item');
+  assert.equal(read(dir, 'AGENTS.md').split(STATE_SENTENCE).length - 1, 1, 'it stands once');
+  const lt = read(dir, LT);
+  assert.equal(lt.split('**Session status.**').length - 1, 1, 'the paragraph stands once');
+  assert.ok(lt.includes(`${STATUS_PARA}\n\n${OPENER}`), 'the paragraph is right before The opener, on "Done"');
+  assert.ok(lt.indexOf('## New session') < lt.indexOf('**Session status.**'), 'inside New session');
+  const workers = fs.readFileSync(path.join(ROOT, 'skills-src', 'ph-workers', 'SKILL.md'), 'utf8');
+  const status = workers.split('\n').find((l) => l.startsWith('- **Status.**'));
+  assert.ok(status.includes(WORKERS_SENTENCE), 'ph-workers Status reads the worker session');
+  const limit = Number(/"start_limit_bytes":\s*(\d+)/.exec(read(dir, 'pan-harness/project/check.json'))[1]);
+  assert.equal(limit, 25600 + Buffer.byteLength(`${read(dir, 'AGENTS.md').split('\n').find((l) => l.startsWith(CLOSING_ITEM_START))}\n`) + Buffer.byteLength(` ${STATE_SENTENCE}`), 'the limit is raised by the sentence');
+});
+
+test('K2: migrate adds the session-state sentence and paragraph once and raises start_limit_bytes by the added AGENTS.md bytes', () => {
+  const dir = current();
+  const tmplAgents = read(dir, 'AGENTS.md');
+  const tmplLt = read(dir, LT);
+  stripStatus(dir);
+  const before = Buffer.byteLength(read(dir, 'AGENTS.md'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^done +3\.18\.11 step 8: AGENTS\.md: .*session/m);
+  assert.match(r.stdout, /^done +3\.18\.11 step 9: playbooks\/large-task\.md: .*Session status/m);
+  assert.equal(read(dir, 'AGENTS.md'), tmplAgents, 'AGENTS.md equals the template');
+  assert.equal(read(dir, LT), tmplLt, 'large-task.md equals the template');
+  const added = Buffer.byteLength(read(dir, 'AGENTS.md')) - before;
+  assert.equal(added, Buffer.byteLength(` ${STATE_SENTENCE}`));
+  assert.match(read(dir, 'pan-harness/project/check.json'), new RegExp(`"start_limit_bytes": ${30000 + added}`));
+  assert.match(r.stdout, /^done +3\.18\.11 step 10: project\/check\.json: start_limit_bytes \d+ bytes higher/m);
+  const text = [read(dir, 'AGENTS.md'), read(dir, LT), read(dir, 'pan-harness/project/check.json')];
+  const again = run('migrate.mjs', '--root', dir);
+  assert.doesNotMatch(again.stdout, /3\.18\.11 step (8|9|10)/);
+  assert.deepEqual([read(dir, 'AGENTS.md'), read(dir, LT), read(dir, 'pan-harness/project/check.json')], text, 'a second run changes nothing');
+});
+
+test('K2: a reworded Check every claim item or a missing opener paragraph gives a by hand line and no limit change', () => {
+  const dir = current();
+  stripStatus(dir);
+  const claim = read(dir, 'AGENTS.md').split('\n').find((l) => l.startsWith(CLAIM_START));
+  put(dir, 'AGENTS.md', read(dir, 'AGENTS.md').replace(claim, `${claim} Mark the rest as such.`));
+  put(dir, LT, read(dir, LT).replace(OPENER, '**The opener, when done.**'));
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^by hand 3\.18\.11 step 8: AGENTS\.md: /m);
+  assert.match(r.stdout, /^by hand 3\.18\.11 step 9: playbooks\/large-task\.md: /m);
+  assert.doesNotMatch(read(dir, 'AGENTS.md'), /A session's state \(/);
+  assert.doesNotMatch(read(dir, LT), /\*\*Session status\.\*\*/);
+  assert.match(read(dir, 'pan-harness/project/check.json'), /"start_limit_bytes": 30000/);
 });

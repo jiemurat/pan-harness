@@ -4,7 +4,7 @@ description: Merges a worker-agent's finished branch into the main branch on the
 compatibility: git and Node 18 or newer
 license: MIT
 metadata:
-  version: "3.17.11"
+  version: "3.18.11"
   package: "@jiemurat/pan-harness"
 ---
 

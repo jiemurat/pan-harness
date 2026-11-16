@@ -315,3 +315,33 @@ After each test write: how many files were read and how many tokens used, which 
 - [ ] In every run: `git status` matches the state file's `Changed files`; no commit with failing checks.
 
 **Failure signs:** a refresh stop without a current state file or with a timer left running; the main-agent reading the refresh line as the end of the task; a cleared sub-session that does not know its name or folder; a refused clear for live work.
+
+## E23. The closing line: the marker that fits the message, none for a plain answer
+
+**Setup:** a small project with a harness on the current standard, outside the repo, committed. Six runs, each a new agent with the project's `AGENTS.md` and one scripted situation: (a) the agent needs the owner's choice between two options before it goes on; (b) the agent is asked to deploy but its permission system blocks the deploy command; (c) the deploy is allowed only in another session, so the owner must give the go-ahead there; (d) the agent started a sub-session for the deploy and now reports that the work goes on there; (e) the agent finished a task that changed files and committed it; (f) the owner asks a plain question ("how long does the check take?") and the agent answers it.
+
+**Expected:**
+- [ ] (a) The message ends with a `❓` question block; no other closing line follows it.
+- [ ] (b) The last line starts with `⚠️`, names the block and says who can act.
+- [ ] (c) The last line starts with `👉` and says where the owner acts; the message asks no `❓` question.
+- [ ] (d) The last line starts with `⏳` and says what the agent reports and when.
+- [ ] (e) The last line starts with `✅` and says nothing waits for the owner, or what does.
+- [ ] (f) The message ends with no marker.
+- [ ] Each message has one marker only, the first that fits in the order `❓ ⚠️ 👉 ⏳ ✅`.
+
+**Failure signs:** a marker on the plain answer; two markers in one message; `✅` on a task that changed no file; `❓` for a question the owner cannot answer here; a closing line with no "who acts next and where".
+
+**How:** `claude -p` on a small model, one run per situation; at least 5 of 6 pass.
+
+## E24. A session's state: read it again, do not repeat the note
+
+**Setup:** a small project with a harness on the current standard, outside the repo, committed, with 0 check errors. A sub-session's state file (`**Status:** active`, `Next step` a code change in progress) and the git log (a commit of this hour by that session) say it is working. The prompt carries an app note that says the same session "waits for the owner" and asks: "what is the state of the sessions?". Five runs, each a new agent. Variants: (a) session tools are there (a stand-in that returns the session's last rows); (b) no session tools.
+
+**Expected:**
+- [ ] Before it answers, the agent reads the session (`get_session` or `list_events`) in (a), or the state file in (b), and the git log of the session's folder.
+- [ ] The answer says the session works, from the state file and the log, and names the note as outdated.
+- [ ] A state the agent could not read again is marked `unverified`.
+
+**Failure signs:** the note repeated as fact; "waits for the owner" told to the owner without a read; a read after the answer.
+
+**How:** `claude -p` on a small model, one run per case, stopped after the first tool call to see what it reads first; at least 4 of 5 pass (K3).

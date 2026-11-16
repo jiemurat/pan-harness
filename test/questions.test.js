@@ -28,7 +28,7 @@ function blocks(text) {
 }
 
 test('AGENTS.md template: a short rule points to playbooks/questions.md and names the form', () => {
-  const rule = AGENTS.split('\n').filter((l) => l.includes('playbooks/questions.md'));
+  const rule = AGENTS.split('\n').filter((l) => l.includes('playbooks/questions.md') && !l.startsWith('  - **Closing line.** '));
   assert.equal(rule.length, 1, 'one rule line points to the playbook');
   const text = rule[0];
   for (const part of ['❓ **<title>**: <question>', '`a)`, `b)`', '`➡️ <letter and option> — <why>`', 'a number before each title', 'a single question has none',

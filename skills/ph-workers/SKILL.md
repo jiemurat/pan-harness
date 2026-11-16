@@ -4,7 +4,7 @@ description: Gives tasks to the project's worker-agents, each in its own visible
 compatibility: git and Node 18 or newer; Claude Desktop opens the sessions itself (its session tools), in another agent the owner opens them
 license: MIT
 metadata:
-  version: "3.17.11"
+  version: "3.18.11"
   package: "@jiemurat/pan-harness"
 ---
 
@@ -45,7 +45,7 @@ Workers talk only through the main-agent. A worker's message for another worker 
 
 ## Status and names
 
-- **Status.** `status --root .` gives one line per worker; tell the owner in the owner's language who does what, what waits for a merge and which conflicts are foreseen.
+- **Status.** `status --root .` gives one line per worker; tell the owner in the owner's language who does what, what waits for a merge and which conflicts are foreseen. Before you tell it, read each busy worker's session (`list_events`, a few rows) and the git log of its branch: the `status` line and a note show the state at their time only.
 - **Rename.** `rename --root . --from <A> --to <B>` renames a worker without a folder, or the main-agent in `AGENTS.md`; then commit. A worker with a folder: merge its work and run `remove --root . --name <A>` first (the name stays in the list).
 - **New and removed names**: `ph-create-worker`, `ph-delete-worker`.
 
