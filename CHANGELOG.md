@@ -2,6 +2,10 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 3.20.12
+
+- The harness check no longer warns about a history entry whose `Files:` line quotes another entry's `(commit: pending)`: only the entry's own commit mark at the end of the line counts.
+
 ## 3.20.11
 
 - The closing line says who acts next: each marker (`❓`, `⚠️`, `👉`, `⏳`, `✅`) is defined by who acts next, and a new marker `💤` marks a pause (nothing runs, no question asked, the work waits for the owner's word). Before `⏳` the session or process is read in the same turn. The sub-session's "Waiting" message covers a `💤` turn. `ph-init` and `ph-update` print a one-time marker legend. `/ph-update` replaces the old closing-line texts, and `start_limit_bytes` follows the real change (7 bytes lower).

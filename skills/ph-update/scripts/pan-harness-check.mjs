@@ -136,7 +136,7 @@ import { spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
-const VERSION = '3.20.11';
+const VERSION = '3.20.12';
 
 // Sizes in bytes. 25 KB fits the start set of a complex project written
 // compactly; 40 KB keeps any doc readable in one go. An agent reads a doc over
@@ -901,7 +901,11 @@ if (lastUpdated && entries.length && lastUpdated[1] < entries[entries.length - 1
 }
 if (hasGit) {
   for (const [name, block] of blocks.slice(0, -1)) {
-    if (/^- \*\*Files:\*\*.*pending/m.test(block)) {
+    // the entry's own mark is the "(commit: …)" or "(commits: …)" at the end of its Files line; a quoted
+    // "(commit: pending)" earlier in the line describes another entry. Without such a mark, any "pending" counts.
+    const files = block.match(/^- \*\*Files:\*\*.*$/m);
+    const mark = files && files[0].match(/\(commits?:[^()]*\)\s*$/);
+    if (files && /pending/.test(mark ? mark[0] : files[0])) {
       warnings.push(`${name}: entry '${splitlines(block)[0].slice(0, 60)}' still has 'pending' in its Files line `
         + '- later nobody knows which commit it was; write the hash from git log');
     }

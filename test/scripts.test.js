@@ -1796,3 +1796,21 @@ test('K4: reworded 3.19.11 texts give by hand lines and no change', () => {
   assert.match(r.stdout, /^by hand 3\.20\.11 step 2: playbooks\/questions\.md: /m);
   assert.deepEqual([read(dir, 'AGENTS.md'), read(dir, QS), read(dir, 'pan-harness/project/check.json')], before, 'nothing changed');
 });
+
+test('history check: a quoted "(commit: pending)" in a Files line is not the entry\'s own mark', () => {
+  const dir = repo();
+  assert.equal(run('scaffold.mjs', '--root', dir).status, 0);
+  const rel = `pan-harness/history/${MONTH}.md`;
+  const day = `${MONTH}-01`;
+  const entry = (title, files) => `\n### ${day} — ${title} [docs]\n- **What and why:** a test entry.\n- **Checks:** none.\n- **Files:** ${files}\n`;
+  put(dir, rel, read(dir, rel)
+    + entry('quoted', 'the history; the earlier entry\'s `(commit: pending)` replaced with the number. (commit: abc1234)')
+    + entry('open', 'the history. (commit: pending)')
+    + entry('last', 'the history. (commit: pending)'));
+  git(dir, 'add', '-A');
+  git(dir, '-c', 'core.hooksPath=/dev/null', 'commit', '-q', '-m', 'entries'); // the unfilled scaffold fails the hook; only the history warning is tested
+  const out = run('pan-harness-check.mjs', '--root', dir).stdout;
+  assert.doesNotMatch(out, /entry '[^']*quoted[^']*' still has 'pending'/, 'a quoted pending inside the text is not a mark');
+  assert.match(out, /entry '[^']*open[^']*' still has 'pending'/, 'an open mark at the end still warns');
+  assert.doesNotMatch(out, /entry '[^']*last[^']*' still has 'pending'/, 'the last entry may still be pending');
+});

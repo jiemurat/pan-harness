@@ -4,6 +4,10 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 3.20.12
+
+The harness check reads only the entry's own commit mark at the end of a history `Files:` line for `pending`. No migration steps: `migrate.mjs` replaces the check script.
+
 ## 3.20.11
 
 The closing line says who acts next. Each marker is defined by who acts next (`❓` the owner answers now, `⚠️` a problem stops the work and the owner acts, `👉` the owner acts elsewhere, `⏳` an agent works now, `✅` the task is finished), and a new marker `💤` covers a pause: nothing runs and no question is asked, the work waits for the owner's word. Before `⏳` the session or process is read in the same turn; a task closed with a later owner check ends with `✅` naming the check. The sub-session's 'Waiting' message covers a `💤` turn too. The start set shrinks by 7 bytes. `ph-init` and `ph-update` print a one-time marker legend (`references/closing-legend.md`).
