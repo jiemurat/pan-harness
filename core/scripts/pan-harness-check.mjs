@@ -55,7 +55,8 @@ Errors (exit 1):
     run 1..n and every R/F/L/D named in the standard docs exists;
   - every journal entry carries a topic tag from the runbook.md list;
   - history/YYYY-MM.md holds only entries of its own month, in date order, and
-    the state.md "Last updated" date is not older than the newest entry;
+    the state.md "Last updated" date is not older than the newest entry (an entry tagged
+    only [harness] or [upgrade] is skipped);
   - dated task rows ("| YYYY-MM-DD") appear only in plan.md;
   - backticked paths under the known prefixes exist (in handoff.md, lines
     marked "(new)" name files still to be made and are skipped; the artifact-folder AGENTS.md
@@ -136,7 +137,7 @@ import { spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
-const VERSION = '3.20.12';
+const VERSION = '3.21.12';
 
 // Sizes in bytes. 25 KB fits the start set of a complex project written
 // compactly; 40 KB keeps any doc readable in one go. An agent reads a doc over
@@ -761,7 +762,8 @@ if (sortedRules.some((n, i) => n !== i + 1)) {
     + 'by number; find the gap or the duplicate');
 }
 pools.R = new Set(rules);
-const ID_REF = new RegExp(`(?<!${W}|-)([FLDR])(\\d+)(?!${W}|[…-])`, 'gu');
+// a part's decision is written `<folder>:D<n>`: the colon keeps it out of the lookup
+const ID_REF = new RegExp(`(?<!${W}|-|:)([FLDR])(\\d+)(?!${W}|[…-])`, 'gu');
 for (const p of docs) {
   for (const m of text.get(p).matchAll(ID_REF)) {
     if (!pools[m[1]].has(Number(m[2]))) {
@@ -880,10 +882,16 @@ for (const p of months) {
 
 // 10. history: one file per month, order, state date, pending commits
 const entries = [];
+const countedEntries = []; // entries that changed project state: a heading tagged only [harness] or [upgrade] did not
 const blocks = [];
 for (const p of months) {
   const body = outsideCode(read(p)).join('\n');
-  const dates = [...body.matchAll(/^### (\d{4}-\d{2}-\d{2})/gm)].map((m) => m[1]);
+  const heads = [...body.matchAll(/^### (\d{4}-\d{2}-\d{2})(.*)$/gm)];
+  const dates = heads.map((m) => m[1]);
+  for (const [, d, rest] of heads) {
+    const tags = [...rest.matchAll(/\[([a-z0-9-]+)\]/g)].map((m) => m[1]);
+    if (!tags.length || tags.some((t) => t !== 'harness' && t !== 'upgrade')) countedEntries.push(d);
+  }
   const stem = path.basename(p, '.md');
   for (const d of dates) {
     if (!d.startsWith(stem)) errors.push(`${rel(p)}: entry ${d} belongs to another month's file - history is searched by month; move it`);
@@ -895,9 +903,10 @@ for (const p of months) {
   body.split(/^### /m).slice(1).forEach((b) => blocks.push([rel(p), b]));
 }
 const lastUpdated = /\*\*Last updated:\*\* (\d{4}-\d{2}-\d{2})/.exec(read(path.join(H, 'state.md')));
-if (lastUpdated && entries.length && lastUpdated[1] < entries[entries.length - 1]) {
+const lastCounted = [...countedEntries].sort().pop();
+if (lastUpdated && lastCounted && lastUpdated[1] < lastCounted) {
   errors.push(`pan-harness/state.md: 'Last updated' ${lastUpdated[1]} is older than the last history entry `
-    + `${entries[entries.length - 1]} - the state may be stale; refresh it (a status check, if the project has one)`);
+    + `${lastCounted} - the state may be stale; refresh it (a status check, if the project has one)`);
 }
 if (hasGit) {
   for (const [name, block] of blocks.slice(0, -1)) {

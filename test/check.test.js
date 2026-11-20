@@ -196,6 +196,42 @@ test('a missing reference and a broken section link are errors', () => {
   assert.match(out, /^ERROR pan-harness\/system-map\.md:3: link `runbook\.md` → "Nowhere" leads to no heading/m);
 });
 
+test('a history entry tagged only [harness] or [upgrade] skips the state.md date rule; another tag keeps it', () => {
+  const dir = harness();
+  edit(dir, 'pan-harness/runbook.md', '`[workflow]`', '`[workflow]` `[harness]` `[upgrade]`');
+  edit(dir, 'pan-harness/state.md', DAY, daysAgo(30));
+  const day = daysAgo(0);
+  const hist = `pan-harness/history/${MONTH}.md`;
+  const stale = /^ERROR pan-harness\/state\.md: 'Last updated' .* is older than the last history entry/m;
+  // the fixture's own entry is [docs] and newer than state.md: the error stands
+  assert.match(check(dir).out, stale);
+  for (const tags of ['[harness]', '[upgrade]', '[harness] [upgrade]']) {
+    const d = harness();
+    edit(d, 'pan-harness/runbook.md', '`[workflow]`', '`[workflow]` `[harness]` `[upgrade]`');
+    edit(d, 'pan-harness/state.md', DAY, daysAgo(30));
+    edit(d, hist, '### ' + day + ' — Harness created [docs]', '### ' + day + ' — Harness created ' + tags);
+    const r = check(d);
+    assert.doesNotMatch(r.out, stale, `${tags}: ${r.out}`);
+    assert.equal(r.code, 0, `${tags}: ${r.out}`);
+  }
+  // a later [docs] entry after a [harness] one counts again
+  const d = harness();
+  edit(d, 'pan-harness/runbook.md', '`[workflow]`', '`[workflow]` `[harness]` `[upgrade]`');
+  edit(d, 'pan-harness/state.md', DAY, daysAgo(30));
+  edit(d, hist, '### ' + day + ' — Harness created [docs]', '### ' + day + ' — Harness created [harness]');
+  fs.appendFileSync(path.join(d, hist), `\n### ${day} — A doc fix [docs]\n- **What and why:** x.\n- **Checks:** y.\n- **Files:** z. (commit: abc1234)\n`);
+  assert.match(check(d).out, stale);
+});
+
+test('<folder>:D<n> names a decision of a harness below: not looked up; a bare unknown D<n> still is', () => {
+  const dir = harness();
+  edit(dir, 'pan-harness/system-map.md', '- Chapters in `docs/`.', '- The part decided it in web-app:D52.');
+  const r = check(dir);
+  assert.doesNotMatch(r.out, /D52 does not exist/, r.out);
+  edit(dir, 'pan-harness/system-map.md', 'web-app:D52', 'D52');
+  assert.match(check(dir).out, /^ERROR pan-harness\/system-map\.md: D52 does not exist/m);
+});
+
 test('scripts: a missing copy is an error, any other file in scripts/ a warning', () => {
   const dir = harness();
   fs.rmSync(path.join(dir, 'pan-harness', 'scripts', 'secret-check.mjs'));
@@ -924,4 +960,23 @@ test('co_change: an empty map gets a note for ph-doctor, a filled one none; chec
   assert.doesNotMatch(empty.out, /check\.json: not on the PAN-HARNESS\.md map/);
   put(dir, 'pan-harness/project/check.json', '{\n  "co_change": {"docs/": ["pan-harness/system-map.md"]}\n}\n');
   assert.doesNotMatch(check(dir).out, /co_change is empty/);
+});
+
+test('a nonstop charter in project/ needs its map line, a finished one moved to archive/ needs none', () => {
+  const dir = harness();
+  const charter = fs.readFileSync(path.join(ROOT, 'skills-src', 'ph-nonstop', 'templates', 'charter.md'), 'utf8').replace('# Run: <name>', '# Run: demo');
+  put(dir, 'pan-harness/run-demo.md', charter);
+  assert.match(check(dir).out, /^WARN\s+pan-harness\/run-demo\.md: not part of the standard/m, 'next to the standard files it is a warning');
+  fs.rmSync(path.join(dir, 'pan-harness', 'run-demo.md'));
+  put(dir, 'pan-harness/project/run-demo.md', charter);
+  assert.match(check(dir).out, /^WARN\s+pan-harness\/project\/run-demo\.md: not on the PAN-HARNESS\.md map/m, 'in project/ it needs a map line');
+  const skill = fs.readFileSync(path.join(ROOT, 'skills-src', 'ph-nonstop', 'SKILL.md'), 'utf8');
+  const line = /the Map's `project\/` list: ``(- `project\/run-<name>\.md` — .*?)``/.exec(skill);
+  assert.ok(line, 'SKILL.md gives the map line');
+  edit(dir, 'PAN-HARNESS.md', '## Map\n', `## Map\n\n${line[1].replaceAll('<name>', 'demo')}\n`);
+  assert.doesNotMatch(check(dir).out, /run-demo\.md: not/, 'the map line of the skill satisfies the check');
+  fs.mkdirSync(path.join(dir, 'pan-harness', 'archive'), { recursive: true });
+  fs.renameSync(path.join(dir, 'pan-harness', 'project', 'run-demo.md'), path.join(dir, 'pan-harness', 'archive', 'run-demo.md'));
+  edit(dir, 'PAN-HARNESS.md', `${line[1].replaceAll('<name>', 'demo')}\n`, '');
+  assert.doesNotMatch(check(dir).out, /run-demo\.md: not/, 'in archive/ with no map line it is silent');
 });

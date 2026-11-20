@@ -4,6 +4,14 @@
 
 Entry format: `## <version>`, what changed in a sentence or two, then the numbered steps (`mechanical` or `structural` — what is done).
 
+## 3.21.12
+
+A history entry tagged only `[harness]` or `[upgrade]` changed no project state, so the `state.md` date rule of the harness check skips it (a new standard tag `[harness]`); a part's decision is written `<its folder>:D<n>` and the check does not look it up; the map line of `playbooks/questions.md` in `PAN-HARNESS.md` names the closing line; the child's "When done" brief line covers a checkpoint and a repeated report. A new skill, `ph-nonstop`, comes with this version; it adds no harness requirement and no migration step (a run's charter is a new file it writes, `pan-harness/run-<name>.md`).
+
+1. `mechanical` — `pan-harness/runbook.md`, the `Topic tags` line: `[harness]` is added to the tag list and the sentence about the `state.md` date rule to its end, when the line still holds the standard form (reworded: `by hand`; `scripts/migrate.mjs`).
+2. `mechanical` — `PAN-HARNESS.md`, the map line of `playbooks/questions.md`: it names the closing line too, when it still holds the 3.20.12 text word for word (reworded: `by hand`; `scripts/migrate.mjs`).
+3. `mechanical` — `playbooks/large-task.md` → `New session` → `Brief lines`: the "When done" line gets the sentence "Send it also after a checkpoint and for a repeated report: …" (reworded: `by hand`; `scripts/migrate.mjs`).
+
 ## 3.20.12
 
 The harness check reads only the entry's own commit mark at the end of a history `Files:` line for `pending`. No migration steps: `migrate.mjs` replaces the check script.

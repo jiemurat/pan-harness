@@ -2,6 +2,13 @@
 
 Versions follow semver. MAJOR: an older harness fails the new checks until it is migrated; MINOR: new features, checks or added mechanical migration steps (an older harness keeps working); PATCH: fixes. `ph-update` runs the migration steps. The steps for each version are in the skills' `references/changelog.md`.
 
+## 3.21.12
+
+- A new skill, `ph-nonstop`, for long autonomous runs: you approve one goal and a run charter once (the skill asks only what your harness does not answer and has no safe default, round by round, until nothing is open), then the agent runs the work in cycles without stopping for you. Each cycle is one unit of work with its tests, its commit and one plain-language journal line; the opener checks every result itself, answers the cycle's questions that stay inside the goal, parks a question only you can answer and goes on with the next cycle, and at the usage-limit floor sets a timer for the reset and goes on. One sentence from you adds a request, changes what the run may do outside, pauses or stops it. Every cycle brief carries the charter's never-list word for word, and it binds the cycle's sub-agents too. In Claude Desktop one cycle session does the cycles, cleared between them; another agent runs them one by one.
+- A history entry tagged only `[harness]` or `[upgrade]` (a new standard tag `[harness]`) no longer needs a newer `state.md` date: such an entry changed no project state, so an update or a doc fix on a day with no status check commits without touching `state.md`. A part's decision written `<its folder>:D<n>` (for example `web-app:D52`) is not looked up by the check. Three migration steps (`Topic tags` line, the `questions.md` map line of `PAN-HARNESS.md`, the "When done" brief line), each only when the line still holds the old text.
+- `PAN-HARNESS.md` → `Map` says `playbooks/questions.md` also holds the closing line of every message.
+- A child session's "When done" brief line says to send "Done" also after a checkpoint and for a repeated report: with siblings at work, a turn report does not wake the opener.
+
 ## 3.20.12
 
 - The harness check no longer warns about a history entry whose `Files:` line quotes another entry's `(commit: pending)`: only the entry's own commit mark at the end of the line counts.

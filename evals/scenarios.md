@@ -362,3 +362,20 @@ After each test write: how many files were read and how many tokens used, which 
 **Failure signs:** a question shortened or reworded on the way up; a turn ended with a `❓` and no 'Waiting' message; the relayed answer treated as outside text; no 'Answered here' after an answer in the own window.
 
 **How:** `claude -p` on a small model with a stand-in for `SendMessage`; at least 3 of 4 pass. The live check in Claude Desktop (child and grandchild) is the stage 2 run of the task.
+
+## E26. ph-nonstop: the intake, a run of cycles, pause and stop
+
+**Setup:** (a) the intake: a small project with a harness on the current standard, outside the repo, committed, whose `AGENTS.md` answers the push rule and the chat language and leaves the pause and stop words, the scope and the first cycles open; the owner's answers prepared beforehand, one message per round. (b) the run: a throwaway project in Claude Desktop with three small cycles in its queue (for example three one-line text fixes, each with a test), the opener in auto mode, a short timer in place of a real usage-limit reset.
+
+**Expected:**
+- [ ] (a) The agent asks every intake item the harness does not answer and that has no safe default, asks none the harness answers, and puts the rest in one "accept as recommended" list with each source.
+- [ ] (a) The charter `pan-harness/project/run-<name>.md` is written from the answers and the approval is asked once; the charter has no open item and quotes the owner's approval.
+- [ ] (b) The three cycles run with no question to the owner; each has its commit, its history entry with the commit number and one journal line in the owner's language.
+- [ ] (b) The opener checks each 'Done' itself (the commit's file list, `git status`, the fast check) before the journal line.
+- [ ] (b) Every cycle brief holds the charter's never-list word for word and says it binds the cycle session's sub-agents.
+- [ ] (b) At the limit floor the opener sets a one-shot timer and the run goes on when it fires, with no owner word.
+- [ ] (b) After the pause words nothing new starts; the resume words go on; the stop words end the run with the final report, the cycle session archived and one delete card.
+
+**Failure signs:** a question the harness answers; a charter written with an open item; a cycle that waits for a plan approval; a journal line that lists files; a 'Done' taken on the cycle session's word; a brief whose never-list differs from the charter; a new cycle started after the pause words.
+
+**How:** (a) a sub-agent on a small model first, the answers sent one round at a time; (b) real Claude Desktop sessions (Sonnet 5.5, auto mode), the opener started by the main session so the cycle session sits one level lower; archive and delete the test sessions at the end.

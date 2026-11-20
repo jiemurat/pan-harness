@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/@jiemurat/pan-harness)](https://www.npmjs.com/package/@jiemurat/pan-harness) [![ci](https://github.com/jiemurat/pan-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/jiemurat/pan-harness/actions/workflows/ci.yml)
 
-Panoramic Harness (pan-harness for short) is a set of plain-text rules and knowledge that let any AI coding agent run a project like its owner. The harness is three things in your repository: `AGENTS.md`, `PAN-HARNESS.md` and a `pan-harness/` folder. Any agent and any model can read them; nothing depends on one tool's memory or settings. This package installs fifteen [agent skills](https://agentskills.io): five build and maintain the harness, four run worker-agents in parallel, three turn documents into Markdown, one removes AI signs from a text, two work with Claude Desktop sessions.
+Panoramic Harness (pan-harness for short) is a set of plain-text rules and knowledge that let any AI coding agent run a project like its owner. The harness is three things in your repository: `AGENTS.md`, `PAN-HARNESS.md` and a `pan-harness/` folder. Any agent and any model can read them; nothing depends on one tool's memory or settings. This package installs sixteen [agent skills](https://agentskills.io): five build and maintain the harness, four run worker-agents in parallel, one runs an approved goal as a long run of work cycles, three turn documents into Markdown, one removes AI signs from a text, two work with Claude Desktop sessions.
 
 | Skill | What it does |
 |---|---|
@@ -15,6 +15,7 @@ Panoramic Harness (pan-harness for short) is a set of plain-text rules and knowl
 | `ph-create-worker` | Adds a worker-agent name |
 | `ph-merge-work` | Merges a worker's finished branch on your word, resolves the conflicts and frees the worker for its next task |
 | `ph-delete-worker` | Removes a worker-agent (its folder, branches, session and name) after showing you what goes; the main-agent stays |
+| `ph-nonstop` | Runs one goal you approve once, in a run charter, as a long run of work cycles that does not stop for you: each cycle is one unit of work with its tests, its commit and one plain-language journal line; you add a request, change what the run may do outside, pause or stop it with one sentence. In Claude Desktop one cycle session does the cycles; other agents run them one by one |
 | `ph-pdf-to-md` | Converts PDFs and scans into Markdown: a script drafts the text-layer pages with headings, lists and ruled tables for the agent to correct, scanned or garbled pages are read from the page image, and a check compares the words, numbers and table columns |
 | `ph-word-to-md` | Converts Word documents (`.docx`, `.doc`) into Markdown with list numbers as Word shows them, tables, footnotes and links, and checks every word and number |
 | `ph-excel-to-md` | Converts Excel workbooks (`.xlsx`, `.xlsm`, `.xls`, `.xlsb`) into Markdown, every cell as Excel shows it, and checks every cell, number and date |

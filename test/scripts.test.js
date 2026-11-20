@@ -1797,6 +1797,52 @@ test('K4: reworded 3.19.11 texts give by hand lines and no change', () => {
   assert.deepEqual([read(dir, 'AGENTS.md'), read(dir, QS), read(dir, 'pan-harness/project/check.json')], before, 'nothing changed');
 });
 
+// ---- harness-only entries, the map line, the "When done" line (3.21.12)
+const RB = 'pan-harness/runbook.md';
+const TAGS_OLD = '- **Topic tags:** `[docs]` `[workflow]` `[config]` `[security]` `[upgrade]` `[web]`. Each journal entry has at least one tag in its heading. Add a new tag to this line when one is needed.';
+const MAP_OLD_LINE = '- `playbooks/questions.md` — the form of a question to the owner: title, `a)`/`b)` options, one `➡️` recommendation with its reason, numbered blocks, a short question, bold in a long message (before asking the owner a question).';
+const DONE_SENTENCE = ' Send it also after a checkpoint and for a repeated report: with siblings at work, your turn report does not wake your opener.';
+const old3 = (dir) => {
+  const rb = read(dir, RB).split('\n').map((l) => (l.startsWith('- **Topic tags:** ') ? TAGS_OLD : l)).join('\n');
+  put(dir, RB, rb);
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').split('\n').map((l) => (l.startsWith('- `playbooks/questions.md` — ') ? MAP_OLD_LINE : l)).join('\n'));
+  assert.ok(read(dir, LT).includes(DONE_SENTENCE), 'the template line has the new sentence');
+  put(dir, LT, read(dir, LT).replace(DONE_SENTENCE, ''));
+  toStandard(dir, '3.20.12');
+};
+
+test('K3: migrate 3.20.12 -> next updates the Topic tags line, the questions.md map line and the "When done" line, each once', () => {
+  const dir = current();
+  old3(dir);
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  for (const n of [1, 2, 3]) assert.match(r.stdout, new RegExp(`^done +3\\.21\\.12 step ${n}: `, 'm'));
+  const tags = read(dir, RB).split('\n').find((l) => l.startsWith('- **Topic tags:** '));
+  assert.equal(tags, '- **Topic tags:** `[docs]` `[harness]` `[workflow]` `[config]` `[security]` `[upgrade]` `[web]`. Each journal entry has at least one tag in its heading. Add a new tag to this line when one is needed. An entry tagged only `[harness]` or `[upgrade]` changed no project state: the `state.md` date rule skips it.');
+  const tmplPan = read(current(), 'PAN-HARNESS.md').split('\n').find((l) => l.startsWith('- `playbooks/questions.md` — '));
+  assert.ok(read(dir, 'PAN-HARNESS.md').split('\n').includes(tmplPan), 'the map line equals the template');
+  assert.equal(read(dir, LT), read(current(), LT), 'large-task.md equals the template');
+  const text = [read(dir, RB), read(dir, 'PAN-HARNESS.md'), read(dir, LT)];
+  assert.doesNotMatch(run('migrate.mjs', '--root', dir).stdout, /3\.21\.12 step/);
+  assert.deepEqual([read(dir, RB), read(dir, 'PAN-HARNESS.md'), read(dir, LT)], text, 'a second run changes nothing');
+});
+
+test('K3: reworded 3.20.12 lines give by hand lines and no change', () => {
+  const dir = current();
+  old3(dir);
+  put(dir, RB, read(dir, RB).replace('Add a new tag to this line when one is needed.', 'Add tags here.'));
+  put(dir, 'PAN-HARNESS.md', read(dir, 'PAN-HARNESS.md').replace('the form of a question to the owner:', 'how to ask the owner:'));
+  put(dir, LT, read(dir, LT).replace('those turns do not wake your opener.', 'those turns do not wake it.'));
+  const noStandard = (d) => read(d, 'PAN-HARNESS.md').replace(/^Standard: .*\n/m, '');
+  const before = [read(dir, RB), noStandard(dir), read(dir, LT)];
+  const r = run('migrate.mjs', '--root', dir);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /^by hand 3\.21\.12 step 1: pan-harness\/runbook\.md: /m);
+  assert.match(r.stdout, /^by hand 3\.21\.12 step 2: PAN-HARNESS\.md: /m);
+  assert.match(r.stdout, /^by hand 3\.21\.12 step 3: playbooks\/large-task\.md: /m);
+  assert.deepEqual([read(dir, RB), noStandard(dir), read(dir, LT)], before, 'nothing changed');
+});
+
 test('history check: a quoted "(commit: pending)" in a Files line is not the entry\'s own mark', () => {
   const dir = repo();
   assert.equal(run('scaffold.mjs', '--root', dir).status, 0);

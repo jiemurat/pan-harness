@@ -11,6 +11,7 @@ What to do at the end of every task that changed a file or the system (R5), and 
 - R — rules (`AGENTS.md`, the tops of playbooks); F, L, D — in the journals, one sequence with their archive; Q — planning questions (they stay in the chat, the result goes into a D or an F). `← F/L/D…` — the source of a rule. A standing instruction is first written into `feedback.md`, then becomes the next numbered rule: into `AGENTS.md` when it concerns every task, at the top of that domain's playbook when it concerns one domain. A short line of a rule whose breach can do harm also stands in `## Boundaries`, wherever the rule itself is. Where possible, a check enforces the rule too: a text can be skipped, a check cannot. The numbers do not change.
 - The journals are append-only: a new entry goes at the end, in an old entry only paths and links are fixed. A changed decision gets a new D, the old one moves to the archive with the mark `Archived (YYYY-MM-DD): superseded by D<n>.` The entry format is at the top of each journal. In a conflict the current D and `state.md` win: a journal entry tells the state of its time.
 - The history goes month by month: `history/YYYY-MM.md`, each entry stays in its month's file. The last tasks: `cat pan-harness/history/*.md | grep '^### 20' | tail -5`.
+- A decision of a harness below is written `<its folder>:D<n>`; the check does not look it up.
 - An entry is found in the journals and the archive by its ID, tag or a word (`grep -rnE 'D1|\[docs\]' pan-harness/`). If a journal lacks it, the archive is searched too.
 
 ## End of task

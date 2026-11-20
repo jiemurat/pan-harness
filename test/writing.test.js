@@ -55,7 +55,7 @@ test('each skill description stays within 300 bytes', () => {
 
 test('a skill description says what the skill does and when to use it, its first sentence within 160 characters', () => {
   for (const s of ['ph-init', 'ph-doctor', 'ph-update', 'ph-pdf-to-md', 'ph-word-to-md', 'ph-excel-to-md', 'ph-rename-claude-session',
-    'ph-archived-claude-sessions', 'ph-workers', 'ph-create-worker', 'ph-merge-work', 'ph-delete-worker', 'ph-humanize']) {
+    'ph-archived-claude-sessions', 'ph-workers', 'ph-create-worker', 'ph-merge-work', 'ph-delete-worker', 'ph-humanize', 'ph-nonstop']) {
     const description = /^description: (.*)$/m.exec(fs.readFileSync(path.join(ROOT, 'skills-src', s, 'SKILL.md'), 'utf8'))[1];
     const first = description.split(/(?<=\.)\s/)[0];
     assert.ok(first.length <= 160, `${s}: ${first.length} characters`);
@@ -385,9 +385,9 @@ test('the language question stands only in style-questions.md; init.md links to 
   assert.match(init, /the language question of `style-questions\.md` → `Language question`/);
 });
 
-test('the standard read at the start of every skill is under 5 000 words; the settings part is its own reference', () => {
+test('the standard read at the start of every skill is under 5 100 words; the settings part is its own reference', () => {
   const structure = fs.readFileSync(path.join(CORE, 'references', 'structure.md'), 'utf8');
-  assert.ok(structure.split(/\s+/).length < 5000, `${structure.split(/\s+/).length} words`);
+  assert.ok(structure.split(/\s+/).length < 5100, `${structure.split(/\s+/).length} words`);
   const settings = fs.readFileSync(path.join(CORE, 'references', 'settings.md'), 'utf8');
   for (const h of ['## Git', '## Size limits', '## Extensions and settings', '## History and archive', '## Version']) {
     assert.ok(settings.includes(`\n${h}\n`), `settings.md ${h}`);

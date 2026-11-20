@@ -48,7 +48,7 @@ root = path.resolve(root);
 if (!fs.existsSync(path.join(root, 'PAN-HARNESS.md'))) usage(`no PAN-HARNESS.md in ${root}: this is not a pan-harness project (ph-init creates one)`);
 
 const SKILL_VERSION = (/^\s*version:\s*"([^"]+)"/m.exec(fs.readFileSync(path.join(SKILL, 'SKILL.md'), 'utf8')) || [])[1];
-const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9', '3.13.9', '3.14.9', '3.15.9', '3.16.9', '3.17.9', '3.17.10', '3.17.11', '3.18.11', '3.19.11', '3.20.11', '3.20.12']; // every version in references/changelog.md
+const KNOWN = ['2.4.2', '2.5.2', '2.6.2', '2.7.2', '2.8.2', '2.8.3', '2.8.4', '2.9.4', '2.10.4', '2.10.5', '2.10.6', '2.10.7', '3.10.7', '3.11.7', '3.11.8', '3.12.8', '3.12.9', '3.13.9', '3.14.9', '3.15.9', '3.16.9', '3.17.9', '3.17.10', '3.17.11', '3.18.11', '3.19.11', '3.20.11', '3.20.12', '3.21.12']; // every version in references/changelog.md
 const done = [];
 const byHand = [];
 
@@ -1902,6 +1902,51 @@ function step5WhoBytes() {
   done.push(`3.20.11 step 5: project/check.json: start_limit_bytes ${whoBytes} bytes ${whoBytes < 0 ? 'lower' : 'higher'} for the closing line item`);
 }
 
+// ---------------------------------------------------------------- 3.21.12 (a harness-only entry skips the state date; the map line; the "When done" line)
+const TAGS_START = '- **Topic tags:** ';
+const TAGS_END = 'Add a new tag to this line when one is needed.';
+const TAGS_ADD = ' An entry tagged only `[harness]` or `[upgrade]` changed no project state: the `state.md` date rule skips it.';
+const MAP_OLD = '- `playbooks/questions.md` — the form of a question to the owner: title, `a)`/`b)` options, one `➡️` recommendation with its reason, numbered blocks, a short question, bold in a long message (before asking the owner a question).';
+const MAP_NEW = (fs.readFileSync(path.join(TEMPLATES, 'PAN-HARNESS.md.tmpl'), 'utf8').split(/\r?\n/).find((l) => l.startsWith('- `playbooks/questions.md` — ')) || '');
+const DONE_OLD = "those turns do not wake your opener.\" Your session id";
+const DONE_NEW = (LARGE_TASK_TMPL.find((l) => l.startsWith('- "- When done: ')) || '').includes(' Send it also after a checkpoint and for a repeated report: ')
+  ? "those turns do not wake your opener. Send it also after a checkpoint and for a repeated report: with siblings at work, your turn report does not wake your opener.\" Your session id" : '';
+
+function step1HarnessTag() {
+  const f = file('pan-harness/runbook.md');
+  if (!f) return;
+  const at = f.lines.findIndex((l) => l.startsWith(TAGS_START));
+  if (at < 0) { byHand.push('3.21.12 step 1: pan-harness/runbook.md: no "Topic tags" line in the standard form; add `[harness]` to the tag list and the sentence "' + TAGS_ADD.trim() + '"'); return; }
+  const line = f.lines[at];
+  if (line.includes('`[harness]`')) return;
+  if (!line.includes('`[docs]` ') || !line.includes('`[upgrade]`') || !line.endsWith(TAGS_END)) {
+    byHand.push('3.21.12 step 1: pan-harness/runbook.md: the "Topic tags" line is reworded; add `[harness]` to its tag list and end it with "' + TAGS_ADD.trim() + '"');
+    return;
+  }
+  f.lines[at] = line.replace('`[docs]` ', '`[docs]` `[harness]` ') + TAGS_ADD;
+  f.changed = true;
+  done.push('3.21.12 step 1: pan-harness/runbook.md: the Topic tags line has `[harness]` and the state date sentence');
+}
+
+function step2MapClosing() {
+  const f = file('PAN-HARNESS.md');
+  if (!f || !MAP_NEW) return;
+  const at = f.lines.findIndex((l) => l.startsWith('- `playbooks/questions.md` — '));
+  if (at < 0 || f.lines[at] === MAP_NEW) return;
+  if (f.lines[at] !== MAP_OLD) { byHand.push(`3.21.12 step 2: PAN-HARNESS.md: the map line of playbooks/questions.md is reworded; let it name the closing line too, as "${MAP_NEW}"`); return; }
+  f.lines[at] = MAP_NEW;
+  f.changed = true;
+  done.push('3.21.12 step 2: PAN-HARNESS.md: the map line of playbooks/questions.md names the closing line');
+}
+
+function step3DoneLine() {
+  const f = file(LARGE_TASK);
+  if (!f || !DONE_NEW || !f.lines.includes('## New session')) return;
+  const r = swap(f, DONE_OLD, DONE_NEW);
+  if (!r) byHand.push('3.21.12 step 3: playbooks/large-task.md: the "When done" brief line is reworded; add the sentence "Send it also after a checkpoint and for a repeated report: with siblings at work, your turn report does not wake your opener." to it');
+  if (r === 'changed') done.push('3.21.12 step 3: playbooks/large-task.md: the "When done" line covers a checkpoint and a repeated report');
+}
+
 // the mechanical steps of each version of references/changelog.md, oldest first: '<version>': [step, …];
 // a step changes a line only when it is the standard's own text or the step names it, and prints
 // what it cannot place as "by hand". The first version has none.
@@ -1929,6 +1974,7 @@ const STEPS = {
   '3.17.11': [step1CardInReport, step2PartArchive, step3ArchiveBytes],
   '3.19.11': [step1WaitingLine, step2WaitingParagraph, step3RelayedAnswer],
   '3.20.11': [step1WhoItem, step2WhoSection, step3WhoWaiting, step4WhoSubSession, step5WhoBytes],
+  '3.21.12': [step1HarnessTag, step2MapClosing, step3DoneLine],
   '3.18.11': [step1PartSentenceRepair, step2ChildDefined, step3DueItem, step4NetBytes, step5ClosingItem, step6ClosingSection, step7ClosingBytes, step8StateSentence, step9StatusParagraph, step10StatusBytes],
 };
 

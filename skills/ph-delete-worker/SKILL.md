@@ -4,7 +4,7 @@ description: Removes a worker-agent after showing the owner its folder, branches
 compatibility: git and Node 18 or newer; Claude Desktop archives the session itself (its session tools)
 license: MIT
 metadata:
-  version: "3.20.12"
+  version: "3.21.12"
   package: "@jiemurat/pan-harness"
 ---
 

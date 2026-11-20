@@ -32,9 +32,9 @@ const exists = (dir, rel) => fs.existsSync(path.join(dir, rel));
 const read = (dir, rel) => fs.readFileSync(path.join(dir, rel), 'utf8');
 const manifest = (dir, base = '.agents/skills') => JSON.parse(read(dir, `${base}/.pan-harness.json`));
 
-test('the package ships the fifteen ph-* skills', () => {
+test('the package ships the sixteen ph-* skills', () => {
   assert.deepEqual(SKILLS, ['ph-archived-claude-sessions', 'ph-create-worker', 'ph-delete-worker', 'ph-doctor', 'ph-excel-to-md', 'ph-grilling', 'ph-humanize', 'ph-init', 'ph-merge-work',
-    'ph-pdf-to-md', 'ph-rename-claude-session', 'ph-update', 'ph-word-to-md', 'ph-workers', 'ph-writing-for-agents']);
+    'ph-nonstop', 'ph-pdf-to-md', 'ph-rename-claude-session', 'ph-update', 'ph-word-to-md', 'ph-workers', 'ph-writing-for-agents']);
 });
 
 test('init installs into .agents/skills and .claude/skills, writes commands, manifest and .gitignore', () => {
